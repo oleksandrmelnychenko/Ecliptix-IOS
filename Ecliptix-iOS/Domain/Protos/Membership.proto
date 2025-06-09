@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package ecliptix.proto.membership;
+option csharp_namespace = "Ecliptix.Protobuf.Membership";
+
+message Membership {
+  bytes unique_identifier = 1;
+
+  enum ActivityStatus {
+    ACTIVE = 0;
+    INACTIVE = 1;
+  }
+  
+  enum CreationStatus {
+    OTP_VERIFIED = 0;
+    SECURE_KEY_SET = 1;
+    PASSPHRASE_SET = 2;
+  }
+
+  ActivityStatus status = 3;
+  optional CreationStatus creation_status = 4;
+}
+
+message UpdateMembershipWithSecureKeyRequest {
+  bytes secure_key = 1;
+  bytes membership_identifier = 2;
+}
+
+message UpdateMembershipWithSecureKeyResponse {
+  enum UpdateResult {
+    SUCCEEDED = 0;
+    INVALID_CREDENTIALS = 1;
+  }
+
+  UpdateResult result = 1;
+  optional string message = 2;
+  optional Membership membership = 3;
+}
+
+message SignInMembershipRequest {
+  string phone_number = 2;
+  bytes secure_key = 3;
+}
+message SignInMembershipResponse {
+  enum SignInResult {
+    SUCCEEDED = 0;
+    INVALID_CREDENTIALS = 1;
+    LOGIN_ATTEMPT_EXCEEDED = 2;
+  }
+
+  SignInResult result = 1;
+  optional string message = 2;
+  optional Membership membership = 3;
+  optional string minutes_until_retry = 4;
+}
