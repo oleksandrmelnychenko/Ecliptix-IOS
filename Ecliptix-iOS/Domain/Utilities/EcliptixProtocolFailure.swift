@@ -70,8 +70,8 @@ public struct EcliptixProtocolFailure: CustomStringConvertible, Equatable, Hasha
     }
     
     // MARK: - Factory Methods
-    static func generic(_ details: String, inner: Error? = nil) -> EcliptixProtocolFailure {
-        return EcliptixProtocolFailure(type: .generic, message: details, innerError: inner)
+    static func generic(_ details: String? = nil, inner: Error? = nil) -> EcliptixProtocolFailure {
+        return EcliptixProtocolFailure(type: .generic, message: details ?? "An unspecified error occurred.", innerError: inner)
     }
 
     static func decode(_ details: String, inner: Error? = nil) -> EcliptixProtocolFailure {

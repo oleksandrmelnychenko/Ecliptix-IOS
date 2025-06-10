@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 06.06.2025.
 //
 
-class ServiceRequest {
+public class ServiceRequest {
     private init(reqId: UInt32, actionType: ServiceFlowType, rcpServiceMethod: RcpServiceAction, payload: Ecliptix_Proto_CipherPayload, encryptedChunls: [Ecliptix_Proto_CipherPayload]) {
         self.reqId = reqId
         self.actionType = actionType

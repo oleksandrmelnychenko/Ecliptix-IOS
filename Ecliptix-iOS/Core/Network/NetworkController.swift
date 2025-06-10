@@ -9,8 +9,9 @@ import Foundation
 import SwiftProtobuf
 
 final class NetworkController {
-    private var connections: [UInt32: EcliptixConnectionContext] = [:]
     private let networkServiceManager: NetworkServiceManager
+    
+    private var connections: [UInt32: EcliptixConnectionContext] = [:]
     
     init(networkServiceManager: NetworkServiceManager) {
         self.networkServiceManager = networkServiceManager
@@ -27,13 +28,7 @@ final class NetworkController {
         }
     }
     
-    func executeServiceAction(
-       connectId: UInt32,
-       serviceAction: RcpServiceAction,
-       plainBuffer: Data,
-       flowType: ServiceFlowType,
-       onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,
-       token: CancellationToken? = nil
+    func executeServiceAction(connectId: UInt32, serviceAction: RcpServiceAction, plainBuffer: Data, flowType: ServiceFlowType, onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>, token: CancellationToken? = CancellationToken()
     ) async -> Result<Unit, EcliptixProtocolFailure> {
         guard let context = connections[connectId] else {
             return .failure(.generic("Connection not found"))
@@ -46,11 +41,68 @@ final class NetworkController {
             let outboundPayload = try protocolSystem.produceOutboundMessage(connectId: connectId, exchangeType: pubKeyExchangeType, plainPayload: plainBuffer)
             
             let request = ServiceRequest.new(actionType: flowType, rcpServiceMethod: serviceAction, payload: outboundPayload, encryptedChunls: [])
-            let invokeResult = try await networkServiceManager.invokeService(request: request, token: token)
-        } catch {
+            let invokeResult = await networkServiceManager.invokeServiceRequestAsync(request: request, token: token!)
             
+            if invokeResult.isErr {
+                return .failure(try invokeResult.unwrapErr())
+            }
+            
+            let flow = try invokeResult.unwrap()
+            
+            switch flow {
+                case let singleCall as RpcFlow.SingleCall:
+                    do {
+                        let callResult = await singleCall.result.value
+                        if callResult.isErr {
+                            return .failure(try callResult.unwrapErr())
+                        }
+                        
+                        let inboundPayload = try callResult.unwrap()
+                        let decryptedData = try protocolSystem.processInboundMessage(sessionId: connectId, exchangeType: pubKeyExchangeType, cipherPayloadProto: inboundPayload)
+                        let callbackOutcome = await onSuccessCallback(decryptedData)
+                        if callbackOutcome.isErr {
+                            return callbackOutcome
+                        }
+                    } catch {
+                        
+                    }
+                    
+                case let inboundStream as RpcFlow.InboundStream:
+                    do {
+                        try await withTaskCancellationHandler(operation: {
+                            for try await streamItem in inboundStream.stream {
+                                if streamItem.isErr {
+                                    print("Stream error: \(try streamItem.unwrapErr().message)")
+                                    continue
+                                }
+                                
+                                let streamPayload = try streamItem.unwrap()
+                                let streamDecryptedData = try protocolSystem.processInboundMessage(sessionId: connectId, exchangeType: pubKeyExchangeType, cipherPayloadProto: streamPayload)
+                                
+                                let streamCallbackOutcome = await onSuccessCallback(streamDecryptedData)
+                                if streamCallbackOutcome.isErr {
+                                    print("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
+                                }
+                            }
+                        }, onCancel: {
+                            // Cancellation handler code here, if needed
+                        })
+                    } catch {
+                        // Handle cancellation or other errors if needed
+                    }
+                    
+                    
+                case is RpcFlow.OutboundSink, is RpcFlow.BidirectionalStream:
+                    return .failure(.generic("Unsupported stream type"))
+                
+                default:
+                    return .failure(.generic("Unsupported stream type"))
+            }
+            
+            return .success(Unit.value)
+        } catch {
+            return .failure(.generic("Unexpected error: \(error.localizedDescription)"))
         }
         
-       
     }
 }

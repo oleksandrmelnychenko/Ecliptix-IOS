@@ -16,42 +16,37 @@ public class MembershipServiceHandler {
         self.verificationClient = verificationClient
     }
     
-//    func getVerificationSessionIfExist(request: Ecliptix_Proto_CipherPayload) async throws -> AsyncStream<Ecliptix_Proto_CipherPayload> {
-//        let call = try verificationClient.initiateVerification(request)
-//        
-//        return AsyncStream<Ecliptix_Proto_CipherPayload> { continuation in
-//            
-//            
-//            for try await response in call.responses {
-//                continuation.yield(response)
-//            }
-//            
-//            continuation.finish()
-//        }
-//    }
-    
-//    func getVerificationSessionIfExist(
-//            request: Ecliptix_Proto_CipherPayload
-//        ) async throws -> AsyncThrowingStream<Ecliptix_Proto_CipherPayload, Error> {
-//
-//            let resonce = verificationClient.initiateVerification
-//            
-//            
-//            
-//            let resultt = verificationClient.int(
-//                request: clientRequest) { responseStream in
-//                return AsyncThrowingStream { continuation in
-//                    Task {
-//                        do {
-//                            for try await response in responseStream.messages {
-//                                continuation.yield(response)
-//                            }
-//                            continuation.finish()
-//                        } catch {
-//                            continuation.finish(throwing: error)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    func getVerificationSessionIfExist(
+        request: Ecliptix_Proto_CipherPayload
+    ) async throws -> AsyncThrowingStream<Ecliptix_Proto_CipherPayload, Error> {
+        
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    // Call the async initiateVerification with the streaming response handler closure
+                    _ = try await verificationClient.initiateVerification(request) { streamingResponse in
+                        // This closure is async and called once the streaming response is ready
+                        
+                        do {
+                            // Iterate over the stream asynchronously
+                            for try await message in streamingResponse.messages {
+                                continuation.yield(message)
+                            }
+                            continuation.finish()
+                        } catch {
+                            continuation.finish(throwing: error)
+                        }
+                        
+                        // Return some dummy value because the closure expects a return value of generic Result type
+                        // But in this case, we just want to yield values via continuation and finish.
+                        // If the closure needs a specific type, adjust accordingly.
+                        return ()
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
 }
