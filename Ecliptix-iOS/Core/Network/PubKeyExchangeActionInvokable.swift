@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 06.06.2025.
 //
 
-public class PubKeyExchangeActionInvokable {
+internal class PubKeyExchangeActionInvokable {
     private init(reqId: UInt32, jobType: ServiceFlowType, method: RcpServiceAction, pubKeyExchange: Ecliptix_Proto_PubKeyExchange, onComplete: ((Ecliptix_Proto_PubKeyExchange) -> Void)?) {
         self.reqId = reqId
         self.jobType = jobType
@@ -20,7 +20,7 @@ public class PubKeyExchangeActionInvokable {
     public let pubKeyExchange: Ecliptix_Proto_PubKeyExchange
     public let onComplete: ((Ecliptix_Proto_PubKeyExchange) -> Void)?
     
-    public static func new(jobType: ServiceFlowType, method: RcpServiceAction, pubKeyExchange: Ecliptix_Proto_PubKeyExchange, callback: ((Ecliptix_Proto_PubKeyExchange) -> Void)? = nil) -> PubKeyExchangeActionInvokable{
+    public static func new(jobType: ServiceFlowType, method: RcpServiceAction, pubKeyExchange: Ecliptix_Proto_PubKeyExchange, callback: ((Ecliptix_Proto_PubKeyExchange) -> Void)?) -> PubKeyExchangeActionInvokable{
         
         let reqId = Utilities.generateRandomUInt32()
         return PubKeyExchangeActionInvokable(reqId: reqId, jobType: jobType, method: method, pubKeyExchange: pubKeyExchange, onComplete: callback)

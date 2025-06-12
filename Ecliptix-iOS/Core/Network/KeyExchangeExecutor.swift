@@ -8,10 +8,10 @@
 import SwiftProtobuf
 import Foundation
 
-public final class KeyExchangeExecutor {
-    private let appDeviceServiceActionsClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActions.ClientProtocol
+internal final class KeyExchangeExecutor {
+    private let appDeviceServiceActionsClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
     
-    init(appDeviceServiceActionsClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActions.ClientProtocol) {
+    init(appDeviceServiceActionsClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient) {
         self.appDeviceServiceActionsClient = appDeviceServiceActionsClient
     }
     

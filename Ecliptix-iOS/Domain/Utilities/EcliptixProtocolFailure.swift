@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCCore
+import GRPC
 
 enum EcliptixProtocolFailureType: Error {
     case generic
@@ -54,20 +54,20 @@ public struct EcliptixProtocolFailure: CustomStringConvertible, Equatable, Hasha
     }
     
     // Maybe not needed
-    public static func toGrpcStatus(_ failure: EcliptixProtocolFailure) -> Status {
-        let code: Status.Code
-        switch failure.type {
-        case .invalidInput:
-            code = .invalidArgument
-        case .objectDisposed, .ephemeralMissing, .stateMissing:
-            code = .failedPrecondition
-        default:
-            code = .internalError
-        }
-
-        let message = (code == .internalError) ? "An internal error occurred." : failure.message
-        return Status(code: code, message: message)
-    }
+//    public static func toGrpcStatus(_ failure: EcliptixProtocolFailure) -> Status {
+//        let code: Status.Code
+//        switch failure.type {
+//        case .invalidInput:
+//            code = .invalidArgument
+//        case .objectDisposed, .ephemeralMissing, .stateMissing:
+//            code = .failedPrecondition
+//        default:
+//            code = .internalError
+//        }
+//
+//        let message = (code == .internalError) ? "An internal error occurred." : failure.message
+//        return Status(code: code, message: message)
+//    }
     
     // MARK: - Factory Methods
     static func generic(_ details: String? = nil, inner: Error? = nil) -> EcliptixProtocolFailure {

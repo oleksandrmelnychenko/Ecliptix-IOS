@@ -52,7 +52,7 @@ final class NetworkController {
             switch flow {
                 case let singleCall as RpcFlow.SingleCall:
                     do {
-                        let callResult = await singleCall.result.value
+                        let callResult = singleCall.result
                         if callResult.isErr {
                             return .failure(try callResult.unwrapErr())
                         }
@@ -64,7 +64,7 @@ final class NetworkController {
                             return callbackOutcome
                         }
                     } catch {
-                        
+                        return .failure(.generic("Failed to process single call response", inner: error))
                     }
                     
                 case let inboundStream as RpcFlow.InboundStream:
@@ -85,10 +85,10 @@ final class NetworkController {
                                 }
                             }
                         }, onCancel: {
-                            // Cancellation handler code here, if needed
+                            print("Stream cancelled for connectId: \(connectId)")
                         })
                     } catch {
-                        // Handle cancellation or other errors if needed
+                        return .failure(.generic("Failed during inbound stream processing", inner: error))
                     }
                     
                     
@@ -103,6 +103,32 @@ final class NetworkController {
         } catch {
             return .failure(.generic("Unexpected error: \(error.localizedDescription)"))
         }
+    }
+    
+    public func dataCenterPubKeyExchange(connectId: UInt32) async -> Result<Unit, EcliptixProtocolFailure> {
+        guard let context = connections[connectId] else {
+            return .failure(.generic("Connection not found"))
+        }
         
+        do {
+            let protocolSystem = context.ecliptixProtocolSystem
+            let pubKeyExchangeType = context.pubKeyExchangeType
+            
+            let pubKeyExchange = try protocolSystem.beginDataCenterPubKeyExchange(connectId: connectId, exchangeType: pubKeyExchangeType)
+            
+            let action = PubKeyExchangeActionInvokable.new(jobType: .single, method: .dataCenterPubKeyExchange, pubKeyExchange: pubKeyExchange, callback: { peerPubKeyExchange in
+                do {
+                    try protocolSystem.completeDataCenterPubKeyExchange(connectId: connectId, exchangeType: pubKeyExchangeType, peerMessage: peerPubKeyExchange)
+                } catch {
+                    debugPrint("Failed to complete key exchange: \(error)")
+                }
+            })
+            
+            _ = await networkServiceManager.beginDataCenterPublicKeyExchange(action: action)
+            
+            return .success(.value)
+        } catch {
+            return .failure(.generic("Failed to begin key exchange", inner: error))
+        }
     }
 }

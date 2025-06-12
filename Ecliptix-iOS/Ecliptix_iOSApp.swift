@@ -9,6 +9,10 @@ import SwiftUI
 
 @main
 struct Ecliptix_iOSApp: App {
+    init() {
+        GrpcModule.registerAll()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

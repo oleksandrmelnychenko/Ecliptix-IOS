@@ -7,27 +7,46 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1104AB0B2DF6F15200337328 /* GRPCCodeGen in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB0A2DF6F15200337328 /* GRPCCodeGen */; };
-		1104AB0D2DF6F15200337328 /* GRPCCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB0C2DF6F15200337328 /* GRPCCore */; };
-		1104AB0F2DF6F15200337328 /* GRPCInProcessTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB0E2DF6F15200337328 /* GRPCInProcessTransport */; };
-		1104AB122DF6F16900337328 /* GRPCProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB112DF6F16900337328 /* GRPCProtobuf */; };
 		1104AB152DF6F19D00337328 /* Clibsodium in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB142DF6F19D00337328 /* Clibsodium */; };
 		1104AB172DF6F19D00337328 /* Sodium in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB162DF6F19D00337328 /* Sodium */; };
 		1104AB1A2DF6F1BC00337328 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = 1104AB192DF6F1BC00337328 /* Atomics */; };
-		1104ABE42DF6F5A900337328 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1104ABE32DF6F5A900337328 /* Collections */; };
-		1104ABE62DF6F5BF00337328 /* BitCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 1104ABE52DF6F5BF00337328 /* BitCollections */; };
-		1104ABE82DF6F5CA00337328 /* HashTreeCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 1104ABE72DF6F5CA00337328 /* HashTreeCollections */; };
-		1104ABEA2DF6F5DD00337328 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 1104ABE92DF6F5DD00337328 /* OrderedCollections */; };
+		1183FAB22DF9863C00FF69F1 /* CGRPCZlib in Frameworks */ = {isa = PBXBuildFile; productRef = 1183FAB12DF9863C00FF69F1 /* CGRPCZlib */; };
+		1183FAB42DF9863C00FF69F1 /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = 1183FAB32DF9863C00FF69F1 /* GRPC */; };
+		1183FAB62DF9863C00FF69F1 /* GRPCReflectionService in Frameworks */ = {isa = PBXBuildFile; productRef = 1183FAB52DF9863C00FF69F1 /* GRPCReflectionService */; };
+		1183FAB82DF9863C00FF69F1 /* protoc-gen-grpc-swift in Frameworks */ = {isa = PBXBuildFile; productRef = 1183FAB72DF9863C00FF69F1 /* protoc-gen-grpc-swift */; };
+		11B82C5A2DF990FD002393C3 /* BitCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C592DF990FD002393C3 /* BitCollections */; };
+		11B82C5C2DF990FD002393C3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C5B2DF990FD002393C3 /* Collections */; };
+		11B82C5E2DF990FD002393C3 /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C5D2DF990FD002393C3 /* DequeModule */; };
+		11B82C602DF990FD002393C3 /* HashTreeCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C5F2DF990FD002393C3 /* HashTreeCollections */; };
+		11B82C622DF990FD002393C3 /* HeapModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C612DF990FD002393C3 /* HeapModule */; };
+		11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C632DF990FD002393C3 /* OrderedCollections */; };
+		11B82C662DF990FD002393C3 /* _RopeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C652DF990FD002393C3 /* _RopeModule */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		11AB14202DFAD497002FCCDC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1104AAF32DF6F13A00337328 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1104AAFA2DF6F13A00337328;
+			remoteInfo = "Ecliptix-iOS";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1104AAFB2DF6F13A00337328 /* Ecliptix-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ecliptix-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		11AB141C2DFAD497002FCCDC /* Ecliptix-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Ecliptix-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1104AAFD2DF6F13A00337328 /* Ecliptix-iOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Ecliptix-iOS";
+			sourceTree = "<group>";
+		};
+		11AB141D2DFAD497002FCCDC /* Ecliptix-iOSTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Ecliptix-iOSTests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -37,17 +56,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1104ABEA2DF6F5DD00337328 /* OrderedCollections in Frameworks */,
-				1104ABE82DF6F5CA00337328 /* HashTreeCollections in Frameworks */,
-				1104AB0B2DF6F15200337328 /* GRPCCodeGen in Frameworks */,
-				1104AB122DF6F16900337328 /* GRPCProtobuf in Frameworks */,
-				1104ABE62DF6F5BF00337328 /* BitCollections in Frameworks */,
-				1104ABE42DF6F5A900337328 /* Collections in Frameworks */,
+				1183FAB82DF9863C00FF69F1 /* protoc-gen-grpc-swift in Frameworks */,
 				1104AB152DF6F19D00337328 /* Clibsodium in Frameworks */,
-				1104AB0D2DF6F15200337328 /* GRPCCore in Frameworks */,
-				1104AB0F2DF6F15200337328 /* GRPCInProcessTransport in Frameworks */,
+				1183FAB42DF9863C00FF69F1 /* GRPC in Frameworks */,
+				1183FAB22DF9863C00FF69F1 /* CGRPCZlib in Frameworks */,
+				11B82C602DF990FD002393C3 /* HashTreeCollections in Frameworks */,
+				11B82C5A2DF990FD002393C3 /* BitCollections in Frameworks */,
+				11B82C662DF990FD002393C3 /* _RopeModule in Frameworks */,
+				1183FAB62DF9863C00FF69F1 /* GRPCReflectionService in Frameworks */,
+				11B82C5C2DF990FD002393C3 /* Collections in Frameworks */,
+				11B82C5E2DF990FD002393C3 /* DequeModule in Frameworks */,
 				1104AB172DF6F19D00337328 /* Sodium in Frameworks */,
+				11B82C622DF990FD002393C3 /* HeapModule in Frameworks */,
+				11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */,
 				1104AB1A2DF6F1BC00337328 /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		11AB14192DFAD497002FCCDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				1104AAFD2DF6F13A00337328 /* Ecliptix-iOS */,
+				11AB141D2DFAD497002FCCDC /* Ecliptix-iOSTests */,
 				1104ABE22DF6F5A900337328 /* Frameworks */,
 				1104AAFC2DF6F13A00337328 /* Products */,
 			);
@@ -67,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				1104AAFB2DF6F13A00337328 /* Ecliptix-iOS.app */,
+				11AB141C2DFAD497002FCCDC /* Ecliptix-iOSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -98,21 +129,47 @@
 			);
 			name = "Ecliptix-iOS";
 			packageProductDependencies = (
-				1104AB0A2DF6F15200337328 /* GRPCCodeGen */,
-				1104AB0C2DF6F15200337328 /* GRPCCore */,
-				1104AB0E2DF6F15200337328 /* GRPCInProcessTransport */,
-				1104AB112DF6F16900337328 /* GRPCProtobuf */,
 				1104AB142DF6F19D00337328 /* Clibsodium */,
 				1104AB162DF6F19D00337328 /* Sodium */,
 				1104AB192DF6F1BC00337328 /* Atomics */,
-				1104ABE32DF6F5A900337328 /* Collections */,
-				1104ABE52DF6F5BF00337328 /* BitCollections */,
-				1104ABE72DF6F5CA00337328 /* HashTreeCollections */,
-				1104ABE92DF6F5DD00337328 /* OrderedCollections */,
+				1183FAB12DF9863C00FF69F1 /* CGRPCZlib */,
+				1183FAB32DF9863C00FF69F1 /* GRPC */,
+				1183FAB52DF9863C00FF69F1 /* GRPCReflectionService */,
+				1183FAB72DF9863C00FF69F1 /* protoc-gen-grpc-swift */,
+				11B82C592DF990FD002393C3 /* BitCollections */,
+				11B82C5B2DF990FD002393C3 /* Collections */,
+				11B82C5D2DF990FD002393C3 /* DequeModule */,
+				11B82C5F2DF990FD002393C3 /* HashTreeCollections */,
+				11B82C612DF990FD002393C3 /* HeapModule */,
+				11B82C632DF990FD002393C3 /* OrderedCollections */,
+				11B82C652DF990FD002393C3 /* _RopeModule */,
 			);
 			productName = "Ecliptix-iOS";
 			productReference = 1104AAFB2DF6F13A00337328 /* Ecliptix-iOS.app */;
 			productType = "com.apple.product-type.application";
+		};
+		11AB141B2DFAD497002FCCDC /* Ecliptix-iOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 11AB14222DFAD497002FCCDC /* Build configuration list for PBXNativeTarget "Ecliptix-iOSTests" */;
+			buildPhases = (
+				11AB14182DFAD497002FCCDC /* Sources */,
+				11AB14192DFAD497002FCCDC /* Frameworks */,
+				11AB141A2DFAD497002FCCDC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				11AB14212DFAD497002FCCDC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				11AB141D2DFAD497002FCCDC /* Ecliptix-iOSTests */,
+			);
+			name = "Ecliptix-iOSTests";
+			packageProductDependencies = (
+			);
+			productName = "Ecliptix-iOSTests";
+			productReference = 11AB141C2DFAD497002FCCDC /* Ecliptix-iOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -127,6 +184,10 @@
 					1104AAFA2DF6F13A00337328 = {
 						CreatedOnToolsVersion = 16.3;
 					};
+					11AB141B2DFAD497002FCCDC = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 1104AAFA2DF6F13A00337328;
+					};
 				};
 			};
 			buildConfigurationList = 1104AAF62DF6F13A00337328 /* Build configuration list for PBXProject "Ecliptix-iOS" */;
@@ -139,12 +200,10 @@
 			mainGroup = 1104AAF22DF6F13A00337328;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				1104AB092DF6F15200337328 /* XCRemoteSwiftPackageReference "grpc-swift" */,
-				1104AB102DF6F16900337328 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */,
 				1104AB132DF6F19D00337328 /* XCRemoteSwiftPackageReference "swift-sodium" */,
 				1104AB182DF6F1BC00337328 /* XCRemoteSwiftPackageReference "swift-atomics" */,
-				1104AB1B2DF6F1CF00337328 /* XCRemoteSwiftPackageReference "swift-nio" */,
-				1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */,
+				11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1104AAFC2DF6F13A00337328 /* Products */;
@@ -152,12 +211,20 @@
 			projectRoot = "";
 			targets = (
 				1104AAFA2DF6F13A00337328 /* Ecliptix-iOS */,
+				11AB141B2DFAD497002FCCDC /* Ecliptix-iOSTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		1104AAF92DF6F13A00337328 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		11AB141A2DFAD497002FCCDC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -174,7 +241,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		11AB14182DFAD497002FCCDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		11AB14212DFAD497002FCCDC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1104AAFA2DF6F13A00337328 /* Ecliptix-iOS */;
+			targetProxy = 11AB14202DFAD497002FCCDC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1104AB042DF6F13B00337328 /* Debug */ = {
@@ -354,6 +436,42 @@
 			};
 			name = Release;
 		};
+		11AB14232DFAD497002FCCDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 72C73YMCA9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ivan.Ecliptix-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ecliptix-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ecliptix-iOS";
+			};
+			name = Debug;
+		};
+		11AB14242DFAD497002FCCDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 72C73YMCA9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ivan.Ecliptix-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ecliptix-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ecliptix-iOS";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -375,25 +493,18 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		11AB14222DFAD497002FCCDC /* Build configuration list for PBXNativeTarget "Ecliptix-iOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11AB14232DFAD497002FCCDC /* Debug */,
+				11AB14242DFAD497002FCCDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		1104AB092DF6F15200337328 /* XCRemoteSwiftPackageReference "grpc-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/grpc/grpc-swift.git";
-			requirement = {
-				kind = exactVersion;
-				version = 2.2.1;
-			};
-		};
-		1104AB102DF6F16900337328 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/grpc/grpc-swift-protobuf.git";
-			requirement = {
-				kind = exactVersion;
-				version = 1.3.0;
-			};
-		};
 		1104AB132DF6F19D00337328 /* XCRemoteSwiftPackageReference "swift-sodium" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jedisct1/swift-sodium.git";
@@ -410,15 +521,15 @@
 				version = 1.2.0;
 			};
 		};
-		1104AB1B2DF6F1CF00337328 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+		1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-nio.git";
+			repositoryURL = "https://github.com/grpc/grpc-swift.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.83.0;
+				kind = exactVersion;
+				version = 1.26.1;
 			};
 		};
-		1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+		11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
 			requirement = {
@@ -429,26 +540,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1104AB0A2DF6F15200337328 /* GRPCCodeGen */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1104AB092DF6F15200337328 /* XCRemoteSwiftPackageReference "grpc-swift" */;
-			productName = GRPCCodeGen;
-		};
-		1104AB0C2DF6F15200337328 /* GRPCCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1104AB092DF6F15200337328 /* XCRemoteSwiftPackageReference "grpc-swift" */;
-			productName = GRPCCore;
-		};
-		1104AB0E2DF6F15200337328 /* GRPCInProcessTransport */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1104AB092DF6F15200337328 /* XCRemoteSwiftPackageReference "grpc-swift" */;
-			productName = GRPCInProcessTransport;
-		};
-		1104AB112DF6F16900337328 /* GRPCProtobuf */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1104AB102DF6F16900337328 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */;
-			productName = GRPCProtobuf;
-		};
 		1104AB142DF6F19D00337328 /* Clibsodium */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1104AB132DF6F19D00337328 /* XCRemoteSwiftPackageReference "swift-sodium" */;
@@ -464,25 +555,60 @@
 			package = 1104AB182DF6F1BC00337328 /* XCRemoteSwiftPackageReference "swift-atomics" */;
 			productName = Atomics;
 		};
-		1104ABE32DF6F5A900337328 /* Collections */ = {
+		1183FAB12DF9863C00FF69F1 /* CGRPCZlib */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = Collections;
+			package = 1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = CGRPCZlib;
 		};
-		1104ABE52DF6F5BF00337328 /* BitCollections */ = {
+		1183FAB32DF9863C00FF69F1 /* GRPC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			package = 1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = GRPC;
+		};
+		1183FAB52DF9863C00FF69F1 /* GRPCReflectionService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = GRPCReflectionService;
+		};
+		1183FAB72DF9863C00FF69F1 /* protoc-gen-grpc-swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = "protoc-gen-grpc-swift";
+		};
+		11B82C592DF990FD002393C3 /* BitCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = BitCollections;
 		};
-		1104ABE72DF6F5CA00337328 /* HashTreeCollections */ = {
+		11B82C5B2DF990FD002393C3 /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+		11B82C5D2DF990FD002393C3 /* DequeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = DequeModule;
+		};
+		11B82C5F2DF990FD002393C3 /* HashTreeCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = HashTreeCollections;
 		};
-		1104ABE92DF6F5DD00337328 /* OrderedCollections */ = {
+		11B82C612DF990FD002393C3 /* HeapModule */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1104ABE12DF6F3DD00337328 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = HeapModule;
+		};
+		11B82C632DF990FD002393C3 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		11B82C652DF990FD002393C3 /* _RopeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = _RopeModule;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

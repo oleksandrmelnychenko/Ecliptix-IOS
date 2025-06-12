@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 06.06.2025.
 //
 
-public final class EcliptixConnectionContext {
+internal final class EcliptixConnectionContext {
     public let pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType
     public let ecliptixProtocolSystem: EcliptixProtocolSystem
     

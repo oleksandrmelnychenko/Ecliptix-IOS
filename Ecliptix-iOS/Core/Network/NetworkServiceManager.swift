@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 06.06.2025.
 //
 
-public class NetworkServiceManager {
+internal class NetworkServiceManager {
     private let singleCallExecutor: SingleCallExecutor
     private let receiveStreamExecutor: ReceiveStreamExecutor
     private let keyExchangeExecutor: KeyExchangeExecutor
@@ -37,16 +37,22 @@ public class NetworkServiceManager {
     public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async -> Result<RpcFlow, EcliptixProtocolFailure> {
         
         let action = request.rcpServiceMethod
-        
-        var result: Result<RpcFlow, EcliptixProtocolFailure> = .failure(.generic("Unhandled action type"))
-        
+                
         if request.actionType == .single {
-            result = await singleCallExecutor.invokeRequestAsync(request: request, token: token)
+            let result: Result<RpcFlow, EcliptixProtocolFailure> = await singleCallExecutor.invokeRequestAsync(request: request, cancellation: token)
+            
+            print("Action \(action) executed successfullt for req_id: \(request.reqId)")
+            return result
         } else if request.actionType == .receiveStream {
-            result = receiveStreamExecutor.processRequestAsync(request: request, token: token)
+            let result: Result<RpcFlow, EcliptixProtocolFailure> = receiveStreamExecutor.processRequestAsync(request: request)
+            
+            print("Action \(action) executed successfullt for req_id: \(request.reqId)")
+            return result
+        } else {
+            let result: Result<RpcFlow, EcliptixProtocolFailure> = .failure(.generic("Unhandled action type"))
+            
+            print("Action \(action) executed successfullt for req_id: \(request.reqId)")
+            return result
         }
-        
-        print("Action \(action) executed successfullt for req_id: \(request.reqId)")
-        return result
     }
 }

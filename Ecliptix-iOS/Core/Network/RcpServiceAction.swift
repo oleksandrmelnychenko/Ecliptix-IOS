@@ -9,8 +9,9 @@ public enum RcpServiceAction {
     case dataCenterPubKeyExchange
     case registerAppDevice
     case validatePhoneNumber
-    case varifyOtp
+    case verifyOtp
     case initiateVerification
+    case initialResendVerification
     case signIn
     case updateMembershipWithSecureKey
 }

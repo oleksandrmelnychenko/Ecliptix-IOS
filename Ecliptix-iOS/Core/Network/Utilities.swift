@@ -9,11 +9,11 @@ import Foundation
 import SwiftProtobuf
 import CryptoKit
 
-public class Utilities {
+internal class Utilities {
     private let invalidPayloadDataLengthMessage = "Invalid payload data length."
     private static let fullUInt32Range = UInt32.min...UInt32.max
     
-    public func guidToByteArray(_ uuid: UUID) -> Data {
+    public static func guidToByteArray(_ uuid: UUID) -> Data {
         let byteArray = withUnsafeBytes(of: uuid.uuid) { Data($0) }
         var bytes = byteArray
         bytes.replaceSubrange(0..<4, with: bytes[0..<4].reversed())
@@ -22,14 +22,14 @@ public class Utilities {
         return bytes
     }
     
-    public func readMemoryToRetrieveBytes(_ data: Data) throws -> Data {
+    public static func readMemoryToRetrieveBytes(_ data: Data) throws -> Data {
         guard !data.isEmpty else {
             throw HelpersError.invalidPayloadDataLength
         }
         return data
     }
     
-    public func fromByteStringToGuid(_ byteString: Data) throws -> UUID {
+    public static func fromByteStringToGuid(_ byteString: Data) throws -> UUID {
         var bytes = Data(byteString)
 
         guard bytes.count == 16 else {
@@ -70,7 +70,7 @@ public class Utilities {
         }
     }
     
-    public static func computeUniqueConnectId(appInstanceId: UUID, appDeviceId: UUID, contextType: Ecliptix_Proto_PubKeyExchangeType, operationContextId: UUID?) -> UInt32 {
+    public static func computeUniqueConnectId(appInstanceId: UUID, appDeviceId: UUID, contextType: Ecliptix_Proto_PubKeyExchangeType, operationContextId: UUID? = nil) -> UInt32 {
         var combined = Data()
         withUnsafeBytes(of: appInstanceId.uuid) { combined.append(contentsOf: $0) }
         withUnsafeBytes(of: appDeviceId.uuid) { combined.append(contentsOf: $0) }

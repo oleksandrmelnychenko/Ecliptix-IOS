@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 06.06.2025.
 //
 
-public class ServiceAction: RetryableAction {
+internal class ServiceAction: RetryableAction {
     
     private let serviceRequest: ServiceRequest
     
