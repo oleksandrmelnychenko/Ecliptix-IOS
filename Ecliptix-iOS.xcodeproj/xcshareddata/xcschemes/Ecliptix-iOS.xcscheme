@@ -35,7 +35,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "11AB13592DFACFF2002FCCDC"
+               BlueprintIdentifier = "11AB141B2DFAD497002FCCDC"
                BuildableName = "Ecliptix-iOSTests.xctest"
                BlueprintName = "Ecliptix-iOSTests"
                ReferencedContainer = "container:Ecliptix-iOS.xcodeproj">
