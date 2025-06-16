@@ -31,7 +31,6 @@ internal class NetworkServiceManager {
         } catch {
             
         }
-
     }
     
     public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async -> Result<RpcFlow, EcliptixProtocolFailure> {

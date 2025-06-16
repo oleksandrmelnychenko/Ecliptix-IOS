@@ -24,7 +24,7 @@ final class NetworkController {
             let context = EcliptixConnectionContext(pubKeyExchangeType: pubKeyExchangeType, ecliptixProtocolSystem: protocolSystem)
             connections[connectId] = context
         } catch {
-            
+            debugPrint("Failed during creating Ecliptix system: \(error.localizedDescription)")
         }
     }
     
@@ -81,11 +81,11 @@ final class NetworkController {
                                 
                                 let streamCallbackOutcome = await onSuccessCallback(streamDecryptedData)
                                 if streamCallbackOutcome.isErr {
-                                    print("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
+                                    debugPrint("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
                                 }
                             }
                         }, onCancel: {
-                            print("Stream cancelled for connectId: \(connectId)")
+                            debugPrint("Stream cancelled for connectId: \(connectId)")
                         })
                     } catch {
                         return .failure(.generic("Failed during inbound stream processing", inner: error))
