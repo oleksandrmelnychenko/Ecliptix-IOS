@@ -68,5 +68,22 @@ enum Strings {
         enum Buttons {
             static let next = "Next"
         }
+        
+        enum Errors {
+            static let invalidPassword = "Password is invalid"
+        }
+    }
+    
+    enum PassPhaseRegister {
+        static let title = "Create a Pass phase"
+        static let description = "Make sure it’s something you’ll remember."
+        
+        enum Buttons {
+            static let submit = "Submit"
+        }
+        
+        enum Errors {
+            static let invalidPassPhase = "Pass phase is invalid"
+        }
     }
 }

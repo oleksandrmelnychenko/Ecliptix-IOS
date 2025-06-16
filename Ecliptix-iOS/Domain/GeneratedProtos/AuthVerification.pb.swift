@@ -182,9 +182,68 @@ public struct Ecliptix_Proto_Membership_VerificationCountdownUpdate: @unchecked 
 
   public var alreadyVerified: Bool = false
 
+  public var status: Ecliptix_Proto_Membership_VerificationCountdownUpdate.CountdownUpdateStatus = .active
+
+  public var message: String {
+    get {return _message ?? String()}
+    set {_message = newValue}
+  }
+  /// Returns true if `message` has been explicitly set.
+  public var hasMessage: Bool {return self._message != nil}
+  /// Clears the value of `message`. Subsequent reads from it will return its default value.
+  public mutating func clearMessage() {self._message = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+  public enum CountdownUpdateStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+    case active // = 0
+    case expired // = 1
+    case notFound // = 2
+    case failed // = 3
+    case maxAttemptsReached // = 4
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .active
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .active
+      case 1: self = .expired
+      case 2: self = .notFound
+      case 3: self = .failed
+      case 4: self = .maxAttemptsReached
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .active: return 0
+      case .expired: return 1
+      case .notFound: return 2
+      case .failed: return 3
+      case .maxAttemptsReached: return 4
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [Ecliptix_Proto_Membership_VerificationCountdownUpdate.CountdownUpdateStatus] = [
+      .active,
+      .expired,
+      .notFound,
+      .failed,
+      .maxAttemptsReached,
+    ]
+
+  }
+
   public init() {}
+
+  fileprivate var _message: String? = nil
 }
 
 public struct Ecliptix_Proto_Membership_VerifyCodeRequest: @unchecked Sendable {
@@ -236,12 +295,14 @@ public struct Ecliptix_Proto_Membership_VerifyCodeResponse: Sendable {
   fileprivate var _membership: Ecliptix_Proto_Membership_Membership? = nil
 }
 
-public struct Ecliptix_Proto_Membership_ValidatePhoneNumberRequest: Sendable {
+public struct Ecliptix_Proto_Membership_ValidatePhoneNumberRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   public var phoneNumber: String = String()
+
+  public var appDeviceIdentifier: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -407,6 +468,8 @@ extension Ecliptix_Proto_Membership_VerificationCountdownUpdate: SwiftProtobuf.M
     1: .standard(proto: "seconds_remaining"),
     2: .standard(proto: "session_identifier"),
     3: .standard(proto: "already_verified"),
+    4: .same(proto: "status"),
+    5: .same(proto: "message"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -418,12 +481,18 @@ extension Ecliptix_Proto_Membership_VerificationCountdownUpdate: SwiftProtobuf.M
       case 1: try { try decoder.decodeSingularUInt64Field(value: &self.secondsRemaining) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.sessionIdentifier) }()
       case 3: try { try decoder.decodeSingularBoolField(value: &self.alreadyVerified) }()
+      case 4: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self._message) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.secondsRemaining != 0 {
       try visitor.visitSingularUInt64Field(value: self.secondsRemaining, fieldNumber: 1)
     }
@@ -433,6 +502,12 @@ extension Ecliptix_Proto_Membership_VerificationCountdownUpdate: SwiftProtobuf.M
     if self.alreadyVerified != false {
       try visitor.visitSingularBoolField(value: self.alreadyVerified, fieldNumber: 3)
     }
+    if self.status != .active {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 4)
+    }
+    try { if let v = self._message {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -440,9 +515,21 @@ extension Ecliptix_Proto_Membership_VerificationCountdownUpdate: SwiftProtobuf.M
     if lhs.secondsRemaining != rhs.secondsRemaining {return false}
     if lhs.sessionIdentifier != rhs.sessionIdentifier {return false}
     if lhs.alreadyVerified != rhs.alreadyVerified {return false}
+    if lhs.status != rhs.status {return false}
+    if lhs._message != rhs._message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+extension Ecliptix_Proto_Membership_VerificationCountdownUpdate.CountdownUpdateStatus: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "ACTIVE"),
+    1: .same(proto: "EXPIRED"),
+    2: .same(proto: "NOT_FOUND"),
+    3: .same(proto: "FAILED"),
+    4: .same(proto: "MAX_ATTEMPTS_REACHED"),
+  ]
 }
 
 extension Ecliptix_Proto_Membership_VerifyCodeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -541,6 +628,7 @@ extension Ecliptix_Proto_Membership_ValidatePhoneNumberRequest: SwiftProtobuf.Me
   public static let protoMessageName: String = _protobuf_package + ".ValidatePhoneNumberRequest"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "phone_number"),
+    2: .standard(proto: "app_device_identifier"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -550,6 +638,7 @@ extension Ecliptix_Proto_Membership_ValidatePhoneNumberRequest: SwiftProtobuf.Me
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.phoneNumber) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.appDeviceIdentifier) }()
       default: break
       }
     }
@@ -559,11 +648,15 @@ extension Ecliptix_Proto_Membership_ValidatePhoneNumberRequest: SwiftProtobuf.Me
     if !self.phoneNumber.isEmpty {
       try visitor.visitSingularStringField(value: self.phoneNumber, fieldNumber: 1)
     }
+    if !self.appDeviceIdentifier.isEmpty {
+      try visitor.visitSingularBytesField(value: self.appDeviceIdentifier, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Ecliptix_Proto_Membership_ValidatePhoneNumberRequest, rhs: Ecliptix_Proto_Membership_ValidatePhoneNumberRequest) -> Bool {
     if lhs.phoneNumber != rhs.phoneNumber {return false}
+    if lhs.appDeviceIdentifier != rhs.appDeviceIdentifier {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

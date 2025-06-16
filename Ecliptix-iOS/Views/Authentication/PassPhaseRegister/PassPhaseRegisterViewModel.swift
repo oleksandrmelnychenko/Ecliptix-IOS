@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-final class PassPhaseViewModel: ObservableObject {
+final class PassPhaseRegisterViewModel: ObservableObject {
     @Published private(set) var pin: [String] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -38,15 +38,23 @@ final class PassPhaseViewModel: ObservableObject {
         
     }
     
-    func submit() {
+    func submitPassPhase() {
         guard isReady else { return }
         
+        errorMessage = nil
         isLoading = true
+        
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 self.isLoading = false
-                self.navigation.navigate(to: .test)
+                
+                if passPhrase == "1234" {
+                    self.navigation.navigate(to: .test)
+                }
+                else {
+                    self.errorMessage = Strings.PassPhaseRegister.Errors.invalidPassPhase
+                }
             }
         }
     }

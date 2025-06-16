@@ -16,12 +16,12 @@ struct PhoneNumberView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
                 viewTitle: Strings.PhoneNumber.title,
                 viewDescription: Strings.PhoneNumber.description
             )
-
+            
             if let selectedCountry = viewModel.selectedCountry {
                 VStack(spacing: 16) {
                     CountryPickerButton(
@@ -32,7 +32,7 @@ struct PhoneNumberView: View {
                         isShowingCountryPicker: $isShowingCountryPicker,
                         countries: viewModel.countries
                     )
-
+                    
                     PhoneInputField(
                         phoneCode: selectedCountry.phoneCode,
                         phoneNumber: $viewModel.phoneNumber,
@@ -43,36 +43,19 @@ struct PhoneNumberView: View {
             } else {
                 ProgressView("Loading countries...")
             }
-
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.footnote)
-                    .padding(.horizontal)
-            }
-
-            Button(action: {
-                viewModel.submitPhone()
-            }) {
-                if viewModel.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                } else {
-                    Text(Strings.PhoneNumber.Buttons.sendCode)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-            }
-            .background(viewModel.phoneNumber.isEmpty || viewModel.isLoading ? Color.gray : Color.black)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .disabled(viewModel.phoneNumber.isEmpty || viewModel.isLoading)
-
+            
+            
+            FormErrorText(error: viewModel.errorMessage)
+            
+            PrimaryActionButton(
+                title: Strings.PhoneNumber.Buttons.sendCode,
+                isLoading: viewModel.isLoading,
+                isEnabled: !viewModel.phoneNumber.isEmpty && !viewModel.isLoading,
+                action: viewModel.submitPhone
+            )
+            
             Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.top, 100)
+        })
     }
 }
 

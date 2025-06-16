@@ -15,7 +15,7 @@ struct PasswordSetupView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
                 viewTitle: Strings.PasswordSetup.title,
                 viewDescription: Strings.PasswordSetup.description
@@ -29,36 +29,27 @@ struct PasswordSetupView: View {
                     placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
                     validationErrors: viewModel.validationErrors
                 )
-                .padding(.bottom, 16)
                                     
                 // Confirm password field
                 PasswordFieldView(
                     title: Strings.PasswordSetup.confirmPasswordFieldLabel,
                     text: $viewModel.confirmPassword,
-                    placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder
+                    placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                    validationErrors: viewModel.confirmPasswordValidationError
                 )
             }
             
-            Button(action: {
-                viewModel.proceed()
-            }) {
-                Text(Strings.PasswordSetup.Buttons.next)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(viewModel.isFormValid ? Color.blue : Color.gray)
-                    .cornerRadius(10)
-            }
-            .alert("Passwords do not match", isPresented: $viewModel.showMismatchAlert) {
-                Button("OK", role: .cancel) {}
-            }
-            .padding(.top, 24)
+            FormErrorText(error: viewModel.errorMessage)
+            
+            PrimaryActionButton(
+                title: Strings.PasswordSetup.Buttons.next,
+                isLoading: viewModel.isLoading,
+                isEnabled: viewModel.isFormValid && !viewModel.isLoading,
+                action: viewModel.submitPassword
+            )
             
             Spacer()
-            
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 100)
+        })
     }
 }
 

@@ -22,12 +22,11 @@ struct VerificationCodeView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
                 viewTitle: Strings.VerificationCode.title,
                 viewDescription: Strings.VerificationCode.description
             )
-            .padding(.bottom, 24)
 
             VStack(spacing: 8) {
                 Text(Strings.VerificationCode.explanationText)
@@ -70,30 +69,22 @@ struct VerificationCodeView: View {
                 }
                 Spacer()
             }
-            .padding(.bottom, 24)
+            
+            FormErrorText(error: viewModel.errorMessage)
 
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.footnote)
-                    .padding(.horizontal)
-            }
-
-            Button(action: {
-                viewModel.verifyCode {
-                    focusedField = 0
+            PrimaryActionButton(
+                title: Strings.VerificationCode.Buttons.verifyCode,
+                isLoading: viewModel.isLoading,
+                isEnabled: !viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign),
+                action: {
+                    viewModel.verifyCode {
+                        focusedField = 0
+                    }
                 }
-            }) {
-                Text(Strings.VerificationCode.Buttons.verifyCode)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign) ? Color.gray : Color.black)
-                    .cornerRadius(10)
-            }
-            .disabled(viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign))
-            .padding(.bottom, 16)
+            )
 
+            Spacer()
+            
             HStack {
                 Spacer()
                 Button(Strings.VerificationCode.Buttons.resendCode) {
@@ -104,11 +95,7 @@ struct VerificationCodeView: View {
                 .underline()
                 Spacer()
             }
-
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 100)
+        })
     }
 }
 

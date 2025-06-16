@@ -7,20 +7,20 @@
 
 import SwiftUI
 
-struct PassPhaseView: View {
-    @StateObject private var viewModel: PassPhaseViewModel
+struct PassPhaseRegisterView: View {
+    @StateObject private var viewModel: PassPhaseRegisterViewModel
 
     init(navigation: NavigationService) {
-        _viewModel = StateObject(wrappedValue: PassPhaseViewModel(navigation: navigation))
+        _viewModel = StateObject(wrappedValue: PassPhaseRegisterViewModel(navigation: navigation))
     }
 
     private let columns = Array(repeating: GridItem(.flexible()), count: 3)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 32) {
+        AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
-                viewTitle: Strings.PassPhase.title,
-                viewDescription: Strings.PassPhase.description
+                viewTitle: Strings.PassPhaseRegister.title,
+                viewDescription: Strings.PassPhaseRegister.description
             )
 
             // MARK: – PIN dots
@@ -35,13 +35,8 @@ struct PassPhaseView: View {
                 Spacer()
             }
             
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.footnote)
-                    .padding(.horizontal)
-            }
-
+            FormErrorText(error: viewModel.errorMessage)
+            
             // MARK: – Number pad
             LazyVGrid(columns: columns, spacing: 20) {
                 ForEach(1...9, id: \.self) { number in
@@ -57,28 +52,7 @@ struct PassPhaseView: View {
             }
             .padding(.horizontal, 40)
             .padding(.top, 150)
-            
-            // MARK: – Submit
-//            Button {
-//                viewModel.submit()
-//            } label: {
-//                if viewModel.isLoading {
-//                    ProgressView()
-//                        .frame(maxWidth: .infinity).padding()
-//                } else {
-//                    Text(Strings.PassPhase.Buttons.submit)
-//                        .frame(maxWidth: .infinity).padding()
-//                }
-//            }
-//            .background(viewModel.isReady && !viewModel.isLoading ? Color.black : Color.gray)
-//            .foregroundColor(.white)
-//            .cornerRadius(10)
-//            .disabled(!viewModel.isReady || viewModel.isLoading)
-
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 100)
+        })
     }
 }
 
@@ -87,6 +61,6 @@ struct PassPhaseView: View {
 
 #Preview {
     let navService = NavigationService()
-    return PassPhaseView(navigation: navService)
+    return PassPhaseRegisterView(navigation: navService)
         .environmentObject(navService)
 }

@@ -12,8 +12,8 @@ final class VerificationCodeViewModel: ObservableObject {
     public static let emptySign = "\u{200B}"
     
     @Published var codeDigits: [String] = Array(repeating: emptySign, count: 6)
-    @Published var navigate: Bool = false
     @Published var errorMessage: String?
+    @Published var isLoading = false
 
     private let phoneNumber: String
     private let navigation: NavigationService
@@ -27,14 +27,29 @@ final class VerificationCodeViewModel: ObservableObject {
         codeDigits.joined()
     }
 
-    func verifyCode(onFailure: () -> Void) {
-        if combinedCode == "123456" {
-            navigate = true
-            navigation.navigate(to: .passwordSetup)
-        } else {
-            errorMessage = Strings.VerificationCode.Errors.invalidCode
-            resetCode()
-            onFailure()
+    func verifyCode(onFailure: @escaping () -> Void) {
+        let code = combinedCode.replacingOccurrences(of: Self.emptySign, with: "")
+        
+        guard code.count == 6 else { return }
+        
+        errorMessage = nil
+        isLoading = true
+        
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            
+            await MainActor.run {
+                guard let self else { return }
+                self.isLoading = false
+                
+                if code == "123456" {
+                    self.navigation.navigate(to: .passwordSetup)
+                } else {
+                    self.errorMessage = Strings.VerificationCode.Errors.invalidCode
+                    self.resetCode()
+                    onFailure()
+                }
+            }
         }
     }
 

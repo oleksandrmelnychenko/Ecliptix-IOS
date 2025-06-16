@@ -16,7 +16,7 @@ struct WelcomeView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        AuthScreenContainer(spacing: 0, content:  {
             Image(systemName: "globe")
                 .resizable()
                 .scaledToFit()
@@ -60,9 +60,7 @@ struct WelcomeView: View {
                     viewModel.continueToSignIn()
                 }
             }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 100)
+        })
     }
 }
 

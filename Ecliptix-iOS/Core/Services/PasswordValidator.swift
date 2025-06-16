@@ -39,12 +39,22 @@ struct PasswordValidator {
         }
         return errors
     }
+    
+    static func validateMismatch(_ first: String, _ second: String) -> [PasswordValidationError] {
+        var errors: [PasswordValidationError] = []
+        if first != second {
+            errors.append(.mismatchPasswords)
+        }
+        return errors
+    }
 }
 
 enum PasswordValidationError: String, CaseIterable, Identifiable {
     case tooShort = "At least 8 characters"
     case missingUppercase = "At least 1 uppercase letter"
     case missingDigit = "At least 1 number"
+    
+    case mismatchPasswords = "Passwords do not match"
 
     var id: String { rawValue }
 }

@@ -12,7 +12,8 @@ import SwiftUI
 final class PasswordSetupViewModel: ObservableObject {
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
-    @Published var showMismatchAlert = false
+    @Published var isLoading = false
+    @Published var errorMessage: String?
     private let navigation: NavigationService
     
     init(navigation: NavigationService) {
@@ -26,16 +27,33 @@ final class PasswordSetupViewModel: ObservableObject {
     var validationErrors: [PasswordValidationError] {
         PasswordValidator.validationErrors(for: password)
     }
-
-    var isFormValid: Bool {
-        isPasswordValid && password == confirmPassword && !password.isEmpty
+    
+    var confirmPasswordValidationError: [PasswordValidationError] {
+        PasswordValidator.validateMismatch(password, confirmPassword)
     }
 
-    func proceed() {
-        if password == confirmPassword {
-            navigation.navigate(to: .passPhaseRegistration)
-        } else {
-            showMismatchAlert = true
+    var isFormValid: Bool {
+        isPasswordValid && confirmPasswordValidationError.isEmpty
+    }
+
+    func submitPassword() {
+        guard !password.isEmpty else { return }
+        guard !confirmPassword.isEmpty else { return }
+        
+        errorMessage = nil
+        isLoading = true
+        
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            await MainActor.run {
+                self.isLoading = false
+                
+                if password == "Admin123" {
+                    navigation.navigate(to: .passPhaseRegistration)
+                } else {
+                    self.errorMessage = Strings.PasswordSetup.Errors.invalidPassword
+                }
+            }
         }
     }
 }

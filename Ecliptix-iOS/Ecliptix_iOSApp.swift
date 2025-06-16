@@ -32,11 +32,11 @@ struct Ecliptix_iOSApp: App {
                         ViewFactory.view(for: route, with: navigationService)
                     }
             }
-//                .task {
-//                    guard !didInitialize else { return }
-//                    didInitialize = true
-//                    await initializeApplicationAsync()
-//                }
+            .task {
+                guard !didInitialize else { return }
+                didInitialize = true
+                await initializeApplicationAsync()
+            }
         }
     }
     
