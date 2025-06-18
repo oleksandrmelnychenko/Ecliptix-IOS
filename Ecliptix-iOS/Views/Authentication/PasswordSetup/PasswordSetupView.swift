@@ -26,28 +26,31 @@ struct PasswordSetupView: View {
                     title: Strings.PasswordSetup.passwordFieldLabel,
                     text: $viewModel.password,
                     hintText: "8 Chars, 1 upper and 1 number",
-                    validationErrors: viewModel.validationErrors,
+                    validationErrors: viewModel.passwordValidationErrors,
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
                             text: $viewModel.password,
                         )
                     }
-                )
+                ).onChange(of: viewModel.password) { _, newPassword in
+                    viewModel.updatePassword(passwordText: newPassword)
+                }
                                     
-                // Confirm password field
                 FieldInput<PasswordValidationError, PasswordInputField>(
                     title: Strings.PasswordSetup.confirmPasswordFieldLabel,
                     text: $viewModel.confirmPassword,
                     hintText: "8 Chars, 1 upper and 1 number",
-                    validationErrors: viewModel.confirmPasswordValidationError,
+                    validationErrors: viewModel.confirmPasswordValidationErrors,
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
                             text: $viewModel.confirmPassword,
                         )
                     }
-                )
+                ).onChange(of: viewModel.confirmPassword) { _, newConfirmPassword in
+                    viewModel.updateConfirmPassword(passwordText: newConfirmPassword)
+                }
             }
             
             FormErrorText(error: viewModel.errorMessage)

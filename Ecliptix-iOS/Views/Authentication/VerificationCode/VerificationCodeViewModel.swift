@@ -87,7 +87,6 @@ final class VerificationCodeViewModel: ObservableObject {
             return
         }
 
-        // Перевірка, чи телефон не є GUID
         guard UUID(uuidString: phoneNumber) == nil else {
             errorMessage = "Phone number must not be a GUID"
             return

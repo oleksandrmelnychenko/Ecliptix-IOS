@@ -66,8 +66,8 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
             .cornerRadius(10)
 
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(validationErrors) { error in
-                    ValidationMessageView(text: error.rawValue)
+                if let firstError = validationErrors.first {
+                    ValidationMessageView(text: firstError.rawValue)
                 }
             }
             .animation(.easeInOut, value: text)

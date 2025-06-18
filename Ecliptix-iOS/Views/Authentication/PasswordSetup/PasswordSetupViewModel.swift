@@ -14,149 +14,95 @@ final class PasswordSetupViewModel: ObservableObject {
     @Published var confirmPassword: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+
     private let navigation: NavigationService
     private let passwordValidator = PasswordValidator()
-    
+
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     private var secureConfirmPasswordHandle: SodiumSecureMemoryHandle?
-    private var passwordManager: PasswordManager?
-    
+
     init(navigation: NavigationService) {
         self.navigation = navigation
     }
 
-    var isPasswordValid: Bool {
-        passwordValidator.validate(password).isEmpty
-    }
-
-    var validationErrors: [PasswordValidationError] {
+    var passwordValidationErrors: [PasswordValidationError] {
         passwordValidator.validate(password)
     }
-
-    var confirmPasswordValidationError: [PasswordValidationError] {
-        passwordValidator.validateMatch(password, confirmPassword)
-    }
+    
+    var confirmPasswordValidationErrors: [PasswordValidationError] = []
 
     var isFormValid: Bool {
-        isPasswordValid && confirmPasswordValidationError.isEmpty
+        passwordValidationErrors.isEmpty &&
+        confirmPasswordValidationErrors.isEmpty &&
+        !password.isEmpty &&
+        !confirmPassword.isEmpty &&
+        securePasswordHandle == nil && securePasswordHandle!.isInvalid &&
+        secureConfirmPasswordHandle == nil && secureConfirmPasswordHandle!.isInvalid
     }
 
     func submitPassword() {
-        guard !password.isEmpty else { return }
-        guard !confirmPassword.isEmpty else { return }
-        
-        errorMessage = nil
+        guard isFormValid else { return }
+
         isLoading = true
-        
+        errorMessage = nil
+
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 self.isLoading = false
-                
-                if password == "Admin123" {
-                    navigation.navigate(to: .passPhaseRegistration)
-                } else {
-                    self.errorMessage = Strings.PasswordSetup.Errors.invalidPassword
-                }
+
+                self.navigation.navigate(to: .passPhaseRegistration)
             }
         }
     }
-    
-    public func updatePassword(passwordText: String?) {
+
+    func updatePassword(passwordText: String?) {
         securePasswordHandle?.dispose()
         securePasswordHandle = nil
-        
+
         do {
-            if let passwordText = passwordText, !passwordText.isEmpty {
-                let result = Self.convertStringToSodiumHandle(text: passwordText)
-                
+            if passwordText != nil && !passwordText!.isEmpty {
+                let result = Self.convertStringToSodiumHandle(text: passwordText!)
                 if result.isOk {
-                    self.securePasswordHandle = try result.unwrap()
+                    securePasswordHandle = try result.unwrap()
                 } else {
-                    self.securePasswordHandle = nil
-                    self.errorMessage = "Error processing password: \(try result.unwrapErr().message)"
+                    securePasswordHandle = nil
+                    errorMessage = "Error processing password: \(try result.unwrapErr())"
                 }
-            }
-            
-            validatePasswords()
-        } catch {
-            
-        }
-    }
-    
-    public func updateConfirmPassword(passwordText: String?) {
-        secureConfirmPasswordHandle?.dispose()
-        secureConfirmPasswordHandle = nil
-        
-        do {
-            if let passwordText = passwordText, !passwordText.isEmpty {
-                let result = Self.convertStringToSodiumHandle(text: passwordText)
-                
-                if result.isOk {
-                    self.secureConfirmPasswordHandle = try result.unwrap()
-                } else {
-                    self.secureConfirmPasswordHandle = nil
-                    self.errorMessage = "Error processing password: \(try result.unwrapErr().message)"
-                }
-            }
-            
-            validatePasswords()
-        } catch {
-            
-        }
-    }
-    
-    private static func convertStringToSodiumHandle(text: String) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
-        guard text.isEmpty == false else {
-            return SodiumSecureMemoryHandle.allocate(length: 0).mapSodiumFailure()
-        }
-        
-        var rentedBuffer: Data?
-        var newHandle: SodiumSecureMemoryHandle?
-        
-        defer {
-            if rentedBuffer != nil {
-                rentedBuffer!.resetBytes(in: 0..<rentedBuffer!.count)
-                rentedBuffer!.removeAll()
-            }
-        }
-        
-        do {
-            guard let utf8Data = text.data(using: .utf8) else {
-                return .failure(.decode("Failed to encode password string to UTF-8 bytes."))
-            }
-            
-            rentedBuffer = utf8Data
-            
-            let allocateResult = SodiumSecureMemoryHandle.allocate(length: utf8Data.count)
-            guard allocateResult.isOk else {
-                return allocateResult.mapSodiumFailure()
             }
 
-            newHandle = try allocateResult.unwrap()
-            
-            let writeResult = rentedBuffer!.withUnsafeBytes { bufferPointer in
-                newHandle!.write(data: bufferPointer).mapSodiumFailure()
-            }
-            guard writeResult.isOk else {
-                newHandle?.dispose()
-                return .failure(try writeResult.unwrapErr())
-            }
-            
-            return .success(newHandle!)
+            validatePasswords()
         } catch {
-            newHandle?.dispose()
-            return .failure(.generic("Failed to convert string to secure handle.", inner: error))
+            
         }
-        
     }
-    
+
+    func updateConfirmPassword(passwordText: String?) {
+        secureConfirmPasswordHandle?.dispose()
+        secureConfirmPasswordHandle = nil
+
+        do {
+            if passwordText != nil && !passwordText!.isEmpty {
+                let result = Self.convertStringToSodiumHandle(text: passwordText!)
+                if result.isOk {
+                    secureConfirmPasswordHandle = try result.unwrap()
+                } else {
+                    secureConfirmPasswordHandle = nil
+                    errorMessage = "Error processing confirmation password: \(try result.unwrapErr())"
+                }
+            }
+
+            validatePasswords()
+        } catch {
+            
+        }
+    }
+
     private func validatePasswords() {
         self.errorMessage = nil
         
-        var isPasswordEntered = self.securePasswordHandle != nil && !self.securePasswordHandle!.isInvalid && self.securePasswordHandle!.length > 0
-        var isConfirmPasswordEntered = self.secureConfirmPasswordHandle != nil && !self.secureConfirmPasswordHandle!.isInvalid && self.secureConfirmPasswordHandle!.length > 0
+        let isPasswordEntered = self.securePasswordHandle != nil && !self.securePasswordHandle!.isInvalid && self.securePasswordHandle!.length > 0
+        let isConfirmPasswordEntered = self.secureConfirmPasswordHandle != nil && !self.secureConfirmPasswordHandle!.isInvalid && self.secureConfirmPasswordHandle!.length > 0
         
         if !isPasswordEntered {
             if isConfirmPasswordEntered {
@@ -187,32 +133,23 @@ final class PasswordSetupViewModel: ObservableObject {
                 return
             }
             
-            guard let passwordString = String(data: passwordSpan, encoding: .utf8) else {
+            guard String(data: passwordSpan, encoding: .utf8) != nil else {
                 errorMessage = "Password contains invalid characters for string conversion."
                 return
             }
-            
-            if passwordManager == nil {
-                passwordManager = try PasswordManager.create().unwrap()
-            }
-            
-            let complianceResult = passwordManager!.checkPasswordCompliance(passwordString, policy: PasswordPolicy.standard)
-            
+                        
             passwordSpan.removeAll()
-            
             rentedPasswordData = nil
             
-            guard complianceResult.isOk else {
-                errorMessage = try complianceResult.unwrapErr().message
+            if !passwordValidationErrors.isEmpty {
                 return
             }
             
-            if !isConfirmPasswordEntered {
-                errorMessage = "Please confirm your password."
+            if confirmPassword.isEmpty {
                 return
             }
             
-            let comparisonResult = Self.compareSodiumHandle(self.securePasswordHandle!, self.secureConfirmPasswordHandle!)
+            let comparisonResult = Self.compareSodiumHandle(self.securePasswordHandle, self.secureConfirmPasswordHandle)
             
             guard comparisonResult.isOk else {
                 errorMessage = "Error comparing passwords: \(try comparisonResult.unwrapErr().message)"
@@ -220,85 +157,113 @@ final class PasswordSetupViewModel: ObservableObject {
             }
             
             if try !comparisonResult.unwrap() {
-                errorMessage = "Passwords do not match."
+                confirmPasswordValidationErrors = [.mismatchPasswords]
                 return
             }
             
+            confirmPasswordValidationErrors = []
             errorMessage = nil
             
         } catch {
             errorMessage = "An unexpected error occurred during validation: \(error)"
         }
     }
-    
-    private static func compareSodiumHandle(_ handle1: SodiumSecureMemoryHandle, _ handle2: SodiumSecureMemoryHandle) -> Result<Bool, EcliptixProtocolFailure> {
+
+    private static func convertStringToSodiumHandle(text: String) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
+        guard !text.isEmpty else {
+            return SodiumSecureMemoryHandle.allocate(length: 0).mapSodiumFailure()
+        }
+
+        guard let utf8Data = text.data(using: .utf8) else {
+            return .failure(.decode("Failed to encode password string to UTF-8 bytes."))
+        }
+
+        var rentedBuffer: Data? = utf8Data
+        defer {
+            rentedBuffer?.resetBytes(in: 0..<utf8Data.count)
+            rentedBuffer?.removeAll()
+        }
+
+        do {
+            let handle = try SodiumSecureMemoryHandle.allocate(length: utf8Data.count).unwrap()
+            let writeResult = rentedBuffer!.withUnsafeBytes { ptr in
+                handle.write(data: ptr).mapSodiumFailure()
+            }
+
+            guard writeResult.isOk else {
+                handle.dispose()
+                return .failure(try writeResult.unwrapErr())
+            }
+
+            return .success(handle)
+        } catch {
+            return .failure(.generic("Failed to convert string to secure handle.", inner: error))
+        }
+    }
+
+    private static func compareSodiumHandle(_ handle1: SodiumSecureMemoryHandle?, _ handle2: SodiumSecureMemoryHandle?) -> Result<Bool, EcliptixProtocolFailure> {
+        guard let handle1 = handle1 else {
+            return .failure(.generic("Handle1 is nil."))
+        }
+        guard let handle2 = handle2 else {
+            return .failure(.generic("Handle2 is nil."))
+        }
+        
         if handle1.isInvalid || handle2.isInvalid {
             return .failure(.objectDisposed("Password handles are invalid for comparison."))
         }
-        
-        if handle1.length != handle2.length {
+
+        guard handle1.length == handle2.length else {
             return .success(false)
         }
-        
-        if handle1.length == 0 {
-            return .success(true)
-        }
-        
-        var rentedBytes1: Data?
-        var rentedBytes2: Data?
-        
-        defer {
-            if rentedBytes1 != nil {
-                rentedBytes1!.resetBytes(in: 0..<rentedBytes1!.count)
-                rentedBytes1!.removeAll()
-            }
-            if rentedBytes2 != nil {
-                rentedBytes2!.resetBytes(in: 0..<rentedBytes2!.count)
-                rentedBytes2!.removeAll()
-            }
-        }
-        
+
         do {
-            rentedBytes1 = Data(count: handle1.length)
+            let rentedBytes1 = Data(count: handle1.length)
             var span1 = rentedBytes1
-            let read1Result = span1!.withUnsafeMutableBytes { destPtr in
+            let read1Result = span1.withUnsafeMutableBytes { destPtr in
                 handle1.read(into: destPtr).mapSodiumFailure()
             }
             if read1Result.isErr {
                 return .failure(try read1Result.unwrapErr())
             }
-            
-            rentedBytes2 = Data(count: handle2.length)
+
+            let rentedBytes2 = Data(count: handle2.length)
             var span2 = rentedBytes2
-            let read2Result = span2!.withUnsafeMutableBytes { destPtr in
+            let read2Result = span2.withUnsafeMutableBytes { destPtr in
                 handle2.read(into: destPtr).mapSodiumFailure()
             }
             if read2Result.isErr {
                 return .failure(try read2Result.unwrapErr())
             }
-            
-            let areEqual = compareFixedTime(span1!, span2!)
-            return .success(areEqual)
+
+            return .success(compareFixedTime(span1, span2))
         } catch {
-            return .failure(.generic("Failed to allocate memory for comparing password handles.", inner: error))
+            return .failure(.generic("Failed to compare secure memory.", inner: error))
         }
     }
-    
+
     private static func compareFixedTime(_ lhs: Data, _ rhs: Data) -> Bool {
-        guard lhs.count == rhs.count else {
-            return false
+        guard lhs.count == rhs.count else { return false }
+
+        var diff: UInt8 = 0
+        for i in 0..<lhs.count {
+            diff |= lhs[i] ^ rhs[i]
         }
 
-        let areEqual = lhs.withUnsafeBytes { (lhsRaw: UnsafeRawBufferPointer) in
-            rhs.withUnsafeBytes { (rhsRaw: UnsafeRawBufferPointer) in
-                var diff: UInt8 = 0
-                for i in 0..<lhs.count {
-                    diff |= lhsRaw[i] ^ rhsRaw[i]
-                }
-                return diff == 0
-            }
+        return diff == 0
+    }
+    
+    private func submitRegistrationPassword() async {
+        if !isFormValid && securePasswordHandle!.length == 0 {
+            errorMessage = "Submission requirements not met."
+            return
         }
-
-        return areEqual
+        
+        await MainActor.run {
+            self.errorMessage = nil
+            self.isLoading = true
+        }
+        
+        
     }
 }
