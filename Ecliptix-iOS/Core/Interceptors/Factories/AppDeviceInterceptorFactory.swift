@@ -12,8 +12,6 @@ import NIOCore
 import NIOHPACK
 
 final class AppDeviceInterceptorFactory: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol {
-
-    
     private let appInstanceId: UUID
     private let deviceId: UUID
     

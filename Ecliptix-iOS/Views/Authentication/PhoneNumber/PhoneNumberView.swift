@@ -33,11 +33,16 @@ struct PhoneNumberView: View {
                         countries: viewModel.countries
                     )
                     
-                    PhoneInputField(
-                        phoneCode: selectedCountry.phoneCode,
-                        phoneNumber: $viewModel.phoneNumber,
-                        isLoading: viewModel.isLoading,
-                        onSubmit: viewModel.submitPhone
+                    FieldInput<PhoneValidationError, PhoneNumberInputField>(
+                        title: "Phone Number",
+                        text: $viewModel.phoneNumber,
+                        hintText: "Include country code",
+                        validationErrors: viewModel.validationErrors,
+                        content: {
+                            PhoneNumberInputField(
+                                phoneCode: selectedCountry.phoneCode,
+                                phoneNumber: $viewModel.phoneNumber)
+                        }
                     )
                 }
             } else {
@@ -56,6 +61,31 @@ struct PhoneNumberView: View {
             
             Spacer()
         })
+    }
+}
+
+struct PhoneNumberInputField: View {
+    var phoneCode: String
+    @Binding var phoneNumber: String
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(phoneCode)
+                .foregroundColor(.black)
+                .frame(width: 50, alignment: .center)
+                .padding(.horizontal, 8)
+            
+            Divider()
+            
+            TextField(Strings.PhoneNumber.Buttons.sendCode, text: $phoneNumber)
+                .keyboardType(.phonePad)
+                .textContentType(.telephoneNumber)
+                .autocapitalization(.none)
+                .padding(.horizontal, 8)
+                .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
+                .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
+        }
+        .frame(height: 25)
     }
 }
 

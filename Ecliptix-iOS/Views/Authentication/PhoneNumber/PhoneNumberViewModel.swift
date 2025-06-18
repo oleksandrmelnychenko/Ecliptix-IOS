@@ -15,13 +15,22 @@ final class PhoneNumberViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let navigation: NavigationService
-
+    private let countryService = CountryService()
+    private let phoneValidator = PhoneValidator()
+    
     var countries: [Country] {
         countryService.countries
     }
-
-    private let countryService = CountryService()
-
+    
+    var fullPhoneNumber: String {
+        guard let code = selectedCountry?.phoneCode else { return phoneNumber }
+        return code + phoneNumber
+    }
+    
+    var validationErrors: [PhoneValidationError] {
+        phoneValidator.validate(fullPhoneNumber)
+    }
+    
     init(navigation: NavigationService) {
         self.navigation = navigation
 
@@ -44,11 +53,7 @@ final class PhoneNumberViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 self.isLoading = false
-                if self.phoneNumber.count >= 7 {
-                    self.navigation.navigate(to: .verificationCode(self.phoneNumber))
-                } else {
-                    self.errorMessage = Strings.PhoneNumber.Errors.invalidFormat
-                }
+                self.navigation.navigate(to: .verificationCode(self.fullPhoneNumber))
             }
         }
     }
@@ -59,4 +64,6 @@ final class PhoneNumberViewModel: ObservableObject {
         }
         selectedCountry = countryService.countries.first
     }
+    
+    
 }

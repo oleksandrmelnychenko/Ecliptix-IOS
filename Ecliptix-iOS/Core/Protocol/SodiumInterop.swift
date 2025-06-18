@@ -25,14 +25,6 @@ final class SodiumInterop {
     }()
 
     private init() {}
-    
-    //    static let isInitialized: Bool = {
-    //        let result = sodium_init()
-    //        guard result >= 0 else {
-    //            fatalError("sodium_init() returned error")
-    //        }
-    //        return true
-    //    }
 
     // MARK: - Libsodium function imports
     @discardableResult

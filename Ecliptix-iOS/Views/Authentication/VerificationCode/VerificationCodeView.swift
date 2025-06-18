@@ -70,6 +70,13 @@ struct VerificationCodeView: View {
                 Spacer()
             }
             
+            if viewModel.secondsRemaining > 0 {
+                Text("Resend available in \(viewModel.remainingTime)")
+                    .font(.footnote)
+                    .foregroundColor(.gray)
+            }
+            
+            
             FormErrorText(error: viewModel.errorMessage)
 
             PrimaryActionButton(
@@ -77,8 +84,10 @@ struct VerificationCodeView: View {
                 isLoading: viewModel.isLoading,
                 isEnabled: !viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign),
                 action: {
-                    viewModel.verifyCode {
-                        focusedField = 0
+                    Task {
+                        await viewModel.verifyCode {
+                            focusedField = 0
+                        }
                     }
                 }
             )
@@ -96,6 +105,9 @@ struct VerificationCodeView: View {
                 Spacer()
             }
         })
+        .onAppear {
+            viewModel.startValidation()
+        }
     }
 }
 

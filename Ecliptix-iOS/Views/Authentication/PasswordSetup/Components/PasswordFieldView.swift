@@ -8,11 +8,11 @@
 
 import SwiftUI
 
-struct PasswordFieldView: View {
+struct PasswordFieldView<ErrorType: ValidationError>: View {
     let title: String
     @Binding var text: String
     var placeholder: String = ""
-    var validationErrors: [PasswordValidationError] = []
+    var validationErrors: [ErrorType] = []
 
     @State private var showPassword: Bool = false
 
@@ -22,26 +22,46 @@ struct PasswordFieldView: View {
                 .font(.subheadline)
                 .foregroundColor(.gray)
 
-            HStack {
-                if showPassword {
-                    TextField(placeholder, text: $text)
-                        .textContentType(.newPassword)
-                } else {
-                    SecureField(placeholder, text: $text)
-                        .textContentType(.newPassword)
+            VStack(spacing: 0) {
+                HStack {
+                    if showPassword {
+                        TextField(placeholder, text: $text)
+                            .textContentType(.newPassword)
+                            .font(.system(size: 20))
+                    } else {
+                        SecureField(placeholder, text: $text)
+                            .textContentType(.newPassword)
+                            .font(.system(size: 20))
+                    }
+                    
+                    Button(action: {
+                        showPassword.toggle()
+                    }) {
+                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(.gray)
+                    }
                 }
-
-                Button(action: {
-                    showPassword.toggle()
-                }) {
-                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                        .foregroundColor(.gray)
+                .padding(.horizontal, 8)
+                .padding(.top, 15)
+                .padding(.bottom, 10)
+                
+                HStack(alignment: .bottom) {
+                    Image(systemName: "lightbulb.min")
+                        .foregroundColor(.black)
+                        .font(.system(size: 14))
+                    
+                    Text("8 Chars, 1 upper and 1 number")
+                        .font(.system(size: 14))
+                    
+                    Spacer()
                 }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 5)
+                
             }
-            .padding()
             .background(Color(.systemGray6))
             .cornerRadius(10)
-
+            
             // Validation errors
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(validationErrors) { error in
@@ -53,29 +73,16 @@ struct PasswordFieldView: View {
     }
 }
 
-
-struct ValidationMessageView: View {
-    let text: String
-    
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "xmark.circle.fill")
-                .foregroundColor(.red)
-                .font(.caption)
-            Text(text)
-                .font(.footnote)
-                .foregroundColor(.red)
-        }
-        .transition(.opacity.combined(with: .move(edge: .top)))
-    }
-}
-
 struct PasswordFieldView_Previews: PreviewProvider {
     @State static var password = ""
 
     static var previews: some View {
-        PasswordFieldView(title: "Password", text: $password, placeholder: "Enter password")
-            .padding()
-            .previewLayout(.sizeThatFits)
+        PasswordFieldView<PasswordValidationError>(
+            title: "Password",
+            text: $password,
+            placeholder: "Enter password"
+        )
+//        .padding()
+//        .previewLayout(.sizeThatFits)
     }
 }

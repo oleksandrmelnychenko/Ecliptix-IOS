@@ -22,20 +22,31 @@ struct PasswordSetupView: View {
             )
             
             Group {
-                // Password field
-                PasswordFieldView(
+                FieldInput<PasswordValidationError, PasswordInputField>(
                     title: Strings.PasswordSetup.passwordFieldLabel,
                     text: $viewModel.password,
-                    placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
-                    validationErrors: viewModel.validationErrors
+                    hintText: "8 Chars, 1 upper and 1 number",
+                    validationErrors: viewModel.validationErrors,
+                    content: {
+                        PasswordInputField(
+                            placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
+                            text: $viewModel.password,
+                        )
+                    }
                 )
                                     
                 // Confirm password field
-                PasswordFieldView(
+                FieldInput<PasswordValidationError, PasswordInputField>(
                     title: Strings.PasswordSetup.confirmPasswordFieldLabel,
                     text: $viewModel.confirmPassword,
-                    placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
-                    validationErrors: viewModel.confirmPasswordValidationError
+                    hintText: "8 Chars, 1 upper and 1 number",
+                    validationErrors: viewModel.confirmPasswordValidationError,
+                    content: {
+                        PasswordInputField(
+                            placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                            text: $viewModel.confirmPassword,
+                        )
+                    }
                 )
             }
             
@@ -50,6 +61,33 @@ struct PasswordSetupView: View {
             
             Spacer()
         })
+    }
+}
+
+struct PasswordInputField: View {
+    @State private var showPassword: Bool = false
+    var placeholder: String = ""
+    @Binding var text: String
+    
+    var body: some View {
+        HStack {
+            if showPassword {
+                TextField(placeholder, text: $text)
+                    .textContentType(.newPassword)
+                    .font(.system(size: 20))
+            } else {
+                SecureField(placeholder, text: $text)
+                    .textContentType(.newPassword)
+                    .font(.system(size: 20))
+            }
+            
+            Button(action: {
+                showPassword.toggle()
+            }) {
+                Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                    .foregroundColor(.gray)
+            }
+        }
     }
 }
 

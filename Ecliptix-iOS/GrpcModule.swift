@@ -28,33 +28,42 @@ enum GrpcModule {
         let appInstanceInfo = ServiceLocator.shared.resolve(AppInstanceInfo.self)
         
         // Interceptors
-        let membershipInterceptorFactory = MembershipInterceptorFactory(
-            appInstanceId: appInstanceInfo.appInstanceId,
-            deviceId: appInstanceInfo.deviceId
-        )
-        
         let appDeviceInterceptorFactory = AppDeviceInterceptorFactory(
             appInstanceId: appInstanceInfo.appInstanceId,
             deviceId: appInstanceInfo.deviceId
         )
         
-        // Clients
-        let membershipClient = Ecliptix_Proto_Membership_MembershipServicesAsyncClient(
-            channel: channel,
-            interceptors: membershipInterceptorFactory
+        let authInterceptorFactory = AuthInterceptorFactory(
+            appInstanceId: appInstanceInfo.appInstanceId,
+            deviceId: appInstanceInfo.deviceId
         )
         
+        let membershipInterceptorFactory = MembershipInterceptorFactory(
+            appInstanceId: appInstanceInfo.appInstanceId,
+            deviceId: appInstanceInfo.deviceId
+        )
+        
+
+        
+        // Clients
         let appDeviceClient = Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient(
             channel: channel,
             interceptors: appDeviceInterceptorFactory
         )
-
-        let callOptions = CallOptions()
-
+        
         let authClient = Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient(
             channel: channel,
-            defaultCallOptions: callOptions
+            interceptors: authInterceptorFactory)
+        
+        let membershipClient = Ecliptix_Proto_Membership_MembershipServicesAsyncClient(
+            channel: channel,
+            interceptors: membershipInterceptorFactory
         )
+
+//        let authClient = Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient(
+//            channel: channel,
+//            defaultCallOptions: callOptions
+//        )
         
         let singleCallExecutor = SingleCallExecutor(
             membershipClient: membershipClient,
