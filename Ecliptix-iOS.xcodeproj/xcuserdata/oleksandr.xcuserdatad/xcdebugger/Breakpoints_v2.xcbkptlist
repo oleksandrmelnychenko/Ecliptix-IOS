@@ -146,5 +146,97 @@
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E5F438D6-41A8-4C3F-8FD7-C950D53CA94D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Domain/Utilities/Result.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
+            landmarkName = "TryAsync(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "08F0015D-7891-4676-B320-8A9B69F0F986"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Domain/Utilities/Result.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "78"
+            endingLineNumber = "78"
+            landmarkName = "TryAsync(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6CAA2C89-4485-4B12-9D87-344B0839A9BF"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/RetryExecutor.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "23"
+            endingLineNumber = "23"
+            landmarkName = "execute(maxRetryCount:delayBetweenRetries:retryCondition:_:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "6CAA2C89-4485-4B12-9D87-344B0839A9BF - 42401e646f389055"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for static Ecliptix_iOS.RetryExecutor.execute&lt;&#x3c4;_0_0&gt;(maxRetryCount: Swift.Int, delayBetweenRetries: Swift.UInt64, retryCondition: (Swift.Error) -&gt; Swift.Bool, _: () async throws -&gt; &#x3c4;_0_0) async -&gt; Swift.Result&lt;&#x3c4;_0_0, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/RetryExecutor.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "23"
+                  endingLineNumber = "23">
+               </Location>
+               <Location
+                  uuid = "6CAA2C89-4485-4B12-9D87-344B0839A9BF - 5ad1cebe7604fe4c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(6) suspend resume partial function for static Ecliptix_iOS.RetryExecutor.execute&lt;&#x3c4;_0_0&gt;(maxRetryCount: Swift.Int, delayBetweenRetries: Swift.UInt64, retryCondition: (Swift.Error) -&gt; Swift.Bool, _: () async throws -&gt; &#x3c4;_0_0) async -&gt; Swift.Result&lt;&#x3c4;_0_0, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/RetryExecutor.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "23"
+                  endingLineNumber = "23">
+               </Location>
+               <Location
+                  uuid = "6CAA2C89-4485-4B12-9D87-344B0839A9BF - e61b401617679433"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(7) suspend resume partial function for static Ecliptix_iOS.RetryExecutor.execute&lt;&#x3c4;_0_0&gt;(maxRetryCount: Swift.Int, delayBetweenRetries: Swift.UInt64, retryCondition: (Swift.Error) -&gt; Swift.Bool, _: () async throws -&gt; &#x3c4;_0_0) async -&gt; Swift.Result&lt;&#x3c4;_0_0, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/RetryExecutor.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "23"
+                  endingLineNumber = "23">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

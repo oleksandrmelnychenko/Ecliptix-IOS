@@ -42,12 +42,11 @@ enum GrpcModule {
             appInstanceId: appInstanceInfo.appInstanceId,
             deviceId: appInstanceInfo.deviceId
         )
-        
-
-        
+    
         // Clients
         let appDeviceClient = Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient(
             channel: channel,
+//            defaultCallOptions: CallOptions(timeLimit: .timeout(.seconds(10))),
             interceptors: appDeviceInterceptorFactory
         )
         
@@ -59,11 +58,6 @@ enum GrpcModule {
             channel: channel,
             interceptors: membershipInterceptorFactory
         )
-
-//        let authClient = Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient(
-//            channel: channel,
-//            defaultCallOptions: callOptions
-//        )
         
         let singleCallExecutor = SingleCallExecutor(
             membershipClient: membershipClient,

@@ -77,7 +77,8 @@ extension Result {
         } catch let error as Failure {
             return .failure(error)
         } catch {
-            fatalError("Unexpected error type: \(error)")
+            let wrapped = EcliptixProtocolFailure.generic("Unexpected error in async block", inner: error)
+            return .failure(wrapped as! Failure)
         }
     }
 

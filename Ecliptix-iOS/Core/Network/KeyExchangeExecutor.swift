@@ -7,6 +7,7 @@
 
 import SwiftProtobuf
 import Foundation
+import GRPC
 
 internal final class KeyExchangeExecutor {
     private let appDeviceServiceActionsClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
@@ -16,11 +17,10 @@ internal final class KeyExchangeExecutor {
     }
     
     public func beginDataCenterPublicKeyExchange(request: Ecliptix_Proto_PubKeyExchange) async -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
-        return await Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure>.TryAsync {
-            let response = try await self.appDeviceServiceActionsClient.establishAppDeviceEphemeralConnect(request)
-            return response
-        }.mapError { error in
-            .generic(error.message, inner: error.innerError)
-        }
+        return await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
+            {
+                try await self.appDeviceServiceActionsClient.establishAppDeviceEphemeralConnect(request)
+            }
+        )
     }
 }
