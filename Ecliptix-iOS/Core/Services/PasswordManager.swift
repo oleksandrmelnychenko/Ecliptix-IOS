@@ -13,11 +13,6 @@ final class PasswordManager {
     private static let defaultIterations: Int = 600_000
     private static let hashSeparator: Character = ":"
     
-//    private static let lowercaseRegex = try! NSRegularExpression(pattern: "[a-z]", options: [])
-//    private static let uppercaseRegex = try! NSRegularExpression(pattern: "[A-Z]", options: [])
-//    private static let digitRegex = try! NSRegularExpression(pattern: "\\d", options: [])
-//    private static let alphanumericOnlyRegex = try! NSRegularExpression(pattern: "^[a-zA-Z0-9]*$", options: [])
-    
     private let iterations: Int
     private let hashAlgorithmName: HashAlgorithmName
     private let saltSize: Int
@@ -50,71 +45,6 @@ final class PasswordManager {
                 saltSize: saltSize
             ))
         }
-    
-//    func checkPasswordCompliance(_ password: String?, policy: PasswordPolicy) -> Result<Unit, EcliptixProtocolFailure> {
-//        
-//        guard let password = password else {
-//            return .failure(.invalidInput("Password policy is missing."))
-//        }
-//
-//        var validationErrorMessages: [String] = []
-//
-//        if password.isEmpty {
-//            validationErrorMessages.append("Password cannot be empty.")
-//        } else {
-//            if password.count < policy.minLength {
-//                validationErrorMessages.append("Password must be at least \(policy.minLength) characters long.")
-//            }
-//            
-//            let range = NSRange(location: 0, length: password.utf16.count)
-//            if policy.requireLowercase && Self.lowercaseRegex.firstMatch(in: password, range: range) == nil {
-//                validationErrorMessages.append("Password must contain at least one lowercase letter.")
-//            }
-//            
-//            if policy.requireUppercase && Self.uppercaseRegex.firstMatch(in: password, range: range) == nil {
-//                validationErrorMessages.append("Password must contain at least one uppercase letter.")
-//            }
-//            
-//            if policy.requireDigit && Self.digitRegex.firstMatch(in: password, range: range) == nil {
-//                validationErrorMessages.append("Password must contain at least one digit.")
-//            }
-//
-//            if policy.requireSpecialChar && !policy.allowedSpecialChars.isEmpty {
-//                let escaped = NSRegularExpression.escapedPattern(for: policy.allowedSpecialChars)
-//                let pattern = "[\(escaped)]"
-//                
-//                if let regex = try? NSRegularExpression(pattern: pattern) {
-//                    if regex.firstMatch(in: password, range: range) == nil {
-//                        validationErrorMessages.append("Password must contain at least one special character from the set: \(policy.allowedSpecialChars).")
-//                    }
-//                }
-//            }
-//
-//            if policy.enforceAllowedCharsOnly {
-//                if !policy.allowedSpecialChars.isEmpty {
-//                    let escaped = NSRegularExpression.escapedPattern(for: policy.allowedSpecialChars)
-//                    let pattern = "^[a-zA-Z0-9\(escaped)]*$"
-//                    
-//                    if let regex = try? NSRegularExpression(pattern: pattern) {
-//                        if regex.firstMatch(in: password, range: range) == nil {
-//                            validationErrorMessages.append("Password contains characters that are not allowed. Only alphanumeric and specified special characters are permitted.")
-//                        }
-//                    }
-//                } else {
-//                    if Self.alphanumericOnlyRegex.firstMatch(in: password, range: range) == nil {
-//                        validationErrorMessages.append("Password contains characters that are not allowed. Only alphanumeric characters are permitted.")
-//                    }
-//                }
-//            }
-//        }
-//
-//        if !validationErrorMessages.isEmpty {
-//            let combined = validationErrorMessages.joined(separator: "; ")
-//            return .failure(.invalidInput("Password does not meet complexity requirements: \(combined)"))
-//        }
-//
-//        return .success(.value)
-//    }
     
     func hashPassword(_ password: String) -> Result<String, EcliptixProtocolFailure> {
         guard !password.isEmpty else {

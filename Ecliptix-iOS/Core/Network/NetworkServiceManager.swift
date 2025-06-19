@@ -33,12 +33,12 @@ internal class NetworkServiceManager {
         }
     }
     
-    public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async -> Result<RpcFlow, EcliptixProtocolFailure> {
+    public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
         
         let action = request.rcpServiceMethod
                 
         if request.actionType == .single {
-            let result: Result<RpcFlow, EcliptixProtocolFailure> = await singleCallExecutor.invokeRequestAsync(request: request, cancellation: token)
+            let result: Result<RpcFlow, EcliptixProtocolFailure> = try await singleCallExecutor.invokeRequestAsync(request: request, cancellation: token)
             
             print("Action \(action) executed successfullt for req_id: \(request.reqId)")
             return result

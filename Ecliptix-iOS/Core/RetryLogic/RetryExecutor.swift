@@ -11,11 +11,11 @@ import GRPC
 final class RetryExecutor {
     
     static func execute<Output>(
-        maxRetryCount:     Int  = 3,
+        maxRetryCount:     Int  = 10,
         backoff:           RetryBackoff = .init(),
         retryConditions:   [(Error) -> Bool],
         _ block:           @escaping () async throws -> Output
-    ) async -> Result<Output, EcliptixProtocolFailure> {
+    ) async throws -> Result<Output, EcliptixProtocolFailure> {
         
         var attempts = 0
         
@@ -28,10 +28,10 @@ final class RetryExecutor {
                 let shouldRetry = retryConditions.contains { $0(error) }
                 
                 guard shouldRetry else {
-                    return .failure(.generic("Operation failed", inner: error))
+                    throw error
                 }
                 
-                if attempts == maxRetryCount {
+                guard attempts < maxRetryCount else {
                     return .failure(.generic("Retry attempts exhausted", inner: error))
                 }
                 
@@ -48,12 +48,12 @@ final class RetryExecutor {
         backoff:         RetryBackoff = .init(),
         retryCondition:  @escaping (Error) -> Bool,
         _ block:         @escaping () async throws -> Output
-    ) async -> Result<Output, EcliptixProtocolFailure> {
-        await execute(
-            maxRetryCount:   maxRetryCount,
-            backoff:         backoff,
-            retryConditions: [retryCondition],
-            block
+    ) async throws -> Result<Output, EcliptixProtocolFailure> {
+        try await execute(
+                maxRetryCount:   maxRetryCount,
+                backoff:         backoff,
+                retryConditions: [retryCondition],
+                block
         )
     }
 }

@@ -12,7 +12,7 @@ enum AppRoute: Hashable {
     
     case phoneNumberVerification
     case verificationCode(String)
-    case passwordSetup
+    case passwordSetup(String)
     case passPhaseRegistration
     
     case signIn
@@ -32,10 +32,10 @@ struct ViewFactory {
             PhoneNumberView(navigation: navigation)
 
         case .verificationCode(let phoneNumber):
-            VerificationCodeView(phoneNumber: phoneNumber, navigation: navigation)
+            VerificationCodeView(navigation: navigation, phoneNumber: phoneNumber)
             
-        case .passwordSetup:
-            PasswordSetupView(navigation: navigation)
+        case .passwordSetup(let verificationSessionId):
+            PasswordSetupView(navigation: navigation, verificationSessionId: verificationSessionId)
             
         case .passPhaseRegistration:
             PassPhaseRegisterView(navigation: navigation)

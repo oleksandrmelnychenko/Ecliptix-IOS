@@ -13,7 +13,7 @@ struct VerificationCodeView: View {
     @StateObject private var viewModel: VerificationCodeViewModel
     @FocusState private var focusedField: Int?
     
-    init(phoneNumber: String, navigation: NavigationService) {
+    init(navigation: NavigationService, phoneNumber: String) {
         self.phoneNumber = phoneNumber
         _viewModel = StateObject(wrappedValue: VerificationCodeViewModel(
             phoneNumber: phoneNumber,
@@ -113,5 +113,5 @@ struct VerificationCodeView: View {
 
 #Preview {
     let navService = NavigationService()
-    VerificationCodeView(phoneNumber: "+380123123123", navigation: navService)
+    VerificationCodeView(navigation: navService, phoneNumber: "+380123123123")
 }

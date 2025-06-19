@@ -238,7 +238,12 @@ final class VerificationCodeViewModel: ObservableObject {
                             if verifyCodeResponse.result == .succeeded {
                                 let membership = verifyCodeResponse.membership
                                 
-                                self.navigation.navigate(to: .passwordSetup)
+                                if let stringID = String(data: membership.uniqueIdentifier, encoding: .utf8) {
+                                    self.navigation.navigate(to: .passwordSetup(stringID))
+                                } else {
+                                    print("Failed to parse Data to string.")
+                                }
+
                             } else if verifyCodeResponse.result == .invalidOtp {
                                 
                             }
