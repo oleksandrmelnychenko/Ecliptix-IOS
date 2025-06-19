@@ -49,24 +49,14 @@ final class PasswordSetupViewModel: ObservableObject {
         confirmPasswordValidationErrors.isEmpty &&
         !password.isEmpty &&
         !confirmPassword.isEmpty &&
-        securePasswordHandle != nil && securePasswordHandle!.isInvalid &&
-        secureConfirmPasswordHandle != nil && secureConfirmPasswordHandle!.isInvalid
+        securePasswordHandle != nil && !securePasswordHandle!.isInvalid &&
+        secureConfirmPasswordHandle != nil && !secureConfirmPasswordHandle!.isInvalid
     }
 
-    func submitPassword() {
+    func submitPassword() async {
         guard isFormValid else { return }
 
-        isLoading = true
-        errorMessage = nil
-
-        Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            await MainActor.run {
-                self.isLoading = false
-
-                self.navigation.navigate(to: .passPhaseRegistration)
-            }
-        }
+        await self.submitRegistrationPassword()
     }
 
     func updatePassword(passwordText: String?) {
@@ -341,7 +331,7 @@ final class PasswordSetupViewModel: ObservableObject {
                             data: payload)
                         
                         if createMembershipResponse.result == .succeeded {
-                            
+                            self.navigation.navigate(to: .passPhaseRegistration)
                         }
                         
                         return .success(.value)

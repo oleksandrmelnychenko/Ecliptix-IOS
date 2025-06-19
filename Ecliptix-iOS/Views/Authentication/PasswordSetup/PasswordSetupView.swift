@@ -59,7 +59,11 @@ struct PasswordSetupView: View {
                 title: Strings.PasswordSetup.Buttons.next,
                 isLoading: viewModel.isLoading,
                 isEnabled: viewModel.isFormValid && !viewModel.isLoading,
-                action: viewModel.submitPassword
+                action: {
+                    Task {
+                        await viewModel.submitPassword()
+                    }
+                }
             )
             
             Spacer()

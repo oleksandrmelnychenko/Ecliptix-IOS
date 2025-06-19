@@ -52,10 +52,6 @@ final class VerificationCodeViewModel: ObservableObject {
 
         await sendVerificationCode()
     }
-
-    func resetCode() {
-        codeDigits = Array(repeating: Self.emptySign, count: 6)
-    }
     
     func handleBackspace(at index: Int, focus: inout Int?) {
         if index > 0 {
@@ -238,10 +234,14 @@ final class VerificationCodeViewModel: ObservableObject {
                             if verifyCodeResponse.result == .succeeded {
                                 let membership = verifyCodeResponse.membership
                                 
-                                if let stringID = String(data: membership.uniqueIdentifier, encoding: .utf8) {
+                                if membership.uniqueIdentifier.count == 16 {
+                                    let uuid = membership.uniqueIdentifier.withUnsafeBytes {
+                                        $0.load(as: UUID.self)
+                                    }
+                                    let stringID = uuid.uuidString
                                     self.navigation.navigate(to: .passwordSetup(stringID))
                                 } else {
-                                    print("Failed to parse Data to string.")
+                                    print("Expected UUID with 16 bytes, got \(membership.uniqueIdentifier.count) bytes")
                                 }
 
                             } else if verifyCodeResponse.result == .invalidOtp {
@@ -265,6 +265,23 @@ final class VerificationCodeViewModel: ObservableObject {
                 self.errorMessage = "Network error: \(error.localizedDescription)"
             }
         }
+    }
+    
+    func reSendVerificationCode() async {
+        codeDigits = Array(repeating: Self.emptySign, count: 6)
+        
+        guard let phoneId = validatePhoneNumberResponce?.phoneNumberIdentifier else {
+            errorMessage = "Phone number identifier is missing"
+            return
+        }
+        
+        isLoading = true
+       defer { isLoading = false }
+        
+        _ = await self.initiateVerification(
+            phoneNumberIdentifier: phoneId,
+            type: .resendOtp
+        )
     }
     
     private static func formatRemainingTime(_ seconds: UInt64) -> String {

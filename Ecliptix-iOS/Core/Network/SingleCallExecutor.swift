@@ -31,48 +31,28 @@ final class SingleCallExecutor {
         do {
             switch request.rcpServiceMethod {
             case .registerAppDevice:
-                let task = try await registerDeviceAsync(payload: request.payload, cancellation: cancellation)
-                
-                if task.isOk {
-                    return .success(RpcFlow.SingleCall(result: task))
-                } else {
-                    return .failure(try task.unwrapErr())
+                return try await wrapCall {
+                    try await self.registerDeviceAsync(payload: request.payload, cancellation: cancellation)
                 }
             
             case .validatePhoneNumber:
-                let task = try await validatePhoneNumberAsync(payload: request.payload, cancellation: cancellation)
-                
-                if task.isOk {
-                    return .success(RpcFlow.SingleCall(result: task))
-                } else {
-                    return .failure(try task.unwrapErr())
+                return try await wrapCall {
+                    try await self.validatePhoneNumberAsync(payload: request.payload, cancellation: cancellation)
                 }
 
             case .signIn:
-                let task = try await signInAsync(payload: request.payload, cancellation: cancellation)
-                
-                if task.isOk {
-                    return .success(RpcFlow.SingleCall(result: task))
-                } else {
-                    return .failure(try task.unwrapErr())
+                return try await wrapCall {
+                    try await self.signInAsync(payload: request.payload, cancellation: cancellation)
                 }
 
             case .updateMembershipWithSecureKey:
-                let task = try await updateMembershipWithSecureKeyAsync(payload: request.payload, cancellation: cancellation)
-                
-                if task.isOk {
-                    return .success(RpcFlow.SingleCall(result: task))
-                } else {
-                    return .failure(try task.unwrapErr())
+                return try await wrapCall {
+                    try await self.updateMembershipWithSecureKeyAsync(payload: request.payload, cancellation: cancellation)
                 }
 
-            case .verifyOtp:
-                let task = try await verifyCodeAsync(payload: request.payload, cancellation: cancellation)
-                
-                if task.isOk {
-                    return .success(RpcFlow.SingleCall(result: task))
-                } else {
-                    return .failure(try task.unwrapErr())
+            case .verifyOtp:               
+                return try await wrapCall {
+                    try await self.verifyCodeAsync(payload: request.payload, cancellation: cancellation)
                 }
 
             default:
@@ -83,6 +63,18 @@ final class SingleCallExecutor {
         }
     }
 
+    private func wrapCall(
+        _ block: @escaping () async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
+    ) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
+        let task = try await block()
+
+        if task.isOk {
+            return .success(RpcFlow.SingleCall(result: task))
+        } else {
+            return .failure(try task.unwrapErr())
+        }
+    }
+    
     private func registerDeviceAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken

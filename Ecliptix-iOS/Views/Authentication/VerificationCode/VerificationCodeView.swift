@@ -97,9 +97,12 @@ struct VerificationCodeView: View {
             HStack {
                 Spacer()
                 Button(Strings.VerificationCode.Buttons.resendCode) {
-                    viewModel.resetCode()
-                    focusedField = 0
+                    Task {
+                        await viewModel.reSendVerificationCode()
+                        focusedField = 0
+                    }
                 }
+                .disabled(viewModel.isLoading)
                 .foregroundColor(.gray)
                 .underline()
                 Spacer()
