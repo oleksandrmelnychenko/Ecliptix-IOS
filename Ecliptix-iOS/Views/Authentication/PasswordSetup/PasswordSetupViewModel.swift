@@ -23,9 +23,9 @@ final class PasswordSetupViewModel: ObservableObject {
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     private var secureConfirmPasswordHandle: SodiumSecureMemoryHandle?
     
-    private let verificationSessionId: String
+    private let verificationSessionId: Data
     
-    init(navigation: NavigationService, verficationSessionId: String) {
+    init(navigation: NavigationService, verficationSessionId: Data) {
         self.navigation = navigation
         self.verificationSessionId = verficationSessionId
         
@@ -313,7 +313,7 @@ final class PasswordSetupViewModel: ObservableObject {
             let passwordVerifierForServer = try verifierResult.unwrap()
             
             var request = Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest()
-            request.membershipIdentifier = Utilities.guidToByteArray(UUID(uuidString: self.verificationSessionId)!)
+            request.membershipIdentifier = self.verificationSessionId
             request.secureKey = Data(passwordVerifierForServer.utf8)
             
             let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
@@ -326,7 +326,7 @@ final class PasswordSetupViewModel: ObservableObject {
                 onSuccessCallback: { payload in
                     
                     do {
-                        var createMembershipResponse = try Utilities.parseFromBytes(
+                        let createMembershipResponse = try Utilities.parseFromBytes(
                             Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.self,
                             data: payload)
                         

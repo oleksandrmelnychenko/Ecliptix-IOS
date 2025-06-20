@@ -234,16 +234,7 @@ final class VerificationCodeViewModel: ObservableObject {
                             if verifyCodeResponse.result == .succeeded {
                                 let membership = verifyCodeResponse.membership
                                 
-                                if membership.uniqueIdentifier.count == 16 {
-                                    let uuid = membership.uniqueIdentifier.withUnsafeBytes {
-                                        $0.load(as: UUID.self)
-                                    }
-                                    let stringID = uuid.uuidString
-                                    self.navigation.navigate(to: .passwordSetup(stringID))
-                                } else {
-                                    print("Expected UUID with 16 bytes, got \(membership.uniqueIdentifier.count) bytes")
-                                }
-
+                                self.navigation.navigate(to: .passwordSetup(membership.uniqueIdentifier))
                             } else if verifyCodeResponse.result == .invalidOtp {
                                 
                             }
