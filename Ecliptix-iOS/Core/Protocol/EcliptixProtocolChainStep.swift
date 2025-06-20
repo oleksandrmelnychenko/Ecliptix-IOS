@@ -8,7 +8,7 @@
 import Foundation
 import OrderedCollections
 
-final class ShieldChainStep {
+final class EcliptixProtocolChainStep {
     private static let defaultCacheWindowSize: UInt32 = 1000
     private static let okResult = Result<Unit, EcliptixProtocolFailure>.success(Unit())
 
@@ -51,13 +51,13 @@ final class ShieldChainStep {
     
     func getCurrentIndex() -> Result<UInt32, EcliptixProtocolFailure> {
         return disposed
-            ? .failure(.objectDisposed(String(describing: ShieldChainStep.self)))
+            ? .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
             : .success(currentIndex)
     }
 
     func setCurrentIndex(_ value: UInt32) -> Result<Unit, EcliptixProtocolFailure> {
         if disposed {
-            return .failure(.objectDisposed(String(describing: ShieldChainStep.self)))
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         }
         
         if currentIndex != value {
@@ -68,7 +68,7 @@ final class ShieldChainStep {
         return .success(Unit.value)
     }
     
-    func pruneOldKeys(messageKeys: inout OrderedDictionary<UInt32, ShieldMessageKey>) {
+    func pruneOldKeys(messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) {
         if disposed || cacheWindow == 0 || messageKeys.isEmpty { return }
         
         do {
@@ -145,7 +145,7 @@ final class ShieldChainStep {
         initialDhPrivateKey: inout Data?,
         initialDhPublicKey: inout Data?,
         cacheWindowSize: UInt32 = defaultCacheWindowSize
-    ) -> Result<ShieldChainStep, EcliptixProtocolFailure> {
+    ) -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
         debugPrint("[ShieldChainStep] Creating chain step of type \(stepType)")
 
         return Result<Unit, EcliptixProtocolFailure>.success(Unit())
@@ -155,7 +155,7 @@ final class ShieldChainStep {
                 allocateAndWriteChainKey(&initialChainKey)
                     .flatMap { chainKeyHandle in
                         let actualCacheWindow: UInt32 = cacheWindowSize > 0 ? cacheWindowSize : defaultCacheWindowSize
-                        let step = ShieldChainStep(
+                        let step = EcliptixProtocolChainStep(
                             stepType: stepType,
                             chainKeyHandle: chainKeyHandle,
                             dhPrivateKeyHandle: dhInfo.dhPrivateKeyHandle,
@@ -243,9 +243,9 @@ final class ShieldChainStep {
             }
     }
 
-    func getOrDeriveKeyFor(targetIndex: UInt32, messageKeys: inout OrderedDictionary<UInt32, ShieldMessageKey>) -> Result<ShieldMessageKey, EcliptixProtocolFailure> {
+    func getOrDeriveKeyFor(targetIndex: UInt32, messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
         if disposed {
-            return .failure(.objectDisposed(String(describing: ShieldChainStep.self)))
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         }
 
         var chainKey: Data?
@@ -304,9 +304,9 @@ final class ShieldChainStep {
                     return .failure(.deriveKey("HKDF failed during derivation at index \(idx).", inner: error))
                 }
                 
-                var msgKeyClone = msgKey
+//                var msgKeyClone = msgKey
                 
-                let keyResult = ShieldMessageKey.new(index: idx, keyMaterial: &msgKeyClone)
+                let keyResult = EcliptixMessageKey.new(index: idx, keyMaterial: &msgKey)
                 if keyResult.isErr {
                     return .failure(try keyResult.unwrapErr())
                 }
@@ -358,10 +358,14 @@ final class ShieldChainStep {
         return .success(Unit())
             .flatMap { _ in checkDisposed() }
             .flatMap { _ in Self.validateNewChainKey(newChainKey) }
-            .flatMap { _ in
-                debugPrint("[ShieldChainStep] Writing new chain key: \(newChainKey.hexEncodedString())")
-                return newChainKey.withUnsafeBytes { bufferPointer in
-                    _chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
+//            .flatMap { _ in
+//                debugPrint("[ShieldChainStep] Writing new chain key: \(newChainKey.hexEncodedString())")
+//                return newChainKey.withUnsafeBytes { bufferPointer in
+//                    _chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
+//                }
+//            }
+            .flatMap { _ in newChainKey.withUnsafeBytes { bufferPointer in
+                    self._chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
                 }
             }
             .flatMap { _ in setCurrentIndex(0) }
@@ -369,7 +373,7 @@ final class ShieldChainStep {
             .map { _ in
                 isNewChain = stepType == .sender
                 debugPrint("[ShieldChainStep] Keys updated successfully. IsNewChain: \(self.isNewChain)")
-                return Unit()
+                return .value
             }
     }
     
@@ -387,10 +391,10 @@ final class ShieldChainStep {
             _ = Self.wipeIfNotNil(&publicKey)
         }
         
-        return ShieldChainStep.validateAll(
-            { ShieldChainStep.validateDhKeysNotNull(privateKey: privateKey, publicKey: publicKey) },
-            { ShieldChainStep.validateDhPrivateKeySize(privateKey: privateKey) },
-            { ShieldChainStep.validateDhPublicKeySize(publicKey: publicKey) }
+        return EcliptixProtocolChainStep.validateAll(
+            { EcliptixProtocolChainStep.validateDhKeysNotNull(privateKey: privateKey, publicKey: publicKey) },
+            { EcliptixProtocolChainStep.validateDhPrivateKeySize(privateKey: privateKey) },
+            { EcliptixProtocolChainStep.validateDhPublicKeySize(publicKey: publicKey) }
         ).flatMap { _ in
             print("[ShieldChainStep] Updating DH keys.")
 
@@ -436,15 +440,15 @@ final class ShieldChainStep {
     
     private func checkDisposed() -> Result<Unit, EcliptixProtocolFailure> {
         if disposed {
-            return .failure(.objectDisposed(String(describing: ShieldChainStep.self)))
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         } else {
-            return .success(Unit())
+            return .success(.value)
         }
     }
 
     private static func validateNewChainKey(_ newChainKey: Data) -> Result<Unit, EcliptixProtocolFailure> {
         if newChainKey.count == Constants.x25519KeySize {
-            return .success(Unit())
+            return .success(.value)
         } else {
             return .failure(.invalidInput("New chain key must be \(Constants.x25519KeySize) bytes."))
         }
@@ -452,7 +456,7 @@ final class ShieldChainStep {
     
     private func ensureDhPrivateKeyHandle() -> Result<Unit, EcliptixProtocolFailure> {
         if dhPrivateKeyHandle != nil {
-            return ShieldChainStep.okResult
+            return EcliptixProtocolChainStep.okResult
         }
 
         do {

@@ -73,10 +73,8 @@ class AesGcmService {
             let gcmNonce = try AES.GCM.Nonce(data: nonce)
             let sealedBox = try AES.GCM.seal(plaintext, using: symmetricKey, nonce: gcmNonce, authenticating: associatedData)
             
-            // Copy ciphertext to ciphertextDestination buffer
             sealedBox.ciphertext.copyBytes(to: ciphertextDestination.baseAddress!, count: sealedBox.ciphertext.count)
             
-            // Copy tag to tagDestination buffer
             sealedBox.tag.copyBytes(to: tagDestination.baseAddress!, count: sealedBox.tag.count)
         } catch {
             throw AesGcmError.encryptFailed(underlying: error)
@@ -120,7 +118,6 @@ class AesGcmService {
             
             let plaintext = try AES.GCM.open(sealedBox, using: symmetricKey, authenticating: associatedData)
             
-            // Copy plaintext bytes to plaintextDestination buffer
             plaintext.copyBytes(to: plaintextDestination.baseAddress!, count: plaintext.count)
         } catch {
             throw AesGcmError.decryptFailed(underlying: error)

@@ -16,7 +16,7 @@ final class ReceiveStreamExecutor {
         self.client = client
     }
 
-    func processRequestAsync(
+    func processRequestAsync(	
         request: ServiceRequest
     ) -> Result<RpcFlow, EcliptixProtocolFailure> {
         switch request.rcpServiceMethod {
@@ -39,7 +39,7 @@ final class ReceiveStreamExecutor {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.yield(.failure(.generic(error.localizedDescription, inner: error)))
+                    continuation.yield(.failure(.generic("Error during stream processing: \(error)", inner: error)))
                     continuation.finish()
                 }
             }

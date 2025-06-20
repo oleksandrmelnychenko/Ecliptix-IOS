@@ -35,7 +35,7 @@ final class NetworkController {
         flowType: ServiceFlowType,
         onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,
         token: CancellationToken? = CancellationToken()
-    ) async -> Result<Unit, EcliptixProtocolFailure> {
+    ) async throws -> Result<Unit, EcliptixProtocolFailure> {
         guard let context = connections[connectId] else {
             return .failure(.generic("Connection not found"))
         }
@@ -87,7 +87,7 @@ final class NetworkController {
                 }
 
             case .other(let inner):
-                return .failure(.generic("Unhandled session error", inner: inner))
+                throw inner
             }
         }
     }
@@ -130,8 +130,7 @@ final class NetworkController {
                     try await withTaskCancellationHandler(operation: {
                         for try await streamItem in inboundStream.stream {
                             if streamItem.isErr {
-                                print("Stream error: \(try streamItem.unwrapErr().message)")
-                                continue
+                                throw try streamItem.unwrapErr()
                             }
 
                             let streamPayload = try streamItem.unwrap()
@@ -146,7 +145,7 @@ final class NetworkController {
                         debugPrint("Stream cancelled for connectId: \(connectId)")
                     })
                 } catch {
-                    return .failure(.generic("Failed during inbound stream processing", inner: error))
+                    throw error
                 }
 
 

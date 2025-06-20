@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ShieldChainStepError: LocalizedError {
+public struct EcliptixChainStepError: LocalizedError {
     let message: String
 
     init(_ message: String) {

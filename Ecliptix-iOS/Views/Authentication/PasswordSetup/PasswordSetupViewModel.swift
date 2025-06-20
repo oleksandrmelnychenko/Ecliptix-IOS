@@ -318,7 +318,7 @@ final class PasswordSetupViewModel: ObservableObject {
             
             let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
             
-            _ = await networkController.executeServiceAction(
+            _ = try await networkController.executeServiceAction(
                 connectId: connectId,
                 serviceAction: .updateMembershipWithSecureKey,
                 plainBuffer: try request.serializedData(),

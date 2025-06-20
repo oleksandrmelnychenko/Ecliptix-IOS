@@ -18,31 +18,7 @@ enum SodiumFailureType {
     case bufferTooLarge
     case nilPointer
     case memoryProtectionFailed
-    
-//    var errorDescription: String {
-//        switch self {
-//        case .initialzationFailed:
-//            return "Failed to initialize libsodium library."
-//        case .libraryNotFound(let library):
-//            return "Failed load \(library). Ensure the native library is available and compatible."
-//        case .allocationFailed:
-//            return "."
-//        case .memoryPinningFailed:
-//            return "."
-//        case .secureWipeFailed:
-//            return "."
-//        case .invalidBufferSize:
-//            return "."
-//        case .bufferTooSmall:
-//            return "."
-//        case .bufferTooLarge:
-//            return "."
-//        case .nilPointer:
-//            return "."
-//        case .memoryProtectionFailed:
-//            return "."
-//        }
-//    }
+    case comparisonFailed
 }
 
 public struct SodiumFailure: CustomStringConvertible, Equatable, Hashable, Error, LocalizedError {
@@ -63,6 +39,10 @@ public struct SodiumFailure: CustomStringConvertible, Equatable, Hashable, Error
     // MARK: - Factory Methods
     static func initializationFailed(_ details: String, inner: Error? = nil) -> SodiumFailure {
         return SodiumFailure(type: .initialzationFailed, message: details, innerError: inner)
+    }
+    
+    static func comparisonFailed(_ details: String, inner: Error? = nil) -> SodiumFailure {
+        return SodiumFailure(type: .comparisonFailed, message: details, innerError: inner)
     }
     
     static func libraryNotFound(_ details: String, inner: Error? = nil) -> SodiumFailure {
@@ -143,6 +123,8 @@ extension SodiumFailure {
             return .bufferTooSmall(self.message)
         case .bufferTooLarge:
             return .dataTooLarge(self.message)
+        case .comparisonFailed:
+            return .generic(self.message, inner: self.innerError)
         }
     }
 }

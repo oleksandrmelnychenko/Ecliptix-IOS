@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPC
 
 @MainActor
 final class VerificationCodeViewModel: ObservableObject {
@@ -16,6 +17,9 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var secondsRemaining: Int = 0
     @Published var remainingTime: String = "00:00"
+    
+    @Published var showAlert: Bool = false
+    @Published var alertMessage: String = ""
 
     private let phoneNumber: String
     private let navigation: NavigationService
@@ -95,7 +99,7 @@ final class VerificationCodeViewModel: ObservableObject {
         let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
 
         do {
-            _ = await networkController.executeServiceAction(
+            _ = try await networkController.executeServiceAction(
                 connectId: connectId,
                 serviceAction: .validatePhoneNumber,
                 plainBuffer: try request.serializedData(),
@@ -152,7 +156,7 @@ final class VerificationCodeViewModel: ObservableObject {
         let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
 
         do {
-            _ = await networkController.executeServiceAction(
+            let result = try await networkController.executeServiceAction(
                 connectId: connectId,
                 serviceAction: .initiateVerification,
                 plainBuffer: try request.serializedData(),
@@ -188,6 +192,10 @@ final class VerificationCodeViewModel: ObservableObject {
                 },
                 token: cancellationToken
             )
+            
+            if result.isErr {
+                // hadle this
+            }
         } catch {
             debugPrint("Verification execution error: \(error)")
             errorMessage = "Failed to initiate verification"
@@ -215,7 +223,7 @@ final class VerificationCodeViewModel: ObservableObject {
         let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
         
         do {
-            _ = await networkController.executeServiceAction(
+            _ = try await networkController.executeServiceAction(
                 connectId: connectId,
                 serviceAction: .verifyOtp,
                 plainBuffer: try verifyCodeRequest.serializedData(),
@@ -265,9 +273,6 @@ final class VerificationCodeViewModel: ObservableObject {
             errorMessage = "Phone number identifier is missing"
             return
         }
-        
-        isLoading = true
-       defer { isLoading = false }
         
         _ = await self.initiateVerification(
             phoneNumberIdentifier: phoneId,

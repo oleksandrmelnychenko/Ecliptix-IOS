@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Sodium
 
 enum SodiumInteropException: Error {
     case invalidOperation(message: String)
@@ -76,6 +77,85 @@ final class SodiumInterop {
             .flatMap { validBuffer -> Result<Unit, SodiumFailure> in
                 return validBuffer.count <= smallBufferThreshold ? wipeSmallBuffer(&buffer) : wipeLargeBuffer(&buffer)
             }
+    }
+    
+    static func generateX25519KeyPair(keyPurpose: String) -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure>
+        {
+        var skHandle: SodiumSecureMemoryHandle? = nil;
+//        var skBytes: Data?  = nil;
+        var tempPrivCopy: Data?  = nil;
+        
+        do
+        {
+            debugPrint("[ShieldSession] Generating X25519 key pair for \(keyPurpose)")
+            
+            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize)
+            if allocResult.isErr {
+                return .failure(try allocResult.unwrapErr().toEcliptixProtocolFailure());
+            }
+            
+            skHandle = try allocResult.unwrap();
+            
+            guard let randomBytes = Sodium().randomBytes.buf(length: Constants.x25519PrivateKeySize) else {
+                skHandle?.dispose()
+                return .failure(.generic("Failed to generate random bytes for \(keyPurpose)"))
+            }
+            var skBytes: Data = Data(randomBytes)
+            
+            let writeResult = skBytes.withUnsafeBytes { bufferPointer in
+                skHandle!.write(data: bufferPointer)
+            }
+            _ = secureWipe(&skBytes)
+            if writeResult.isErr {
+                skHandle?.dispose()
+                return .failure(try writeResult.unwrapErr().toEcliptixProtocolFailure())
+            }
+            
+            tempPrivCopy = Data(count: Constants.x25519PrivateKeySize)
+            let readResult = tempPrivCopy!.withUnsafeMutableBytes { destPtr in
+                skHandle!.read(into: destPtr)
+            }
+            if readResult.isErr {
+                skHandle?.dispose()
+                _ = SodiumInterop.secureWipe(&tempPrivCopy)
+                return .failure(try readResult.unwrapErr().toEcliptixProtocolFailure())
+            }
+            
+            let deriveResult = Result<Data, EcliptixProtocolFailure>.Try {
+                return try ScalarMult.base(&tempPrivCopy!)
+            }.mapError { error in
+                EcliptixProtocolFailure.generic("Failed to derive \(keyPurpose) public key.", inner: error)
+            }
+            
+            _ = SodiumInterop.secureWipe(&tempPrivCopy)
+            tempPrivCopy = nil;
+            
+            if deriveResult.isErr {
+                skHandle?.dispose()
+                return .failure(try deriveResult.unwrapErr())
+            }
+            
+            var pkBytes = try deriveResult.unwrap()
+            if pkBytes.count != Constants.x25519PublicKeySize {
+                skHandle?.dispose()
+                _ = SodiumInterop.secureWipe(&pkBytes)
+                return .failure(.generic("Derived \(keyPurpose) public key has incorrect size."))
+            }
+            
+            debugPrint("[ShieldSession] Generated \(keyPurpose) Public Key: \(pkBytes.hexEncodedString())")
+            return .success((skHandle!, pkBytes))
+        }
+        catch
+        {
+            debugPrint("[ShieldSession] Error generating \(keyPurpose) key pair: \(error.localizedDescription)")
+            skHandle?.dispose()
+
+            if tempPrivCopy != nil {
+                _ = SodiumInterop.secureWipe(&tempPrivCopy)
+            }
+
+            return .failure(.keyGeneration("Unexpected error generating \(keyPurpose) key pair.", inner: error))
+        }
     }
     
 

@@ -96,18 +96,26 @@ struct VerificationCodeView: View {
             
             HStack {
                 Spacer()
-                Button(Strings.VerificationCode.Buttons.resendCode) {
-                    Task {
-                        await viewModel.reSendVerificationCode()
-                        focusedField = 0
+                if viewModel.secondsRemaining <= 0 {
+                    Button(Strings.VerificationCode.Buttons.resendCode) {
+                        Task {
+                            await viewModel.reSendVerificationCode()
+                            focusedField = 0
+                        }
                     }
+                    .disabled(viewModel.isLoading)
+                    .underline()
+                    Spacer()
                 }
-                .disabled(viewModel.isLoading)
-                .foregroundColor(.gray)
-                .underline()
-                Spacer()
             }
         })
+        .alert("Session Error", isPresented: $viewModel.showAlert) {
+            Button("OK") {
+                print("Session restart requested")
+            }
+        } message: {
+            Text(viewModel.alertMessage)
+        }
         .onAppear {
             viewModel.startValidation()
         }

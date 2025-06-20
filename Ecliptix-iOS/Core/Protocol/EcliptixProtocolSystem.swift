@@ -9,7 +9,7 @@ import Foundation
 import SwiftProtobuf
 
 public class EcliptixProtocolSystem {
-    private var connectSession: ConnectSession?
+    private var connectSession: EcliptixProtocolConnection?
     private let ecliptixSystemIdentityKeys: EcliptixSystemIdentityKeys
 
     init(ecliptixSystemIdentityKeys: EcliptixSystemIdentityKeys) {
@@ -27,20 +27,20 @@ public class EcliptixProtocolSystem {
         
         let localBundleResult = ecliptixSystemIdentityKeys.createPublicBundle()
         guard localBundleResult.isOk else {
-            throw ShieldChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
+            throw EcliptixChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
         }
         let localBundle = try localBundleResult.unwrap()
         let protoBundle = localBundle.toProtobufExchange()
         
-        let sessionResult = ConnectSession.create(connectId: connectId, localBundle: localBundle, isInitiator: true)
+        let sessionResult = EcliptixProtocolConnection.create(connectId: connectId, localBundle: localBundle, isInitiator: true)
         guard sessionResult.isOk else {
-            throw ShieldChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
+            throw EcliptixChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
         }
         connectSession = try sessionResult.unwrap()
         
         let dhPublicKeyResult = connectSession!.getCurrentSenderDhPublicKey()
         if dhPublicKeyResult.isErr {
-            throw ShieldChainStepError("Sender DH key not initialized: \(try dhPublicKeyResult.unwrapErr())")
+            throw EcliptixChainStepError("Sender DH key not initialized: \(try dhPublicKeyResult.unwrapErr())")
         }
         let dhPublicKey = try dhPublicKeyResult.unwrap()
         
@@ -50,7 +50,7 @@ public class EcliptixProtocolSystem {
         do {
             pubKeyExchange.payload = try protoBundle.serializedData()
         } catch {
-            throw ShieldChainStepError("Failed to serialize protoBundle: \(error.localizedDescription)")
+            throw EcliptixChainStepError("Failed to serialize protoBundle: \(error.localizedDescription)")
         }
         pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
 
@@ -65,7 +65,7 @@ public class EcliptixProtocolSystem {
     ) throws -> Ecliptix_Proto_PubKeyExchange {
 
         guard peerInitialMessageProto.state == .init_ else {
-            throw ShieldChainStepError("Expected peer message state to be Init.")
+            throw EcliptixChainStepError("Expected peer message state to be Init.")
         }
 
         let exchangeType = peerInitialMessageProto.ofType
@@ -81,7 +81,7 @@ public class EcliptixProtocolSystem {
             let peerBundleProto = try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerInitialMessageProto.payload)
             let peerBundleResult = LocalPublicKeyBundle.fromProtobufExchange(peerBundleProto)
             guard peerBundleResult.isOk else {
-                throw ShieldChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
             }
             let peerBundle = try peerBundleResult.unwrap()
 
@@ -95,7 +95,7 @@ public class EcliptixProtocolSystem {
                     ? "Invalid signature"
                     : String(describing: try? spkValidResult.unwrapErr().description)
 
-                throw ShieldChainStepError("SPK signature validation failed: \(errorMsg)")
+                throw EcliptixChainStepError("SPK signature validation failed: \(errorMsg)")
             }
 
             debugPrint("[ShieldPro] Generating ephemeral key for response.")
@@ -103,14 +103,14 @@ public class EcliptixProtocolSystem {
 
             let localBundleResult = ecliptixSystemIdentityKeys.createPublicBundle()
             guard localBundleResult.isOk else {
-                throw ShieldChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
             }
             let localBundle = try localBundleResult.unwrap()
             let protoBundle = localBundle.toProtobufExchange()
 
-            let sessionResult = ConnectSession.create(connectId: connectId, localBundle: localBundle, isInitiator: false)
+            let sessionResult = EcliptixProtocolConnection.create(connectId: connectId, localBundle: localBundle, isInitiator: false)
             guard sessionResult.isOk else {
-                throw ShieldChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
             }
             connectSession = try sessionResult.unwrap()
 
@@ -126,7 +126,7 @@ public class EcliptixProtocolSystem {
             )
             
             guard deriveResult.isOk else {
-                throw ShieldChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
+                throw EcliptixChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
             }
             rootKeyHandle = try deriveResult.unwrap()
 
@@ -135,7 +135,7 @@ public class EcliptixProtocolSystem {
                 rootKeyHandle!.read(into: buffer)
             }
             guard readResult.isOk else {
-                throw ShieldChainStepError("Failed to read root key: \(try readResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to read root key: \(try readResult.unwrapErr())")
             }
             debugPrint("[ShieldPro] Root Key: \(rootKeyBytes.hexEncodedString())")
 
@@ -147,19 +147,19 @@ public class EcliptixProtocolSystem {
 
             let finalizeResult = connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytes, initialPeerDhPublicKey: &peerDhKey)
             guard finalizeResult.isOk else {
-                throw ShieldChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
             }
 
             let stateResult = connectSession!.setConnectionState(.complete)
             guard stateResult.isOk else {
-                throw ShieldChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
             }
 
             _ = SodiumInterop.secureWipe(&rootKeyBytes)
 
             let dhPublicKeyResult = connectSession!.getCurrentSenderDhPublicKey()
             guard dhPublicKeyResult.isOk else {
-                throw ShieldChainStepError("Failed to get sender DH key: \(try dhPublicKeyResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to get sender DH key: \(try dhPublicKeyResult.unwrapErr())")
             }
             let dhPublicKey = try dhPublicKeyResult.unwrap()
 
@@ -189,7 +189,7 @@ public class EcliptixProtocolSystem {
         
         let peerBundleResult = LocalPublicKeyBundle.fromProtobufExchange(peerBundleProto)
         guard peerBundleResult.isOk else {
-            throw ShieldChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
+            throw EcliptixChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
         }
         let peerBundle = try peerBundleResult.unwrap()
         
@@ -200,13 +200,13 @@ public class EcliptixProtocolSystem {
             remoteSpkSignature: peerBundle.signedPreKeySignature
         )
         if !spkValidResult.isOk || (try? spkValidResult.unwrap()) != true {
-            throw ShieldChainStepError("SPK signature validation failed: \(spkValidResult.isOk ? "Invalid signature" : "\(try spkValidResult.unwrapErr())")")
+            throw EcliptixChainStepError("SPK signature validation failed: \(spkValidResult.isOk ? "Invalid signature" : "\(try spkValidResult.unwrapErr())")")
         }
         
         debugPrint("[ShieldPro] Deriving X3DH shared secret.")
         let deriveResult = ecliptixSystemIdentityKeys.x3dhDeriveSharedSecret(remoteBundle: peerBundle, info: Constants.x3dhInfo)
         guard deriveResult.isOk else {
-            throw ShieldChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
+            throw EcliptixChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
         }
         
         let rootKeyHandle = try deriveResult.unwrap()
@@ -217,7 +217,7 @@ public class EcliptixProtocolSystem {
         }
 
         guard result.isOk else {
-            throw ShieldChainStepError("Failed to read root key: \(try result.unwrapErr())")
+            throw EcliptixChainStepError("Failed to read root key: \(try result.unwrapErr())")
         }
         
         debugPrint("[ShieldPro] Derived Root Key: \(rootKeyBytes.hexEncodedString())")
@@ -225,14 +225,14 @@ public class EcliptixProtocolSystem {
         var initialDhPublicKeyCopy = peerMessage.initialDhPublicKey
         let finalizeResult = connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytes, initialPeerDhPublicKey: &initialDhPublicKeyCopy)
         guard finalizeResult.isOk else {
-            throw ShieldChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
+            throw EcliptixChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
         }
         
         try connectSession!.setPeerBundle(peerBundle)
         
         let stateResult = connectSession!.setConnectionState(.complete)
         guard stateResult.isOk else {
-            throw ShieldChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
+            throw EcliptixChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
         }
         
         _ = SodiumInterop.secureWipe(&rootKeyBytes)
@@ -244,7 +244,7 @@ public class EcliptixProtocolSystem {
         
         var ciphertext: Data? = nil
         var tag: Data? = nil
-        var messageKeyClone: ShieldMessageKey? = nil
+        var messageKeyClone: EcliptixMessageKey? = nil
         
         defer {
             messageKeyClone?.dispose()
@@ -257,7 +257,7 @@ public class EcliptixProtocolSystem {
             let prepResult = connectSession!.prepareNextSendMessage()
             
             guard prepResult.isOk else {
-                throw ShieldChainStepError("Failed to prepare outgoing message key: \(try prepResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to prepare outgoing message key: \(try prepResult.unwrapErr())")
             }
             
             let prepValues = try prepResult.unwrap()
@@ -266,7 +266,7 @@ public class EcliptixProtocolSystem {
             
             let nonceResult = connectSession!.generateNextNonce()
             guard nonceResult.isOk else {
-                throw ShieldChainStepError("Failed to generate nonce: \(try nonceResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to generate nonce: \(try nonceResult.unwrapErr())")
             }
             
             let nonce = try nonceResult.unwrap()
@@ -281,7 +281,7 @@ public class EcliptixProtocolSystem {
                         return value
                     },
                     onFailure: { error in
-                        throw ShieldChainStepError("Failed to get sender DH key: \(error.localizedDescription)")
+                        throw EcliptixChainStepError("Failed to get sender DH key: \(error.localizedDescription)")
                     }
                 ) : nil
             
@@ -293,9 +293,9 @@ public class EcliptixProtocolSystem {
             _ = messageKey.readKeyMaterial(into: &messageKeyBytes)
             debugPrint("[ShieldPro][Encrypt] Message Key: \(messageKeyBytes.hexEncodedString())")
             
-            let cloneResult = ShieldMessageKey.new(index: messageKey.index, keyMaterial: &messageKeyBytes)
+            let cloneResult = EcliptixMessageKey.new(index: messageKey.index, keyMaterial: &messageKeyBytes)
             guard cloneResult.isOk else {
-                throw ShieldChainStepError("Failed to clone message key: \(try cloneResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to clone message key: \(try cloneResult.unwrapErr())")
             }
             
             messageKeyClone = try cloneResult.unwrap()
@@ -303,7 +303,7 @@ public class EcliptixProtocolSystem {
             
             let peerBundleResult = connectSession!.getPeerBundle()
             guard peerBundleResult.isOk else {
-                throw ShieldChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
             }
             
             let peerBundle = try peerBundleResult.unwrap()
@@ -362,7 +362,7 @@ public class EcliptixProtocolSystem {
 
         var messageKeyBytes: Data?
         var plaintext: Data?
-        var messageKeyClone: ShieldMessageKey?
+        var messageKeyClone: EcliptixMessageKey?
 
         defer {
             _ = SodiumInterop.secureWipe(&messageKeyBytes)
@@ -383,7 +383,7 @@ public class EcliptixProtocolSystem {
                         debugPrint("[ShieldPro] Performing DH ratchet due to new peer DH key.")
                         let ratchetResult = connectSession!.performReceivingRatchet(receivedDhKey: receivedDhKey!)
                         guard ratchetResult.isOk else {
-                            throw ShieldChainStepError("Fialied to perform DH ratchet: \(try ratchetResult.unwrapErr())")
+                            throw EcliptixChainStepError("Fialied to perform DH ratchet: \(try ratchetResult.unwrapErr())")
                         }
                     }
                 }
@@ -396,7 +396,7 @@ public class EcliptixProtocolSystem {
             let messageKeyResult = connectSession!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
             
             guard messageKeyResult.isOk else {
-                throw ShieldChainStepError("Failed to process received message: \(try messageKeyResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to process received message: \(try messageKeyResult.unwrapErr())")
             }
             
             let originalMessageKey = try messageKeyResult.unwrap()
@@ -405,16 +405,16 @@ public class EcliptixProtocolSystem {
             _ = originalMessageKey.readKeyMaterial(into: &messageKeyBytes!)
             debugPrint("[ShieldPro][Decrypt] Message Key: \(messageKeyBytes!.hexEncodedString())")
 
-            let cloneResult = ShieldMessageKey.new(index: originalMessageKey.index, keyMaterial: &messageKeyBytes!)
+            let cloneResult = EcliptixMessageKey.new(index: originalMessageKey.index, keyMaterial: &messageKeyBytes!)
             guard cloneResult.isOk else {
-                throw ShieldChainStepError("Failed to clone message key for decryption: \(try cloneResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to clone message key for decryption: \(try cloneResult.unwrapErr())")
             }
             messageKeyClone = try cloneResult.unwrap()
             debugPrint("[ShieldPro] Processed Key Index: \(messageKeyClone!.index)")
 
             let peerBundleResult = connectSession!.getPeerBundle()
             guard peerBundleResult.isOk else {
-                throw ShieldChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
+                throw EcliptixChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
             }
             let peerBundle = try peerBundleResult.unwrap()
             
