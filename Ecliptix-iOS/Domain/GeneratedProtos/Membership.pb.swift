@@ -118,12 +118,12 @@ public struct Ecliptix_Proto_Membership_Membership: @unchecked Sendable {
   fileprivate var _creationStatus: Ecliptix_Proto_Membership_Membership.CreationStatus? = nil
 }
 
-public struct Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: @unchecked Sendable {
+public struct Ecliptix_Proto_Membership_OprfRegistrationInitRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var secureKey: Data = Data()
+  public var peerOprf: Data = Data()
 
   public var membershipIdentifier: Data = Data()
 
@@ -132,12 +132,14 @@ public struct Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: @u
   public init() {}
 }
 
-public struct Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: Sendable {
+public struct Ecliptix_Proto_Membership_OprfRegistrationInitResponse: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var result: Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.UpdateResult = .succeeded
+  public var peerOprf: Data = Data()
+
+  public var result: Ecliptix_Proto_Membership_OprfRegistrationInitResponse.UpdateResult = .succeeded
 
   public var message: String {
     get {return _message ?? String()}
@@ -186,7 +188,7 @@ public struct Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: S
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.UpdateResult] = [
+    public static let allCases: [Ecliptix_Proto_Membership_OprfRegistrationInitResponse.UpdateResult] = [
       .succeeded,
       .invalidCredentials,
     ]
@@ -199,26 +201,24 @@ public struct Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: S
   fileprivate var _membership: Ecliptix_Proto_Membership_Membership? = nil
 }
 
-public struct Ecliptix_Proto_Membership_SignInMembershipRequest: @unchecked Sendable {
+public struct Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var phoneNumber: String = String()
+  public var peerRegistrationRecord: Data = Data()
 
-  public var secureKey: Data = Data()
+  public var membershipIdentifier: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 }
 
-public struct Ecliptix_Proto_Membership_SignInMembershipResponse: Sendable {
+public struct Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
-
-  public var result: Ecliptix_Proto_Membership_SignInMembershipResponse.SignInResult = .succeeded
 
   public var message: String {
     get {return _message ?? String()}
@@ -229,6 +229,131 @@ public struct Ecliptix_Proto_Membership_SignInMembershipResponse: Sendable {
   /// Clears the value of `message`. Subsequent reads from it will return its default value.
   public mutating func clearMessage() {self._message = nil}
 
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _message: String? = nil
+}
+
+public struct Ecliptix_Proto_Membership_OpaqueSignInInitRequest: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var phoneNumber: String = String()
+
+  public var peerOprf: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Ecliptix_Proto_Membership_OpaqueSignInInitResponse: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var serverOprfResponse: Data = Data()
+
+  public var serverEphemeralPublicKey: Data = Data()
+
+  public var registrationRecord: Data = Data()
+
+  public var serverStateToken: Data = Data()
+
+  public var message: String {
+    get {return _message ?? String()}
+    set {_message = newValue}
+  }
+  /// Returns true if `message` has been explicitly set.
+  public var hasMessage: Bool {return self._message != nil}
+  /// Clears the value of `message`. Subsequent reads from it will return its default value.
+  public mutating func clearMessage() {self._message = nil}
+
+  public var minutesUntilRetry: Int32 {
+    get {return _minutesUntilRetry ?? 0}
+    set {_minutesUntilRetry = newValue}
+  }
+  /// Returns true if `minutesUntilRetry` has been explicitly set.
+  public var hasMinutesUntilRetry: Bool {return self._minutesUntilRetry != nil}
+  /// Clears the value of `minutesUntilRetry`. Subsequent reads from it will return its default value.
+  public mutating func clearMinutesUntilRetry() {self._minutesUntilRetry = nil}
+
+  public var result: Ecliptix_Proto_Membership_OpaqueSignInInitResponse.SignInResult = .succeeded
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum SignInResult: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+    case succeeded // = 0
+    case invalidCredentials // = 1
+    case loginAttemptExceeded // = 2
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .succeeded
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .succeeded
+      case 1: self = .invalidCredentials
+      case 2: self = .loginAttemptExceeded
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .succeeded: return 0
+      case .invalidCredentials: return 1
+      case .loginAttemptExceeded: return 2
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [Ecliptix_Proto_Membership_OpaqueSignInInitResponse.SignInResult] = [
+      .succeeded,
+      .invalidCredentials,
+      .loginAttemptExceeded,
+    ]
+
+  }
+
+  public init() {}
+
+  fileprivate var _message: String? = nil
+  fileprivate var _minutesUntilRetry: Int32? = nil
+}
+
+public struct Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var phoneNumber: String = String()
+
+  public var clientEphemeralPublicKey: Data = Data()
+
+  public var clientMac: Data = Data()
+
+  public var serverStateToken: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var serverMac: Data = Data()
+
   public var membership: Ecliptix_Proto_Membership_Membership {
     get {return _membership ?? Ecliptix_Proto_Membership_Membership()}
     set {_membership = newValue}
@@ -238,8 +363,19 @@ public struct Ecliptix_Proto_Membership_SignInMembershipResponse: Sendable {
   /// Clears the value of `membership`. Subsequent reads from it will return its default value.
   public mutating func clearMembership() {self._membership = nil}
 
-  public var minutesUntilRetry: String {
-    get {return _minutesUntilRetry ?? String()}
+  public var result: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse.SignInResult = .succeeded
+
+  public var message: String {
+    get {return _message ?? String()}
+    set {_message = newValue}
+  }
+  /// Returns true if `message` has been explicitly set.
+  public var hasMessage: Bool {return self._message != nil}
+  /// Clears the value of `message`. Subsequent reads from it will return its default value.
+  public mutating func clearMessage() {self._message = nil}
+
+  public var minutesUntilRetry: Int32 {
+    get {return _minutesUntilRetry ?? 0}
     set {_minutesUntilRetry = newValue}
   }
   /// Returns true if `minutesUntilRetry` has been explicitly set.
@@ -279,7 +415,7 @@ public struct Ecliptix_Proto_Membership_SignInMembershipResponse: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Ecliptix_Proto_Membership_SignInMembershipResponse.SignInResult] = [
+    public static let allCases: [Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse.SignInResult] = [
       .succeeded,
       .invalidCredentials,
       .loginAttemptExceeded,
@@ -289,9 +425,67 @@ public struct Ecliptix_Proto_Membership_SignInMembershipResponse: Sendable {
 
   public init() {}
 
-  fileprivate var _message: String? = nil
   fileprivate var _membership: Ecliptix_Proto_Membership_Membership? = nil
-  fileprivate var _minutesUntilRetry: String? = nil
+  fileprivate var _message: String? = nil
+  fileprivate var _minutesUntilRetry: Int32? = nil
+}
+
+public struct Ecliptix_Proto_Membership_AkeServerState: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var serverEphemeralPrivateKeyBytes: Data = Data()
+
+  public var serverEphemeralPublicKey: Data = Data()
+
+  public var clientStaticPublicKey: Data = Data()
+
+  public var oprfResponse: Data = Data()
+
+  public var username: String = String()
+
+  public var registrationRecord: Data = Data()
+
+  public var expiration: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {return _expiration ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_expiration = newValue}
+  }
+  /// Returns true if `expiration` has been explicitly set.
+  public var hasExpiration: Bool {return self._expiration != nil}
+  /// Clears the value of `expiration`. Subsequent reads from it will return its default value.
+  public mutating func clearExpiration() {self._expiration = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _expiration: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+}
+
+public struct Ecliptix_Proto_Membership_AkePasswordResetState: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var username: String = String()
+
+  public var resetToken: String = String()
+
+  public var expiration: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {return _expiration ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_expiration = newValue}
+  }
+  /// Returns true if `expiration` has been explicitly set.
+  public var hasExpiration: Bool {return self._expiration != nil}
+  /// Clears the value of `expiration`. Subsequent reads from it will return its default value.
+  public mutating func clearExpiration() {self._expiration = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _expiration: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -361,10 +555,10 @@ extension Ecliptix_Proto_Membership_Membership.CreationStatus: SwiftProtobuf._Pr
   ]
 }
 
-extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateMembershipWithSecureKeyRequest"
+extension Ecliptix_Proto_Membership_OprfRegistrationInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRegistrationInitRequest"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "secure_key"),
+    1: .standard(proto: "peer_oprf"),
     2: .standard(proto: "membership_identifier"),
   ]
 
@@ -374,7 +568,7 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: SwiftP
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.secureKey) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerOprf) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.membershipIdentifier) }()
       default: break
       }
@@ -382,8 +576,8 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: SwiftP
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.secureKey.isEmpty {
-      try visitor.visitSingularBytesField(value: self.secureKey, fieldNumber: 1)
+    if !self.peerOprf.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerOprf, fieldNumber: 1)
     }
     if !self.membershipIdentifier.isEmpty {
       try visitor.visitSingularBytesField(value: self.membershipIdentifier, fieldNumber: 2)
@@ -391,20 +585,21 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest: SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest, rhs: Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest) -> Bool {
-    if lhs.secureKey != rhs.secureKey {return false}
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRegistrationInitRequest, rhs: Ecliptix_Proto_Membership_OprfRegistrationInitRequest) -> Bool {
+    if lhs.peerOprf != rhs.peerOprf {return false}
     if lhs.membershipIdentifier != rhs.membershipIdentifier {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateMembershipWithSecureKeyResponse"
+extension Ecliptix_Proto_Membership_OprfRegistrationInitResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRegistrationInitResponse"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "result"),
-    2: .same(proto: "message"),
-    3: .same(proto: "membership"),
+    1: .standard(proto: "peer_oprf"),
+    2: .same(proto: "result"),
+    3: .same(proto: "message"),
+    4: .same(proto: "membership"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -413,9 +608,10 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: Swift
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularEnumField(value: &self.result) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self._message) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerOprf) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.result) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
       default: break
       }
     }
@@ -426,19 +622,23 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: Swift
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.peerOprf.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerOprf, fieldNumber: 1)
+    }
     if self.result != .succeeded {
-      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 1)
+      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 2)
     }
     try { if let v = self._message {
-      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+      try visitor.visitSingularStringField(value: v, fieldNumber: 3)
     } }()
     try { if let v = self._membership {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse, rhs: Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRegistrationInitResponse, rhs: Ecliptix_Proto_Membership_OprfRegistrationInitResponse) -> Bool {
+    if lhs.peerOprf != rhs.peerOprf {return false}
     if lhs.result != rhs.result {return false}
     if lhs._message != rhs._message {return false}
     if lhs._membership != rhs._membership {return false}
@@ -447,18 +647,18 @@ extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse: Swift
   }
 }
 
-extension Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.UpdateResult: SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_Membership_OprfRegistrationInitResponse.UpdateResult: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "SUCCEEDED"),
     1: .same(proto: "INVALID_CREDENTIALS"),
   ]
 }
 
-extension Ecliptix_Proto_Membership_SignInMembershipRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SignInMembershipRequest"
+extension Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRegistrationCompleteRequest"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "phone_number"),
-    3: .standard(proto: "secure_key"),
+    1: .standard(proto: "peer_registration_record"),
+    2: .standard(proto: "membership_identifier"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -467,8 +667,82 @@ extension Ecliptix_Proto_Membership_SignInMembershipRequest: SwiftProtobuf.Messa
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 2: try { try decoder.decodeSingularStringField(value: &self.phoneNumber) }()
-      case 3: try { try decoder.decodeSingularBytesField(value: &self.secureKey) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerRegistrationRecord) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.membershipIdentifier) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.peerRegistrationRecord.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerRegistrationRecord, fieldNumber: 1)
+    }
+    if !self.membershipIdentifier.isEmpty {
+      try visitor.visitSingularBytesField(value: self.membershipIdentifier, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest, rhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest) -> Bool {
+    if lhs.peerRegistrationRecord != rhs.peerRegistrationRecord {return false}
+    if lhs.membershipIdentifier != rhs.membershipIdentifier {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRegistrationCompleteResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "message"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._message {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse, rhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse) -> Bool {
+    if lhs._message != rhs._message {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OpaqueSignInInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OpaqueSignInInitRequest"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "phone_number"),
+    2: .standard(proto: "peer_oprf"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.phoneNumber) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.peerOprf) }()
       default: break
       }
     }
@@ -476,29 +750,32 @@ extension Ecliptix_Proto_Membership_SignInMembershipRequest: SwiftProtobuf.Messa
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.phoneNumber.isEmpty {
-      try visitor.visitSingularStringField(value: self.phoneNumber, fieldNumber: 2)
+      try visitor.visitSingularStringField(value: self.phoneNumber, fieldNumber: 1)
     }
-    if !self.secureKey.isEmpty {
-      try visitor.visitSingularBytesField(value: self.secureKey, fieldNumber: 3)
+    if !self.peerOprf.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerOprf, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_Membership_SignInMembershipRequest, rhs: Ecliptix_Proto_Membership_SignInMembershipRequest) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_Membership_OpaqueSignInInitRequest, rhs: Ecliptix_Proto_Membership_OpaqueSignInInitRequest) -> Bool {
     if lhs.phoneNumber != rhs.phoneNumber {return false}
-    if lhs.secureKey != rhs.secureKey {return false}
+    if lhs.peerOprf != rhs.peerOprf {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Ecliptix_Proto_Membership_SignInMembershipResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SignInMembershipResponse"
+extension Ecliptix_Proto_Membership_OpaqueSignInInitResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OpaqueSignInInitResponse"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "result"),
-    2: .same(proto: "message"),
-    3: .same(proto: "membership"),
-    4: .standard(proto: "minutes_until_retry"),
+    1: .standard(proto: "server_oprf_response"),
+    2: .standard(proto: "server_ephemeral_public_key"),
+    3: .standard(proto: "registration_record"),
+    4: .standard(proto: "server_state_token"),
+    5: .same(proto: "message"),
+    6: .standard(proto: "minutes_until_retry"),
+    7: .same(proto: "result"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -507,10 +784,13 @@ extension Ecliptix_Proto_Membership_SignInMembershipResponse: SwiftProtobuf.Mess
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularEnumField(value: &self.result) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self._message) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
-      case 4: try { try decoder.decodeSingularStringField(value: &self._minutesUntilRetry) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.serverOprfResponse) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.serverEphemeralPublicKey) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.registrationRecord) }()
+      case 4: try { try decoder.decodeSingularBytesField(value: &self.serverStateToken) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      case 6: try { try decoder.decodeSingularInt32Field(value: &self._minutesUntilRetry) }()
+      case 7: try { try decoder.decodeSingularEnumField(value: &self.result) }()
       default: break
       }
     }
@@ -521,35 +801,285 @@ extension Ecliptix_Proto_Membership_SignInMembershipResponse: SwiftProtobuf.Mess
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    if self.result != .succeeded {
-      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 1)
+    if !self.serverOprfResponse.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverOprfResponse, fieldNumber: 1)
+    }
+    if !self.serverEphemeralPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverEphemeralPublicKey, fieldNumber: 2)
+    }
+    if !self.registrationRecord.isEmpty {
+      try visitor.visitSingularBytesField(value: self.registrationRecord, fieldNumber: 3)
+    }
+    if !self.serverStateToken.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverStateToken, fieldNumber: 4)
     }
     try { if let v = self._message {
-      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    } }()
-    try { if let v = self._membership {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      try visitor.visitSingularStringField(value: v, fieldNumber: 5)
     } }()
     try { if let v = self._minutesUntilRetry {
+      try visitor.visitSingularInt32Field(value: v, fieldNumber: 6)
+    } }()
+    if self.result != .succeeded {
+      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OpaqueSignInInitResponse, rhs: Ecliptix_Proto_Membership_OpaqueSignInInitResponse) -> Bool {
+    if lhs.serverOprfResponse != rhs.serverOprfResponse {return false}
+    if lhs.serverEphemeralPublicKey != rhs.serverEphemeralPublicKey {return false}
+    if lhs.registrationRecord != rhs.registrationRecord {return false}
+    if lhs.serverStateToken != rhs.serverStateToken {return false}
+    if lhs._message != rhs._message {return false}
+    if lhs._minutesUntilRetry != rhs._minutesUntilRetry {return false}
+    if lhs.result != rhs.result {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OpaqueSignInInitResponse.SignInResult: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SUCCEEDED"),
+    1: .same(proto: "INVALID_CREDENTIALS"),
+    2: .same(proto: "LOGIN_ATTEMPT_EXCEEDED"),
+  ]
+}
+
+extension Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OpaqueSignInFinalizeRequest"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "phone_number"),
+    2: .standard(proto: "client_ephemeral_public_key"),
+    3: .standard(proto: "client_mac"),
+    4: .standard(proto: "server_state_token"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.phoneNumber) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.clientEphemeralPublicKey) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.clientMac) }()
+      case 4: try { try decoder.decodeSingularBytesField(value: &self.serverStateToken) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.phoneNumber.isEmpty {
+      try visitor.visitSingularStringField(value: self.phoneNumber, fieldNumber: 1)
+    }
+    if !self.clientEphemeralPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.clientEphemeralPublicKey, fieldNumber: 2)
+    }
+    if !self.clientMac.isEmpty {
+      try visitor.visitSingularBytesField(value: self.clientMac, fieldNumber: 3)
+    }
+    if !self.serverStateToken.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverStateToken, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, rhs: Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest) -> Bool {
+    if lhs.phoneNumber != rhs.phoneNumber {return false}
+    if lhs.clientEphemeralPublicKey != rhs.clientEphemeralPublicKey {return false}
+    if lhs.clientMac != rhs.clientMac {return false}
+    if lhs.serverStateToken != rhs.serverStateToken {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OpaqueSignInFinalizeResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "server_mac"),
+    2: .same(proto: "membership"),
+    3: .same(proto: "result"),
+    4: .same(proto: "message"),
+    5: .standard(proto: "minutes_until_retry"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.serverMac) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
+      case 3: try { try decoder.decodeSingularEnumField(value: &self.result) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      case 5: try { try decoder.decodeSingularInt32Field(value: &self._minutesUntilRetry) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.serverMac.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverMac, fieldNumber: 1)
+    }
+    try { if let v = self._membership {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.result != .succeeded {
+      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 3)
+    }
+    try { if let v = self._message {
       try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+    } }()
+    try { if let v = self._minutesUntilRetry {
+      try visitor.visitSingularInt32Field(value: v, fieldNumber: 5)
     } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_Membership_SignInMembershipResponse, rhs: Ecliptix_Proto_Membership_SignInMembershipResponse) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse, rhs: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse) -> Bool {
+    if lhs.serverMac != rhs.serverMac {return false}
+    if lhs._membership != rhs._membership {return false}
     if lhs.result != rhs.result {return false}
     if lhs._message != rhs._message {return false}
-    if lhs._membership != rhs._membership {return false}
     if lhs._minutesUntilRetry != rhs._minutesUntilRetry {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Ecliptix_Proto_Membership_SignInMembershipResponse.SignInResult: SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse.SignInResult: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "SUCCEEDED"),
     1: .same(proto: "INVALID_CREDENTIALS"),
     2: .same(proto: "LOGIN_ATTEMPT_EXCEEDED"),
   ]
+}
+
+extension Ecliptix_Proto_Membership_AkeServerState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".AkeServerState"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "server_ephemeral_private_key_bytes"),
+    2: .standard(proto: "server_ephemeral_public_key"),
+    3: .standard(proto: "client_static_public_key"),
+    4: .standard(proto: "oprf_response"),
+    5: .same(proto: "username"),
+    6: .standard(proto: "registration_record"),
+    7: .same(proto: "expiration"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.serverEphemeralPrivateKeyBytes) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.serverEphemeralPublicKey) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.clientStaticPublicKey) }()
+      case 4: try { try decoder.decodeSingularBytesField(value: &self.oprfResponse) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.username) }()
+      case 6: try { try decoder.decodeSingularBytesField(value: &self.registrationRecord) }()
+      case 7: try { try decoder.decodeSingularMessageField(value: &self._expiration) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.serverEphemeralPrivateKeyBytes.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverEphemeralPrivateKeyBytes, fieldNumber: 1)
+    }
+    if !self.serverEphemeralPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverEphemeralPublicKey, fieldNumber: 2)
+    }
+    if !self.clientStaticPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.clientStaticPublicKey, fieldNumber: 3)
+    }
+    if !self.oprfResponse.isEmpty {
+      try visitor.visitSingularBytesField(value: self.oprfResponse, fieldNumber: 4)
+    }
+    if !self.username.isEmpty {
+      try visitor.visitSingularStringField(value: self.username, fieldNumber: 5)
+    }
+    if !self.registrationRecord.isEmpty {
+      try visitor.visitSingularBytesField(value: self.registrationRecord, fieldNumber: 6)
+    }
+    try { if let v = self._expiration {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_AkeServerState, rhs: Ecliptix_Proto_Membership_AkeServerState) -> Bool {
+    if lhs.serverEphemeralPrivateKeyBytes != rhs.serverEphemeralPrivateKeyBytes {return false}
+    if lhs.serverEphemeralPublicKey != rhs.serverEphemeralPublicKey {return false}
+    if lhs.clientStaticPublicKey != rhs.clientStaticPublicKey {return false}
+    if lhs.oprfResponse != rhs.oprfResponse {return false}
+    if lhs.username != rhs.username {return false}
+    if lhs.registrationRecord != rhs.registrationRecord {return false}
+    if lhs._expiration != rhs._expiration {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_AkePasswordResetState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".AkePasswordResetState"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "username"),
+    2: .standard(proto: "reset_token"),
+    3: .same(proto: "expiration"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.username) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.resetToken) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._expiration) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.username.isEmpty {
+      try visitor.visitSingularStringField(value: self.username, fieldNumber: 1)
+    }
+    if !self.resetToken.isEmpty {
+      try visitor.visitSingularStringField(value: self.resetToken, fieldNumber: 2)
+    }
+    try { if let v = self._expiration {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_AkePasswordResetState, rhs: Ecliptix_Proto_Membership_AkePasswordResetState) -> Bool {
+    if lhs.username != rhs.username {return false}
+    if lhs.resetToken != rhs.resetToken {return false}
+    if lhs._expiration != rhs._expiration {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }

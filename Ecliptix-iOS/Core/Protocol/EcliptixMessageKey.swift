@@ -9,7 +9,7 @@ import Foundation
 
 final class EcliptixMessageKey: Equatable, Hashable {
     private var disposed: Bool
-    private var keyHandle: SodiumSecureMemoryHandle
+    public var keyHandle: SodiumSecureMemoryHandle
     let index: UInt32
 
     private init(index: UInt32, keyHandle: SodiumSecureMemoryHandle) {
@@ -20,6 +20,10 @@ final class EcliptixMessageKey: Equatable, Hashable {
 
     deinit {
         dispose(disposing: false)
+    }
+    
+    func dispose() {
+        dispose(disposing: true)
     }
 
     static func new(index: UInt32, keyMaterial: inout Data) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
@@ -62,15 +66,11 @@ final class EcliptixMessageKey: Equatable, Hashable {
         }
 
         return destination.withUnsafeMutableBytes { destPtr in
-            keyHandle.read(into: destPtr).mapSodiumFailure()
+            self.keyHandle.read(into: destPtr).mapSodiumFailure()
         }
     }
-
-    func dispose() {
-        dispose(disposing: true)
-    }
     
-    func dispose(disposing: Bool) {
+    private func dispose(disposing: Bool) {
         if !self.disposed {
             if disposing {
                 keyHandle.dispose()

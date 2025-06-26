@@ -22,28 +22,7 @@ final public class SodiumSecureMemoryHandle {
     var isInvalid: Bool {
         return !isAllocated
     }
-    
-    func dangerousAddRef(_ success: inout Bool) throws {
-        if isClosed {
-            success = false
-            throw EcliptixProtocolFailure.objectDisposed("Memory handle already closed.")
-        }
-        refCount += 1
-        success = true
-    }
-
-    func dangerousRelease() {
-        refCount -= 1
-        if refCount <= 0 {
-            if let ptr = pointer {
-                SodiumInterop.sodium_free(ptr)
-            }
-            pointer = nil
-            isClosed = true
-            isAllocated = false
-        }
-    }
-    
+        
     init(pointer: UnsafeMutableRawPointer?, length: Int, isAllocated: Bool) {
         self.pointer = pointer
         self.length = length
@@ -257,10 +236,31 @@ final public class SodiumSecureMemoryHandle {
         
         return true
     }
-
+    
     func dispose() {
         if !isClosed && pointer != nil {
             SodiumInterop.sodium_free(pointer)
+            pointer = nil
+            isClosed = true
+            isAllocated = false
+        }
+    }
+    
+    private func dangerousAddRef(_ success: inout Bool) throws {
+        if isClosed {
+            success = false
+            throw EcliptixProtocolFailure.objectDisposed("Memory handle already closed.")
+        }
+        refCount += 1
+        success = true
+    }
+
+    private func dangerousRelease() {
+        refCount -= 1
+        if refCount <= 0 {
+            if let ptr = pointer {
+                SodiumInterop.sodium_free(ptr)
+            }
             pointer = nil
             isClosed = true
             isAllocated = false

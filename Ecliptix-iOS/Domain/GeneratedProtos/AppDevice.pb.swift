@@ -80,6 +80,8 @@ public struct Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply: @unchecked
 
   public var uniqueID: Data = Data()
 
+  public var serverPublicKey: Data = Data()
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum Status: SwiftProtobuf.Enum, Swift.CaseIterable {
@@ -205,6 +207,7 @@ extension Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply: SwiftProtobuf.
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "status"),
     2: .standard(proto: "unique_id"),
+    3: .standard(proto: "server_public_key"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -215,6 +218,7 @@ extension Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply: SwiftProtobuf.
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self.status) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.uniqueID) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.serverPublicKey) }()
       default: break
       }
     }
@@ -227,12 +231,16 @@ extension Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply: SwiftProtobuf.
     if !self.uniqueID.isEmpty {
       try visitor.visitSingularBytesField(value: self.uniqueID, fieldNumber: 2)
     }
+    if !self.serverPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverPublicKey, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply, rhs: Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply) -> Bool {
     if lhs.status != rhs.status {return false}
     if lhs.uniqueID != rhs.uniqueID {return false}
+    if lhs.serverPublicKey != rhs.serverPublicKey {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

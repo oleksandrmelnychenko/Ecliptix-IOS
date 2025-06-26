@@ -57,28 +57,36 @@ enum HkdfError: LocalizedError, Equatable {
 
 public final class HkdfSha256 {
     private static let hashOutputLength = 32
-    private var ikm: Data
-    private var salt: Data
+    private let ikmHandle: SodiumSecureMemoryHandle
+    private var saltHandle: SodiumSecureMemoryHandle
     private var disposed = false
-    private let sodium: Sodium
     
     public init(ikm: inout Data, salt: inout Data?) throws {
-        SodiumInterop.sodium_init()
-        sodium = Sodium()
-        self.ikm = ikm
-        
-        if salt == nil || (salt != nil && salt!.isEmpty) {
-            self.salt = Data(count: Self.hashOutputLength)
+        let ikmHandle = try SodiumSecureMemoryHandle.allocate(length: ikm.count).unwrap()
+        _ = ikm.withUnsafeBytes { bufferPointer in
+            ikmHandle.write(data: bufferPointer)
         }
-        else {
-            if salt!.count != Self.hashOutputLength {
+
+        let saltHandle: SodiumSecureMemoryHandle
+        if salt == nil || salt!.isEmpty {
+            saltHandle = try SodiumSecureMemoryHandle.allocate(length: Self.hashOutputLength).unwrap()
+        } else {
+            guard salt!.count == Self.hashOutputLength else {
                 throw HkdfError.invalidSaltLength(hashOutputLength: Self.hashOutputLength)
             }
-            
-            self.salt = salt!
+            saltHandle = try SodiumSecureMemoryHandle.allocate(length: salt!.count).unwrap()
+            _ = salt!.withUnsafeBytes { bufferPointer in
+                saltHandle.write(data: bufferPointer).mapSodiumFailure()
+            }
         }
-        
-        disposed = false
+
+        self.ikmHandle = ikmHandle
+        self.saltHandle = saltHandle
+        self.disposed = false
+    }
+    
+    deinit {
+        dispose()
     }
     
     public func dispose() {
@@ -90,83 +98,83 @@ public final class HkdfSha256 {
         guard output.count <= 255 * Self.hashOutputLength else {
             throw HkdfError.outputLengthTooLarge
         }
+        if output.isEmpty {
+            return
+        }
 
-        var prk: Data = Data()
+        var prk: Data = Data(count: Self.hashOutputLength)
+        var ikmBytes: Data?
+        var saltBytes: Data?
+        
+        defer {
+            _ = SodiumInterop.secureWipe(&ikmBytes)
+            _ = SodiumInterop.secureWipe(&saltBytes)
+        }
         
         do {
-            
-            var prkBytes = signHmacSha256(ikm: &ikm, salt: &salt)
+            ikmBytes = try self.ikmHandle.readBytes(length: self.ikmHandle.length).unwrap()
+            saltBytes = try self.saltHandle.readBytes(length: self.saltHandle.length).unwrap()
+            var prkBytes = signHmacSha256(ikm: &ikmBytes!, salt: &saltBytes!)
             if prkBytes.count != Self.hashOutputLength {
                 throw HkdfError.hmacOutputSizeMismatch
             }
             prk = Data(count: prkBytes.count)
             prk.replaceSubrange(0..<prkBytes.count, with: prkBytes)
-            wipe(&prkBytes)
+            _ = SodiumInterop.secureWipe(&prkBytes)
+            
         } catch {
             throw HkdfError.hkdfExtractFailed(error)
         }
         
-        var counter: UInt8 = 1
+        var counter: UInt32 = 1
         var bytesWritten = 0
-        var requiredInputSize = Self.hashOutputLength + info.count + 1
+        var previousHash = Data(count: Self.hashOutputLength)
         
-        var inputBufferHeap = Data(count: requiredInputSize)
-        var inputBufferSpan = inputBufferHeap
-        var hash = Data(count: Self.hashOutputLength)
-        
-        var prkAsKey = Data(count: Self.hashOutputLength)
-        var tempInputArray: Data?
+        let hmacInputSize = Self.hashOutputLength + info.count + 1
+        var hmacInputBuffer: Data?
         
         defer {
+            prk.resetBytes(in: 0..<prk.count)
             prk.removeAll()
-            hash.removeAll()
+            previousHash.resetBytes(in: 0..<previousHash.count)
+            previousHash.removeAll()
             
-            wipe(&inputBufferHeap)
-            wipe(&prkAsKey)
-            if tempInputArray != nil {
-                wipe(&tempInputArray!)
+            if hmacInputBuffer != nil {
+                hmacInputBuffer!.resetBytes(in: 0..<hmacInputBuffer!.count)
+                hmacInputBuffer!.removeAll()
             }
         }
         
         do {
-            prkAsKey.replaceSubrange(0..<prk.count, with: prk)
+            hmacInputBuffer = Data(count: hmacInputSize)
             
             while bytesWritten < output.count {
-                var currentInputSlice: Data
+                var currentInputLength = 0
                 
                 if bytesWritten == 0 {
-                    inputBufferSpan.replaceSubrange(0..<info.count, with: info)
-                    inputBufferSpan[info.count] = counter
-                    currentInputSlice = inputBufferSpan[0..<info.count + 1]
-                }
-                else {
-                    inputBufferSpan.replaceSubrange(0..<hash.count, with: hash)
-                    inputBufferSpan.replaceSubrange(Self.hashOutputLength..<(Self.hashOutputLength + info.count), with: info)
-                    inputBufferSpan[Self.hashOutputLength + info.count] = counter
-                    currentInputSlice = inputBufferSpan[0..<(Self.hashOutputLength + info.count + 1)]
-                }
-                
-                if tempInputArray == nil || tempInputArray!.count != currentInputSlice.count {
-                    tempInputArray = Data(count: currentInputSlice.count)
+                    hmacInputBuffer!.replaceSubrange(0..<info.count, with: info)
+                    hmacInputBuffer![info.count] = UInt8(counter)
+                    currentInputLength = info.count + 1
+                } else {
+                    hmacInputBuffer!.replaceSubrange(0..<Self.hashOutputLength, with: previousHash)
+                    hmacInputBuffer!.replaceSubrange(Self.hashOutputLength..<(Self.hashOutputLength + info.count), with: info)
+                    hmacInputBuffer![Self.hashOutputLength + info.count] = UInt8(counter)
+                    currentInputLength = Self.hashOutputLength + info.count + 1
                 }
                 
-                tempInputArray?.replaceSubrange(0..<currentInputSlice.count, with: currentInputSlice)
-                
-                var tempHashResult = signHmacSha256(ikm: &tempInputArray!, salt: &prkAsKey)
-                
-                if tempHashResult.count != Self.hashOutputLength {
-                    throw HkdfError.hmacOutputSizeMismatch
-                }
-                
-                hash.replaceSubrange(0..<tempHashResult.count, with: tempHashResult)
-                wipe(&tempHashResult)
+                var inputSlice = hmacInputBuffer!.prefix(currentInputLength)
+                var tempHashResult = signHmacSha256(ikm: &inputSlice, salt: &prk)
                 
                 let bytesToCopy = min(Self.hashOutputLength, output.count - bytesWritten)
-                output.replaceSubrange(bytesWritten..<(bytesWritten + bytesToCopy), with: hash.prefix(bytesToCopy))
-
-                bytesWritten += bytesToCopy
+                output.replaceSubrange(bytesWritten..<bytesWritten + bytesToCopy, with: tempHashResult.prefix(bytesToCopy))
+                bytesWritten = bytesWritten + bytesToCopy
+                
+                if bytesWritten < output.count {
+                    previousHash.replaceSubrange(0..<tempHashResult.count, with: tempHashResult)
+                }
+                
+                _ = SodiumInterop.secureWipe(&tempHashResult)
                 counter += 1
-                wipe(&tempInputArray!)
             }
         } catch {
             debugPrint("[HkdfSha256] Error expanding HKDF: \(error)")
@@ -198,19 +206,11 @@ public final class HkdfSha256 {
     private func dispose(_ disposing: Bool) {
         if !disposed {
             if disposing {
-                wipe(&ikm)
-                wipe(&salt)
+                self.ikmHandle.dispose()
+                self.saltHandle.dispose()
             }
             disposed = true
         }
-    }
-
-    deinit {
-        dispose()
-    }
-
-    private func wipe(_ data: inout Data) {
-        _ = SodiumInterop.secureWipe(&data)
     }
 }
 

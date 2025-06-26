@@ -19,457 +19,296 @@ public class EcliptixProtocolSystem {
     func beginDataCenterPubKeyExchange(
         connectId: UInt32,
         exchangeType: Ecliptix_Proto_PubKeyExchangeType
-    ) throws -> Ecliptix_Proto_PubKeyExchange {
-        debugPrint("[ShieldPro] Beginning exchange \(exchangeType), generated ConnectId: \(connectId)")
-        debugPrint("[ShieldPro] Generating ephemeral key pair.")
+    ) throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
+        self.ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
         
-        ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
-        
-        let localBundleResult = ecliptixSystemIdentityKeys.createPublicBundle()
-        guard localBundleResult.isOk else {
-            throw EcliptixChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
-        }
-        let localBundle = try localBundleResult.unwrap()
-        let protoBundle = localBundle.toProtobufExchange()
-        
-        let sessionResult = EcliptixProtocolConnection.create(connectId: connectId, localBundle: localBundle, isInitiator: true)
-        guard sessionResult.isOk else {
-            throw EcliptixChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
-        }
-        connectSession = try sessionResult.unwrap()
-        
-        let dhPublicKeyResult = connectSession!.getCurrentSenderDhPublicKey()
-        if dhPublicKeyResult.isErr {
-            throw EcliptixChainStepError("Sender DH key not initialized: \(try dhPublicKeyResult.unwrapErr())")
-        }
-        let dhPublicKey = try dhPublicKeyResult.unwrap()
-        
-        var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
-        pubKeyExchange.state = .init_
-        pubKeyExchange.ofType = exchangeType
-        do {
-            pubKeyExchange.payload = try protoBundle.serializedData()
-        } catch {
-            throw EcliptixChainStepError("Failed to serialize protoBundle: \(error.localizedDescription)")
-        }
-        pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
-
-        
-        return pubKeyExchange
+        return ecliptixSystemIdentityKeys.createPublicBundle()
+            .flatMap { bundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: true)
+                .flatMap { session in
+                    self.connectSession = session
+                    return session.getCurrentSenderDhPublicKey()
+                        .map { dhPublicKey in
+                            var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
+                            pubKeyExchange.state = .init_
+                            pubKeyExchange.ofType = exchangeType
+                            pubKeyExchange.payload = try! bundle.toProtobufExchange().serializedData()
+                            pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
+                            return pubKeyExchange
+                    }
+                }
+            }
     }
 
     
-    func processAndRespondToPubKeyExchange(
-        connectId: UInt32,
-        peerInitialMessageProto: Ecliptix_Proto_PubKeyExchange
-    ) throws -> Ecliptix_Proto_PubKeyExchange {
-
-        guard peerInitialMessageProto.state == .init_ else {
-            throw EcliptixChainStepError("Expected peer message state to be Init.")
-        }
-
-        let exchangeType = peerInitialMessageProto.ofType
-        debugPrint("[ShieldPro] Processing exchange request \(exchangeType), generated Session ID: \(connectId)")
-
+    func processAndRespondToPubKeyExchange(connectId: UInt32, peerInitialMessageProto: inout Ecliptix_Proto_PubKeyExchange) throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
+        
         var rootKeyHandle: SodiumSecureMemoryHandle? = nil
         
         defer {
             rootKeyHandle?.dispose()
         }
-
+        
         do {
-            let peerBundleProto = try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerInitialMessageProto.payload)
-            let peerBundleResult = LocalPublicKeyBundle.fromProtobufExchange(peerBundleProto)
-            guard peerBundleResult.isOk else {
-                throw EcliptixChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
-            }
-            let peerBundle = try peerBundleResult.unwrap()
-
-            let spkValidResult = EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(
-                remoteIdentityEd25519: peerBundle.identityEd25519,
-                remoteSpkPublic: peerBundle.signedPreKeyPublic,
-                remoteSpkSignature: peerBundle.signedPreKeySignature
-            )
-            guard spkValidResult.isOk, try spkValidResult.unwrap() else {
-                let errorMsg = spkValidResult.isOk
-                    ? "Invalid signature"
-                    : String(describing: try? spkValidResult.unwrapErr().description)
-
-                throw EcliptixChainStepError("SPK signature validation failed: \(errorMsg)")
-            }
-
-            debugPrint("[ShieldPro] Generating ephemeral key for response.")
-            ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
-
-            let localBundleResult = ecliptixSystemIdentityKeys.createPublicBundle()
-            guard localBundleResult.isOk else {
-                throw EcliptixChainStepError("Failed to create local public bundle: \(try localBundleResult.unwrapErr())")
-            }
-            let localBundle = try localBundleResult.unwrap()
-            let protoBundle = localBundle.toProtobufExchange()
-
-            let sessionResult = EcliptixProtocolConnection.create(connectId: connectId, localBundle: localBundle, isInitiator: false)
-            guard sessionResult.isOk else {
-                throw EcliptixChainStepError("Failed to create session: \(try sessionResult.unwrapErr())")
-            }
-            connectSession = try sessionResult.unwrap()
-
-            debugPrint("[ShieldPro] Deriving shared secret as recipient.")
-            let firstPreKey: OneTimePreKeyRecord? = peerBundle.oneTimePreKeys.first
-
-            // maybe error here
-            let deriveResult: Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> = ecliptixSystemIdentityKeys.calculateSharedSecretAsRecipient(
-                remoteIdentityPublicKeyX: peerBundle.identityX25519,
-                remoteEphemeralPublicKeyX: peerBundle.ephemeralX25519!,
-                usedLocalOpkId: firstPreKey?.preKeyId,
-                info: Constants.x3dhInfo
-            )
-            
-            guard deriveResult.isOk else {
-                throw EcliptixChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
-            }
-            rootKeyHandle = try deriveResult.unwrap()
-
-            var rootKeyBytes = Data(count: Constants.x25519KeySize)
-            let readResult = rootKeyBytes.withUnsafeMutableBytes { buffer in
-                rootKeyHandle!.read(into: buffer)
-            }
-            guard readResult.isOk else {
-                throw EcliptixChainStepError("Failed to read root key: \(try readResult.unwrapErr())")
-            }
-            debugPrint("[ShieldPro] Root Key: \(rootKeyBytes.hexEncodedString())")
-
-            try connectSession!.setPeerBundle(peerBundle)
-            _ = connectSession!.setConnectionState(.pending)
-
-            var peerDhKey = peerInitialMessageProto.initialDhPublicKey
-            debugPrint("[ShieldPro] Peer Initial DH Public Key: \(peerDhKey.hexEncodedString())")
-
-            let finalizeResult = connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytes, initialPeerDhPublicKey: &peerDhKey)
-            guard finalizeResult.isOk else {
-                throw EcliptixChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
-            }
-
-            let stateResult = connectSession!.setConnectionState(.complete)
-            guard stateResult.isOk else {
-                throw EcliptixChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
-            }
-
-            _ = SodiumInterop.secureWipe(&rootKeyBytes)
-
-            let dhPublicKeyResult = connectSession!.getCurrentSenderDhPublicKey()
-            guard dhPublicKeyResult.isOk else {
-                throw EcliptixChainStepError("Failed to get sender DH key: \(try dhPublicKeyResult.unwrapErr())")
-            }
-            let dhPublicKey = try dhPublicKeyResult.unwrap()
-
-            var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
-            pubKeyExchange.state = .pending
-            pubKeyExchange.ofType = exchangeType
-            pubKeyExchange.payload = try protoBundle.serializedData()
-            pubKeyExchange.initialDhPublicKey = dhPublicKey!
-
-            return pubKeyExchange
-
+            return Result<Unit, EcliptixProtocolFailure>
+                .validate(.value, predicate: { _ in peerInitialMessageProto.state == .init_ }, error: .invalidInput("Expected peer message state to be Init, but was \(peerInitialMessageProto.state)."))
+                .flatMap { _ in
+                    Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
+                        try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerInitialMessageProto.payload)
+                    }.mapError { error in
+                        .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
+                    }
+                }
+                .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
+                .flatMap { peerBundle in
+                    EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
+                        .flatMap { spkValid in
+                            Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed."))
+                        }
+                        .flatMap { _ in
+                            self.ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
+                            return self.ecliptixSystemIdentityKeys.createPublicBundle()
+                        }
+                        .flatMap { localBundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: false)
+                                .flatMap { session in
+                                    self.connectSession = session
+                                    return self.ecliptixSystemIdentityKeys.calculateSharedSecretAsRecipient(
+                                        remoteIdentityPublicKeyX: peerBundle.identityX25519,
+                                        remoteEphemeralPublicKeyX: peerBundle.ephemeralX25519!,
+                                        usedLocalOpkId: peerBundle.oneTimePreKeys.first?.preKeyId,
+                                        info: Constants.x3dhInfo)
+                                    .flatMap { derivedKeyHandle in
+                                        rootKeyHandle = derivedKeyHandle
+                                        return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
+                                    }
+                                    .flatMap { rootKeyBytes in
+                                        var rootKeyBytesCopy = rootKeyBytes
+                                        return session.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerInitialMessageProto.initialDhPublicKey)
+                                    }
+                                    .flatMap { _ in session.setPeerBundle(peerBundle) }
+                                    .flatMap { _ in session.setConnectionState(.complete) }
+                                    .flatMap { _ in session.getCurrentSenderDhPublicKey() }
+                                    .map { dhPublicKey in
+                                        var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
+                                        pubKeyExchange.state = .pending
+                                        pubKeyExchange.ofType = peerInitialMessageProto.ofType
+                                        pubKeyExchange.payload = try! localBundle.toProtobufExchange().serializedData()
+                                        pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
+                                        return pubKeyExchange
+                                    }
+                                }
+                        }
+                }
         } catch {
             debugPrint("[ShieldPro] Error in processAndRespondToPubKeyExchange for session \(connectId): \(error)")
             throw error
         }
     }
 
-    
-    func completeDataCenterPubKeyExchange(
-        connectId: UInt32,
-        exchangeType: Ecliptix_Proto_PubKeyExchangeType,
-        peerMessage: Ecliptix_Proto_PubKeyExchange
-    ) throws {
-        debugPrint("[ShieldPro] Completing exchange for session \(connectId) (\(exchangeType)).")
-        
-        let peerBundleProto = try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerMessage.payload)
-        
-        let peerBundleResult = LocalPublicKeyBundle.fromProtobufExchange(peerBundleProto)
-        guard peerBundleResult.isOk else {
-            throw EcliptixChainStepError("Failed to convert peer bundle: \(try peerBundleResult.unwrapErr())")
-        }
-        let peerBundle = try peerBundleResult.unwrap()
-        
-        debugPrint("[ShieldPro] Verifying remote SPK signature for completion.")
-        let spkValidResult = EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(
-            remoteIdentityEd25519: peerBundle.identityEd25519,
-            remoteSpkPublic: peerBundle.signedPreKeyPublic,
-            remoteSpkSignature: peerBundle.signedPreKeySignature
-        )
-        if !spkValidResult.isOk || (try? spkValidResult.unwrap()) != true {
-            throw EcliptixChainStepError("SPK signature validation failed: \(spkValidResult.isOk ? "Invalid signature" : "\(try spkValidResult.unwrapErr())")")
-        }
-        
-        debugPrint("[ShieldPro] Deriving X3DH shared secret.")
-        let deriveResult = ecliptixSystemIdentityKeys.x3dhDeriveSharedSecret(remoteBundle: peerBundle, info: Constants.x3dhInfo)
-        guard deriveResult.isOk else {
-            throw EcliptixChainStepError("Shared secret derivation failed: \(try deriveResult.unwrapErr())")
-        }
-        
-        let rootKeyHandle = try deriveResult.unwrap()
-        
-        var rootKeyBytes = Data(count: Constants.x25519KeySize)
-        let result = rootKeyBytes.withUnsafeMutableBytes { buffer in
-            rootKeyHandle.read(into: buffer)
-        }
-
-        guard result.isOk else {
-            throw EcliptixChainStepError("Failed to read root key: \(try result.unwrapErr())")
-        }
-        
-        debugPrint("[ShieldPro] Derived Root Key: \(rootKeyBytes.hexEncodedString())")
-        
-        var initialDhPublicKeyCopy = peerMessage.initialDhPublicKey
-        let finalizeResult = connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytes, initialPeerDhPublicKey: &initialDhPublicKeyCopy)
-        guard finalizeResult.isOk else {
-            throw EcliptixChainStepError("Failed to finalize chain keys: \(try finalizeResult.unwrapErr())")
-        }
-        
-        try connectSession!.setPeerBundle(peerBundle)
-        
-        let stateResult = connectSession!.setConnectionState(.complete)
-        guard stateResult.isOk else {
-            throw EcliptixChainStepError("Failed to set Complete state: \(try stateResult.unwrapErr())")
-        }
-        
-        _ = SodiumInterop.secureWipe(&rootKeyBytes)
-    }
-
-    
-    func produceOutboundMessage(connectId: UInt32, exchangeType: Ecliptix_Proto_PubKeyExchangeType, plainPayload: Data) throws -> Ecliptix_Proto_CipherPayload {
-        debugPrint("[ShieldPro] Producing outbound message for session \(connectId) (\(exchangeType)).")
-        
-        var ciphertext: Data? = nil
-        var tag: Data? = nil
-        var messageKeyClone: EcliptixMessageKey? = nil
+    func completeDataCenterPubKeyExchange(exchangeType: Ecliptix_Proto_PubKeyExchangeType, peerMessage: inout Ecliptix_Proto_PubKeyExchange) throws -> Result<Unit, EcliptixProtocolFailure> {
+        var rootKeyHandle: SodiumSecureMemoryHandle? = nil
         
         defer {
-            messageKeyClone?.dispose()
-            _ = SodiumInterop.secureWipe(&ciphertext)
-            _ = SodiumInterop.secureWipe(&tag)
+            rootKeyHandle?.dispose()
         }
         
         do {
-            debugPrint("[ShieldPro] Preparing next send message.")
-            let prepResult = connectSession!.prepareNextSendMessage()
-            
-            guard prepResult.isOk else {
-                throw EcliptixChainStepError("Failed to prepare outgoing message key: \(try prepResult.unwrapErr())")
+            return Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
+                try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerMessage.payload)
+            }.mapError { error in
+                .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
             }
-            
-            let prepValues = try prepResult.unwrap()
-            let messageKey = prepValues.messageKey
-            let includeDhKey = prepValues.includeDhKey
-            
-            let nonceResult = connectSession!.generateNextNonce()
-            guard nonceResult.isOk else {
-                throw EcliptixChainStepError("Failed to generate nonce: \(try nonceResult.unwrapErr())")
-            }
-            
-            let nonce = try nonceResult.unwrap()
-            
-            debugPrint("[ShieldPro][Encrypt] Nonce: \(nonce.hexEncodedString())")
-            debugPrint("[ShieldPro][Encrypt] Plaintext: \(plainPayload.hexEncodedString())")
-            
-            
-            let newSenderDhPublicKey: Data? = includeDhKey ? try connectSession!.getCurrentSenderDhPublicKey()
-                .Match(
-                    onSuccess: { value in
-                        return value
-                    },
-                    onFailure: { error in
-                        throw EcliptixChainStepError("Failed to get sender DH key: \(error.localizedDescription)")
+            .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
+            .flatMap { peerBundle in EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
+                    .flatMap { spkValid in Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed during completion.")) }
+                    .flatMap { _ in self.ecliptixSystemIdentityKeys.x3dhDeriveSharedSecret(remoteBundle: peerBundle, info: Constants.x3dhInfo) }
+                    .flatMap { derivedKeyHandle in
+                        rootKeyHandle = derivedKeyHandle
+                        return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
                     }
-                ) : nil
-            
-            if newSenderDhPublicKey != nil {
-                debugPrint("[ShieldPro] Including new DH Public Key: \(newSenderDhPublicKey!.hexEncodedString())")
+                    .flatMap { rootKeyBytes in
+                        var rootKeyBytesCopy = rootKeyBytes
+                        return self.connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerMessage.initialDhPublicKey)
+                    }
+                    .flatMap { _ in self.connectSession!.setPeerBundle(peerBundle) }
+                    .flatMap { _ in self.connectSession!.setConnectionState(.complete) }
             }
-            
-            var messageKeyBytes = Data(repeating: 0, count: Constants.aesKeySize)
-            _ = messageKey.readKeyMaterial(into: &messageKeyBytes)
-            debugPrint("[ShieldPro][Encrypt] Message Key: \(messageKeyBytes.hexEncodedString())")
-            
-            let cloneResult = EcliptixMessageKey.new(index: messageKey.index, keyMaterial: &messageKeyBytes)
-            guard cloneResult.isOk else {
-                throw EcliptixChainStepError("Failed to clone message key: \(try cloneResult.unwrapErr())")
-            }
-            
-            messageKeyClone = try cloneResult.unwrap()
-            _ = SodiumInterop.secureWipe(&messageKeyBytes)
-            
-            let peerBundleResult = connectSession!.getPeerBundle()
-            guard peerBundleResult.isOk else {
-                throw EcliptixChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
-            }
-            
-            let peerBundle = try peerBundleResult.unwrap()
-            
-            let localId = ecliptixSystemIdentityKeys.identityX25519PublicKey
-            let peerId = peerBundle.identityX25519
-            var ad = localId + peerId
-            debugPrint("[ShieldPro][Encrypt] Associated Data: \(ad.hexEncodedString())")
-            
-            var clonedKeyMaterial = Data(repeating: 0, count: Constants.aesKeySize)
-            
-            defer {
-                _ = SodiumInterop.secureWipe(&clonedKeyMaterial)
-            }
+        } catch {
+            debugPrint("Unexpected error in completeDataCenterPubKeyExchange: \(error)")
+        }
+    }
 
-            _ = messageKeyClone!.readKeyMaterial(into: &clonedKeyMaterial)
-            debugPrint("[ShieldPro][Encrypt] Ecryption Key: \(clonedKeyMaterial.hexEncodedString())")
-            
-            let encryptValues = try AesGcmService.encryptAllocating(
-                key: clonedKeyMaterial,
-                nonce: nonce,
-                plaintext: plainPayload,
-                associatedData: ad)
-            ciphertext = encryptValues.ciphertext
-            tag = encryptValues.tag
-            debugPrint("[ShieldPro][Encrypt] Ciphertext: \(ciphertext!.hexEncodedString())")
-            debugPrint("[ShieldPro][Encrypt] Tag: \(tag!.hexEncodedString())")
-            
-            let ciphertextAndTag = (ciphertext!) + (tag!)
-            debugPrint("[ShieldPro][Encrypt] Ciphertext+Tag: \(ciphertextAndTag.hexEncodedString())")
-            
-            debugPrint("[ShieldPro][Encrypt] Nonce: \(nonce.hexEncodedString())")
-            
-            var payload = Ecliptix_Proto_CipherPayload()
-            payload.requestID = Helpers.generateRandomUInt32(excludeZero: true)
-            payload.nonce = nonce
-            payload.ratchetIndex = messageKeyClone!.index
-            payload.cipher = ciphertextAndTag
-            payload.createdAt = Self.getProtoTimestamp()
-            payload.dhPublicKey = newSenderDhPublicKey ?? Data()
-            
-            debugPrint("[ShieldPro] Outbound message prepared with Ratchet Index: \(messageKeyClone!.index)")
-            return payload
+    
+    func produceOutboundMessage(plainPayload: Data) throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+
+        var messageKeyClone: EcliptixMessageKey? = nil
+
+        defer {
+            messageKeyClone?.dispose()
+        }
+        
+        do {
+            return self.connectSession!.prepareNextSendMessage()
+                .flatMap { prep in self.connectSession!.generateNextNonce()
+                        .flatMap { nonce in getOptionalSenderDhKey(include: prep.includeDhKey)
+                                .flatMap { newSenderDhPublicKey in Self.cloneMessageKey(key: prep.messageKey)
+                                        .flatMap { clonedKey in
+                                            messageKeyClone = clonedKey
+                                            return self.connectSession!.getPeerBundle()
+                                        }
+                                        .flatMap { peerBundle in
+                                            let ad = Self.createAssociatedData(self.ecliptixSystemIdentityKeys.identityX25519PublicKey, peerBundle.identityX25519)
+                                            return Self.encrypt(key: messageKeyClone!, nonce: nonce, plaintext: plainPayload, ad: ad)
+                                        }
+                                        .map { encrypted in
+                                            var cipherPayload = Ecliptix_Proto_CipherPayload()
+                                            cipherPayload.requestID = Helpers.generateRandomUInt32(excludeZero: true)
+                                            cipherPayload.nonce = Data(nonce)
+                                            cipherPayload.ratchetIndex = messageKeyClone!.index
+                                            cipherPayload.cipher = Data(encrypted)
+                                            cipherPayload.createdAt = Self.getProtoTimestamp()
+                                            cipherPayload.dhPublicKey = newSenderDhPublicKey.count > 0 ? Data(newSenderDhPublicKey) : Data()
+                                            return cipherPayload
+                                        }
+                                    
+                                }
+                    }
+                    
+                }
         } catch {
             throw error
         }
     }
 
     
-    func processInboundMessage(
-        sessionId: UInt32,
-        exchangeType: Ecliptix_Proto_PubKeyExchangeType,
-        cipherPayloadProto: Ecliptix_Proto_CipherPayload
-    ) throws -> Data {
-        debugPrint("[ShieldPro] Processing inbound message for session \(sessionId) (\(exchangeType)), Ratchet Index: \(cipherPayloadProto.ratchetIndex)")
-
-        var messageKeyBytes: Data?
-        var plaintext: Data?
+    func processInboundMessage(cipherPayloadProto: Ecliptix_Proto_CipherPayload) throws -> Result<Data, EcliptixProtocolFailure> {
+        
         var messageKeyClone: EcliptixMessageKey?
 
         defer {
-            _ = SodiumInterop.secureWipe(&messageKeyBytes)
             messageKeyClone?.dispose()
         }
 
         do {
-            var receivedDhKey = cipherPayloadProto.dhPublicKey.isEmpty ? nil : cipherPayloadProto.dhPublicKey
+            var receivedDhKey = cipherPayloadProto.dhPublicKey.count > 0 ? cipherPayloadProto.dhPublicKey : nil
             
-            if receivedDhKey != nil {
-                let currentPeerDhResult = connectSession!.getCurrentPeerDhPublicKey()
-                if currentPeerDhResult.isOk {
-                    let currentPeerDh = try currentPeerDhResult.unwrap()
-                    debugPrint("[ShieldPro][Decrypt] Received DH Key: \(receivedDhKey!.hexEncodedString())")
-                    debugPrint("[ShieldPro][Decrypt] Current Peer DH Key: \(currentPeerDh!.hexEncodedString())")
-
-                    if receivedDhKey != currentPeerDh {
-                        debugPrint("[ShieldPro] Performing DH ratchet due to new peer DH key.")
-                        let ratchetResult = connectSession!.performReceivingRatchet(receivedDhKey: receivedDhKey!)
-                        guard ratchetResult.isOk else {
-                            throw EcliptixChainStepError("Fialied to perform DH ratchet: \(try ratchetResult.unwrapErr())")
-                        }
-                    }
+            return performRatchetIfNeeded(receivedDhKey: receivedDhKey)
+                .flatMap { _ in self.connectSession!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
                 }
-            }
-
-            debugPrint("[ShieldPro][Decrypt] Ciphertext+Tag: \(cipherPayloadProto.cipher.hexEncodedString())")
-            debugPrint("[ShieldPro][Decrypt] Nonce: \(cipherPayloadProto.nonce.hexEncodedString())")
-
-            let indexd = cipherPayloadProto.ratchetIndex
-            let messageKeyResult = connectSession!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
-            
-            guard messageKeyResult.isOk else {
-                throw EcliptixChainStepError("Failed to process received message: \(try messageKeyResult.unwrapErr())")
-            }
-            
-            let originalMessageKey = try messageKeyResult.unwrap()
-
-            messageKeyBytes = Data(count: Constants.aesKeySize)
-            _ = originalMessageKey.readKeyMaterial(into: &messageKeyBytes!)
-            debugPrint("[ShieldPro][Decrypt] Message Key: \(messageKeyBytes!.hexEncodedString())")
-
-            let cloneResult = EcliptixMessageKey.new(index: originalMessageKey.index, keyMaterial: &messageKeyBytes!)
-            guard cloneResult.isOk else {
-                throw EcliptixChainStepError("Failed to clone message key for decryption: \(try cloneResult.unwrapErr())")
-            }
-            messageKeyClone = try cloneResult.unwrap()
-            debugPrint("[ShieldPro] Processed Key Index: \(messageKeyClone!.index)")
-
-            let peerBundleResult = connectSession!.getPeerBundle()
-            guard peerBundleResult.isOk else {
-                throw EcliptixChainStepError("Failed to get peer bundle: \(try peerBundleResult.unwrapErr())")
-            }
-            let peerBundle = try peerBundleResult.unwrap()
-            
-            let senderId = peerBundle.identityX25519
-            let receiverId = ecliptixSystemIdentityKeys.identityX25519PublicKey
-            var ad = senderId + receiverId
-            print("[ShieldPro][Decrypt] Associated Data: \(ad.hexEncodedString())")
-
-            var clonedKeyMaterial = Data(count: Constants.aesKeySize)
-            defer {
-                _ = SodiumInterop.secureWipe(&clonedKeyMaterial)
-                _ = SodiumInterop.secureWipe(&plaintext)
-                _ = SodiumInterop.secureWipe(&ad)
-            }
-
-            _ = messageKeyClone!.readKeyMaterial(into: &clonedKeyMaterial)
-            debugPrint("[ShieldPro][Decrypt] Decryption Key: \(clonedKeyMaterial.hexEncodedString())")
-
-            let fullCipherData = cipherPayloadProto.cipher
-            let cipherLength = fullCipherData.count - Constants.aesGcmTagSize
-            let cipherOnly = fullCipherData.prefix(cipherLength)
-            let tagData = fullCipherData.dropFirst(cipherLength)
-
-            plaintext = try AesGcmService.decryptAllocating(
-                key: clonedKeyMaterial,
-                nonce: cipherPayloadProto.nonce,
-                ciphertext: cipherOnly,
-                tag: tagData,
-                associatedData: ad)
-            debugPrint("[ShieldPro][Decrypt] Plaintext: \(plaintext!.hexEncodedString())")
-
-            let plaintextCopy = plaintext!
-            
-            debugPrint("[ShieldPro][Decrypt] Returning plaintext copy: \(plaintextCopy.hexEncodedString())")
-            
-            return plaintextCopy
+                .flatMap { key in Self.cloneMessageKey(key: key) }
+                .flatMap { clonedKey in
+                    messageKeyClone = clonedKey
+                    return self.connectSession!.getPeerBundle()
+                }
+                .flatMap { peerBundle in
+                    let ad = Self.createAssociatedData(peerBundle.identityX25519, self.ecliptixSystemIdentityKeys.identityX25519PublicKey)
+                    return Self.decrypt(key: messageKeyClone!, payload: cipherPayloadProto, ad: ad)
+                }
         } catch {
             throw error
         }
     }
 
+    private func getOptionalSenderDhKey(include: Bool) -> Result<Data, EcliptixProtocolFailure> {
+        return include
+            ? self.connectSession!.getCurrentSenderDhPublicKey().map { k in k! }
+            : .success(Data())
+    }
     
-//    func closeSession() {
-//        if let session = connectSession {
-//            // Тут можна додати очищення або безпечне знищення даних, якщо потрібно
-//            
-//            // Припустимо, що connectSession має свій метод для закриття сесії
-//            session.dispose() // Якщо такого методу немає, додай його в ConnectSession
-//
-//            connectSession = nil
-//        } else {
-//            debugPrint("[ShieldPro] No active session to close.")
-//        }
-//    }
+    private func performRatchetIfNeeded(receivedDhKey: Data?) -> Result<Unit, EcliptixProtocolFailure> {
+        if receivedDhKey == nil {
+            return .success(.value)
+        }
+        
+        return self.connectSession!.getCurrentPeerDhPublicKey()
+            .flatMap { currentPeerDhKey in
+                if currentPeerDhKey != nil && receivedDhKey != currentPeerDhKey {
+                    return self.connectSession!.performReceivingRatchet(receivedDhKey: receivedDhKey!)
+                }
+                
+                return .success(.value)
+            }
+    }
+    
+    private static func createAssociatedData(_ id1: Data, _ id2: Data) -> Data {
+        let ad = id1 + id2
+        return ad
+    }
+    
+    private static func encrypt(key: EcliptixMessageKey, nonce: Data, plaintext: Data, ad: Data) -> Result<Data, EcliptixProtocolFailure> {
+        var keyMaterial: Data? = nil
+        do {
+            keyMaterial = Data(count: Constants.aesKeySize)
+            let readResult = key.readKeyMaterial(into: &keyMaterial!)
+            if readResult.isErr {
+                return .failure(try readResult.unwrapErr())
+            }
+            
+            print("keyMaterial: \(keyMaterial!.hexEncodedString())")
+            
+            var encryptValues = try AesGcmService.encryptAllocating(key: keyMaterial!, nonce: nonce, plaintext: plaintext, associatedData: ad)
+            let ciphertextAndTag = encryptValues.ciphertext + encryptValues.tag
+                        
+            _ = SodiumInterop.secureWipe(&encryptValues.ciphertext)
+            _ = SodiumInterop.secureWipe(&encryptValues.tag)
+            return .success(ciphertextAndTag)
+        } catch {
+            return .failure(.generic("AES-GCM encryption failed", inner: error))
+        }
+    }
+    
+    private static func decrypt(key: EcliptixMessageKey, payload: Ecliptix_Proto_CipherPayload, ad: Data) -> Result<Data, EcliptixProtocolFailure> {
+        let fullCipher = payload.cipher
+        let tagSize = Constants.aesGcmTagSize
+        let cipherSize = fullCipher.count - tagSize
+        
+        guard cipherSize >= 0 else {
+            return .failure(.bufferTooSmall("Received ciphertext length (\(fullCipher.count)) is smaller than the GCM tag size (\(tagSize))."))
+        }
+        
+        var keyMaterial: Data? = nil
+        var cipherOnlyBytes: Data? = nil
+        var tagBytes: Data? = nil
+        do {
+            keyMaterial = Data(count: Constants.aesKeySize)
+            let readResult = key.readKeyMaterial(into: &keyMaterial!)
+            if readResult.isErr {
+                return .failure(try readResult.unwrapErr())
+            }
+            
+            cipherOnlyBytes = Data(count: cipherSize)
+            cipherOnlyBytes = fullCipher.prefix(cipherSize)
+            
+            tagBytes = Data(count: tagSize)
+            tagBytes = fullCipher.suffix(tagSize)
+            
+            print("keyMaterial: \(keyMaterial!.hexEncodedString())")
+            
+            let result = try AesGcmService.decryptAllocating(key: keyMaterial!, nonce: payload.nonce, ciphertext: cipherOnlyBytes!, tag: tagBytes!, associatedData: ad)
+            
+            return .success(result)
+        } catch {
+            return .failure(.generic("Unexpected error during AES-GCM decryption.", inner: error))
+        }
+    }
+    
+    private static func readAndWipeSecureHandle(handle: SodiumSecureMemoryHandle, size: Int) -> Result<Data, EcliptixProtocolFailure> {
+        var buffer = Data(count: size)
+        let t = buffer.withUnsafeMutableBytes { buffer in
+            handle.read(into: buffer)
+        }.map { _ in
+            let copy = Data(buffer)
+            _ = SodiumInterop.secureWipe(&buffer)
+            return copy
+        }.mapSodiumFailure()
+        
+        return t
+    }
 
+    private static func cloneMessageKey(key: EcliptixMessageKey) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
+        var keyMaterial = Data(count: Constants.aesKeySize)
+        _ = key.readKeyMaterial(into: &keyMaterial)
+        return EcliptixMessageKey.new(index: key.index, keyMaterial: &keyMaterial)
+    }
     
     private static func getProtoTimestamp() -> Google_Protobuf_Timestamp {
         let now = Date()

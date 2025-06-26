@@ -32,11 +32,11 @@ final class EcliptixProtocolConnection {
     private var messageKeys: OrderedDictionary<UInt32, EcliptixMessageKey>
     private let sendingStep: EcliptixProtocolChainStep
     private var currentSendingDhPrivateKeyHandle: SodiumSecureMemoryHandle?
-    private let initialSendingDhPrivateKeyHandle: SodiumSecureMemoryHandle?
+    private var initialSendingDhPrivateKeyHandle: SodiumSecureMemoryHandle?
     private let nonceCounter = ManagedAtomic<UInt32>(0)
-    private var peerBundle: LocalPublicKeyBundle?
+    private var peerBundle: PublicKeyBundle?
     private var peerDhPublicKey: Data?
-    private let persistentDhPrivateKeyHandle: SodiumSecureMemoryHandle?
+    private var persistentDhPrivateKeyHandle: SodiumSecureMemoryHandle?
     private var persistentDhPublicKey: Data?
     private var receivedNewDhKey: Bool
     private var receivingStep: EcliptixProtocolChainStep?
@@ -90,31 +90,23 @@ final class EcliptixProtocolConnection {
         var persistentDhPublicKey: Data? = nil
 
         do {
-            debugPrint("[ShieldSession] Creating session \(connectId), Initiator: \(isInitiator)")
-
             let overallResult = SodiumInterop.generateX25519KeyPair(keyPurpose: "Initial Sending DH")
-                .flatMap { initialSendKeys -> Result<Unit, EcliptixProtocolFailure> in
-                    initialSendingDhPrivateKeyHandle = initialSendKeys.0
-                    initialSendingDhPublicKey = initialSendKeys.1
-                    
-                    debugPrint("[ShieldSession] Generated Initial Sending DH Public Key: \(initialSendingDhPublicKey!.hexEncodedString())")
-                
+                .flatMap { initialSendKeys in
+                    initialSendingDhPrivateKeyHandle = initialSendKeys.skHandle
+                    initialSendingDhPublicKey = initialSendKeys.pk
+                                    
                     return initialSendingDhPrivateKeyHandle!.readBytes(length: Constants.x25519PrivateKeySize)
                         .mapSodiumFailure()
                         .map { bytes in
-                            initialSendingDhPrivateKeyBytes = Data(bytes)
-                            debugPrint("[ShieldSession] Initial Sending DH Private Key: \(initialSendingDhPrivateKeyBytes!.hexEncodedString())")
-                            return .value
+                            initialSendingDhPrivateKeyBytes = bytes
+                            return Unit.value
                         }
                 }
-                .flatMap { _ in SodiumInterop.generateX25519KeyPair(keyPurpose: "Persistent DH")
-                }
-                .flatMap { persistentKeys -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> in
+                .flatMap { _ in SodiumInterop.generateX25519KeyPair(keyPurpose: "Persistent DH") }
+                .flatMap { persistentKeys in
                     persistentDhPrivateKeyHandle = persistentKeys.skHandle
                     persistentDhPublicKey = persistentKeys.pk
                     
-                    debugPrint("[ShieldSession] Generated Persistent DH Public Key: \(persistentDhPublicKey!.hexEncodedString())")
-
                     var tempChainKey: Data? = Data(count: Constants.x25519KeySize)
                     let stepResult = EcliptixProtocolChainStep.create(
                         stepType: .sender,
@@ -130,9 +122,8 @@ final class EcliptixProtocolConnection {
                 }
                 .flatMap { createdSendingStep in
                     sendingStep = createdSendingStep
-                    debugPrint("[ShieldSession] Sending step created for session \(connectId)")
-
-                    let session = EcliptixProtocolConnection(
+                    
+                    let connection = EcliptixProtocolConnection(
                         id: connectId,
                         isInitiator: isInitiator,
                         initialSendingDhPrivateHandle: initialSendingDhPrivateKeyHandle!,
@@ -145,11 +136,10 @@ final class EcliptixProtocolConnection {
                     persistentDhPrivateKeyHandle = nil
                     sendingStep = nil
 
-                    return .success(session)
+                    return .success(connection)
                 }
 
             if overallResult.isErr {
-                debugPrint("[ShieldSession] Failed to create session \(connectId): \(try overallResult.unwrapErr().message)")
                 initialSendingDhPrivateKeyHandle?.dispose()
                 sendingStep?.dispose()
                 persistentDhPrivateKeyHandle?.dispose()
@@ -168,13 +158,13 @@ final class EcliptixProtocolConnection {
         }
     }
     
-    public func getPeerBundle() -> Result<LocalPublicKeyBundle, EcliptixProtocolFailure> {
+    public func getPeerBundle() -> Result<PublicKeyBundle, EcliptixProtocolFailure> {
         lock.lock()
         defer { lock.unlock() }
         
         return checkDisposed().flatMap { _ in
-            return peerBundle != nil
-            ? .success(peerBundle!)
+            return self.peerBundle != nil
+            ? .success(self.peerBundle!)
             : .failure(.generic("Peer bundle has not been set."))
         }
     }
@@ -189,13 +179,10 @@ final class EcliptixProtocolConnection {
         lock.lock()
         defer { lock.unlock() }
         
-        return checkDisposed().map { u in
-            debugPrint("[ShieldSession] Setting state for session \(id) to \(newState)")
-            return u
-        }
+        return checkDisposed().map { u in u }
     }
     
-    internal func setPeerBundle(_ peerBundleToSet: LocalPublicKeyBundle?) -> Result<Unit, EcliptixProtocolFailure> {
+    internal func setPeerBundle(_ peerBundleToSet: PublicKeyBundle?) -> Result<Unit, EcliptixProtocolFailure> {
         lock.lock()
         defer { lock.unlock() }
         
@@ -219,11 +206,11 @@ final class EcliptixProtocolConnection {
 
         defer {
             if localSenderCk != nil {
-                localSenderCk!.resetBytes(in: 0...localSenderCk!.count)
+                localSenderCk!.resetBytes(in: 0..<localSenderCk!.count)
                 localSenderCk!.removeAll()
             }
             if localReceiverCk != nil {
-                localReceiverCk!.resetBytes(in: 0...localReceiverCk!.count)
+                localReceiverCk!.resetBytes(in: 0..<localReceiverCk!.count)
                 localReceiverCk!.removeAll()
             }
             
@@ -232,19 +219,13 @@ final class EcliptixProtocolConnection {
             lock.unlock()
         }
 
-        debugPrint("[ShieldSession] Finalizing chain and DH keys for session \(id)")
-
         return checkDisposed()
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
-                return checkIfNotFinalized()
-            }
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
-                return Self.validateInitialKeys(rootKey: initialRootKey, peerDhKey: initialPeerDhPublicKey)
-            }
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
+            .flatMap { _ in checkIfNotFinalized() }
+            .flatMap { _ in Self.validateInitialKeys(rootKey: initialRootKey, peerDhKey: initialPeerDhPublicKey) }
+            .flatMap { _ in
                 peerDhPublicCopy = initialPeerDhPublicKey
 
-                let result = SodiumSecureMemoryHandle.allocate(length: Constants.x25519KeySize)
+                return SodiumSecureMemoryHandle.allocate(length: Constants.x25519KeySize)
                     .mapSodiumFailure()
                     .flatMap { handle -> Result<Unit, EcliptixProtocolFailure> in
                         tempRootHandle = handle
@@ -253,28 +234,26 @@ final class EcliptixProtocolConnection {
                             handle.write(data: bufferPointer).mapSodiumFailure()
                         }
                     }
-                
-                return result
             }
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
+            .flatMap { _ in
                 localSenderCk = Data(count: Constants.x25519KeySize)
                 localReceiverCk = Data(count: Constants.x25519KeySize)
                 return deriveInitialChainKeys(rootKey: &initialRootKey, senderCkDest: &localSenderCk!, receiverCkDest: &localReceiverCk!)
             }
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
-                return persistentDhPrivateKeyHandle!.readBytes(length: Constants.x25519PrivateKeySize)
+            .flatMap { _ in
+                return self.persistentDhPrivateKeyHandle!.readBytes(length: Constants.x25519PrivateKeySize)
                     .mapSodiumFailure()
                     .map { bytes -> Unit in
                         persistentPrivKeyBytes = bytes
                         return .value
                     }
             }
-            .flatMap { _ -> Result<Unit, EcliptixProtocolFailure> in
+            .flatMap { _ in
                 var newDhPrivateKey: Data? = nil
                 var newDhPublicKey: Data? = nil
-                return self.sendingStep.updateKeysAfterDhRatchet(newChainKey: &localSenderCk!, newDhPrivateKey: &newDhPrivateKey, newDhPublicKey: &newDhPublicKey) // maybe here error
+                return self.sendingStep.updateKeysAfterDhRatchet(newChainKey: &localSenderCk!, newDhPrivateKey: &newDhPrivateKey, newDhPublicKey: &newDhPublicKey)
             }
-            .flatMap { _ -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> in
+            .flatMap { _  in
                 return EcliptixProtocolChainStep.create(
                     stepType: .receiver,
                     initialChainKey: &localReceiverCk!,
@@ -329,14 +308,13 @@ final class EcliptixProtocolConnection {
                     }
             }
             .flatMap { resultTuple in
-                let originalKey: EcliptixMessageKey = resultTuple.derivedKey
+                let originalKey = resultTuple.derivedKey
                 let includeDhKey = resultTuple.includeDhKey
                 
                 keyMaterial = Data(count: Constants.aesKeySize)
-                var keySpan = Data(count: Constants.aesKeySize)
-                _ = originalKey.readKeyMaterial(into: &keySpan)
+                _ = originalKey.readKeyMaterial(into: &keyMaterial!)
                 
-                return EcliptixMessageKey.new(index: originalKey.index, keyMaterial: &keySpan)
+                return EcliptixMessageKey.new(index: originalKey.index, keyMaterial: &keyMaterial!)
                     .map { clonedKey in (clonedKey, includeDhKey) }
             }
             .map { finalResult in
@@ -348,62 +326,42 @@ final class EcliptixProtocolConnection {
     // stopped here
     internal func processReceivedMessage(receivedIndex: UInt32, receivedDhPublicKeyBytes: inout Data?) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
         lock.lock()
-        
-        var receivingStepLocal: EcliptixProtocolChainStep?
-        var peerDhPublicCopy: Data? = nil
-        var messageKey: EcliptixMessageKey?
 
         defer {
-            _ = Self.wipeIfNotNil(&peerDhPublicCopy)
             lock.unlock()
         }
-
-        debugPrint("[ShieldSession] Processing received message for session \(id), Index: \(receivedIndex)")
-        if receivedDhPublicKeyBytes != nil {
-            peerDhPublicCopy = Data(receivedDhPublicKeyBytes!)
-            debugPrint("[ShieldSession] Received DH Public Key: \(peerDhPublicCopy!.hexEncodedString())")
-        }
-
+        
         return checkDisposed()
-            .flatMap { _ in self.ensureNotExpired() }
-            .flatMap { _ in self.ensureReceivingStepInitialized() }
-            .flatMap { step in
-                receivingStepLocal = step
-                return maybePerformReceivingDhRatchet(receivingStep: step, receivedDhPublicKeyBytes: &peerDhPublicCopy)
-            }
-            .flatMap { _ in
-                receivingStepLocal!.getOrDeriveKeyFor(targetIndex: receivedIndex, messageKeys: &messageKeys)
-            }
-            .flatMap { derivedKey in
-                messageKey = derivedKey
-                debugPrint("[ShieldSession] Derived message key for received index: \(receivedIndex)")
-                return receivingStepLocal!.setCurrentIndex(messageKey!.index)
-                    .map { _ in messageKey! }
+            .flatMap { _ in ensureNotExpired() }
+            .flatMap { _ in ensureReceivingStepInitialized() }
+            .flatMap { receivingStep in maybePerformReceivingDhRatchet(receivingStep: receivingStep, receivedDhPublicKeyBytes: &receivedDhPublicKeyBytes)
+                    .flatMap { _ in receivingStep.getOrDeriveKeyFor(targetIndex: receivedIndex, messageKeys: &messageKeys) }
+                    .flatMap { derivedKey in receivingStep.setCurrentIndex(derivedKey.index).map { _ in derivedKey } }
             }
             .map { finalKey in
-                receivingStepLocal!.pruneOldKeys(messageKeys: &messageKeys)
+                self.receivingStep!.pruneOldKeys(messageKeys: &messageKeys)
                 return finalKey
             }
     }
 
     private func checkIfNotFinalized() -> Result<Unit, EcliptixProtocolFailure> {
         return checkDisposed().flatMap { _ in
-            return (rootKeyHandle != nil || receivingStep != nil)
+            return (self.rootKeyHandle != nil || self.receivingStep != nil)
                 ? .failure(.generic("Session has not yet been finalized."))
-                : .success(Unit.value)
+                : .success(.value)
         }
     }
 
     private static func validateInitialKeys(rootKey: Data, peerDhKey: Data) -> Result<Unit, EcliptixProtocolFailure> {
-        if rootKey.count != Constants.x25519KeySize {
+        guard rootKey.count == Constants.x25519KeySize else {
             return .failure(.invalidInput("Initial root key must be \(Constants.x25519KeySize) bytes."))
         }
 
-        if peerDhKey.count != Constants.x25519PublicKeySize {
+        guard peerDhKey.count == Constants.x25519PublicKeySize else {
             return .failure(.invalidInput("Initial peer DH public key must be \(Constants.x25519PublicKeySize) bytes."))
         }
 
-        return .success(Unit.value)
+        return .success(.value)
     }
     
     private func deriveInitialChainKeys(rootKey: inout Data, senderCkDest: inout Data, receiverCkDest: inout Data) -> Result<Unit, EcliptixProtocolFailure> {
@@ -420,12 +378,14 @@ final class EcliptixProtocolConnection {
             try hkdfRecv.expand(info: Self.initialReceiverChainInfo, output: &recvSpan)
             
             if self.isInitiator {
-                senderCkDest.replaceSubrange(0..<sendSpan.count, with: sendSpan)
-                receiverCkDest.replaceSubrange(0..<recvSpan.count, with: recvSpan)
+                senderCkDest = sendSpan
+                receiverCkDest = recvSpan
             } else {
-                senderCkDest.replaceSubrange(0..<recvSpan.count, with: recvSpan)
-                receiverCkDest.replaceSubrange(0..<sendSpan.count, with: sendSpan)
+                senderCkDest = recvSpan
+                receiverCkDest = sendSpan
             }
+            
+            return .value
         }.mapError { error in
             EcliptixProtocolFailure.deriveKey("Failed to derive initial chain keys.", inner: error)
         }
@@ -433,8 +393,8 @@ final class EcliptixProtocolConnection {
     
     private func ensureSendingStepInitialized() -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
         return checkDisposed().flatMap { _ in
-            return sendingStep != nil
-            ? .success(sendingStep)
+            return self.sendingStep != nil
+            ? .success(self.sendingStep)
             : .failure(EcliptixProtocolFailure.generic("Sending chain step not initialized."))
         }
     }
@@ -470,45 +430,37 @@ final class EcliptixProtocolConnection {
         receivedDhPublicKeyBytes: inout Data?
     ) -> Result<Unit, EcliptixProtocolFailure> {
         if receivedDhPublicKeyBytes == nil {
-            return .success(Unit.value)
+            return .success(.value)
         }
-
-        do {
-            let keysDiffer = peerDhPublicKey == nil || peerDhPublicKey != receivedDhPublicKeyBytes
         
-            if self.peerDhPublicKey != nil {
-                debugPrint("[ShieldSession] Checking DH key difference. Peer DH Key: \(peerDhPublicKey!.hexEncodedString()), Received: \(receivedDhPublicKeyBytes!.hexEncodedString())")
-            }
-            
-            if !keysDiffer {
-                return .success(Unit.value)
-            }
-
-            let currentIndexResult = receivingStep.getCurrentIndex()
-            if currentIndexResult.isErr {
-                return .failure(try currentIndexResult.unwrapErr())
-            }
-            
-            let currentIndex: UInt32 = try currentIndexResult.unwrap()
+        let keysDiffer = peerDhPublicKey == nil || receivedDhPublicKeyBytes != receivedDhPublicKeyBytes
+        
+        if !keysDiffer {
+            return .success(.value)
+        }
+        
+        return receivingStep.getCurrentIndex().flatMap { currentIndex in
             let shouldRatchet = isFirstReceivingRatchet || (currentIndex + 1) % UInt32(Self.dhRotationInterval) == 0
             if shouldRatchet {
+                self.isFirstReceivingRatchet = false
                 return performDhRatchet(isSender: false, receivedDhPublicKeyBytes: receivedDhPublicKeyBytes)
+            } else {
+                _ = Self.wipeIfNotNil(&peerDhPublicKey)
+                peerDhPublicKey = receivedDhPublicKeyBytes
+                receivedNewDhKey = true
+                return .success(.value)
             }
-            
-
-            _ = Self.wipeIfNotNil(&peerDhPublicKey)
-            peerDhPublicKey = receivedDhPublicKeyBytes
-            receivedNewDhKey = true
-            debugPrint("[ShieldSession] Deferred DH ratchet: New key received but waiting for interval.")
-            return .success(Unit.value)
-        } catch {
-            return .failure(EcliptixProtocolFailure.generic("Unexpected error during perform receiving DhRatchet.", inner: error))
         }
     }
 
     
     func performReceivingRatchet(receivedDhKey: Data) -> Result<Unit, EcliptixProtocolFailure> {
-        debugPrint("[ShieldSession] Performing receiving ratchet for session \(id)")
+        lock.lock()
+        
+        defer {
+            lock.unlock()
+        }
+        
         return performDhRatchet(isSender: false, receivedDhPublicKeyBytes: receivedDhKey)
     }
     
@@ -542,10 +494,8 @@ final class EcliptixProtocolConnection {
         }
 
         do {
-            debugPrint("[ShieldSession] Performing DH ratchet for session \(id), IsSender: \(isSender)")
-
             let initailCheck = checkDisposed().flatMap { _ in
-                return rootKeyHandle!.isInvalid == false
+                return self.rootKeyHandle!.isInvalid == false
                 ? .success(Unit.value)
                 : .failure(.generic("Root key handle not initialized or invalid."))
             }
@@ -553,11 +503,9 @@ final class EcliptixProtocolConnection {
                 return initailCheck
             }
 
-            let dhResult: Result<Data, EcliptixProtocolFailure>
-
             let dhCalculationResult = Result<Unit, EcliptixProtocolFailure>.Try {
                 if isSender {
-                    if sendingStep == nil || peerDhPublicKey == nil {
+                    if self.sendingStep == nil || self.peerDhPublicKey == nil {
                         throw EcliptixProtocolConnectionExceptions.ArgumentNil(message: "Sender ratchet pre-conditions not met.")
                     }
                     let ephResult = try SodiumInterop.generateX25519KeyPair(keyPurpose: "Ephemeral DH Ratchet").unwrap()
@@ -565,7 +513,7 @@ final class EcliptixProtocolConnection {
                     newEphemeralSkHandle = ephResult.skHandle
                     newEphemeralPublicKey = ephResult.pk
                     localPrivateKeyBytes = try newEphemeralSkHandle!.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
-                    dhSecret = try ScalarMult.mult(localPrivateKeyBytes!, peerDhPublicKey!)
+                    dhSecret = try ScalarMult.mult(localPrivateKeyBytes!, self.peerDhPublicKey!)
                 } else {
                     if self.receivingStep == nil || receivedDhPublicKeyBytes!.count != Constants.x25519PublicKeySize {
                         throw EcliptixProtocolConnectionExceptions.ArgumentNil(message: "Receiver ratchet pre-conditions not met.")
@@ -574,6 +522,7 @@ final class EcliptixProtocolConnection {
                     dhSecret = try ScalarMult.mult(localPrivateKeyBytes!, receivedDhPublicKeyBytes!)
                     
                 }
+                return .value
             }.mapError { error in
                 EcliptixProtocolFailure.deriveKey("DH calculation failed during ratchet.", inner: error)
             }
@@ -597,7 +546,7 @@ final class EcliptixProtocolConnection {
                 return writeResult.mapError { f in f }
             }
             
-            var updateResult: Result<Unit, EcliptixProtocolFailure>
+            let updateResult: Result<Unit, EcliptixProtocolFailure>
             if isSender {
                 newDhPrivateKey = try newEphemeralSkHandle!.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
                 self.currentSendingDhPrivateKeyHandle?.dispose()
@@ -658,12 +607,22 @@ final class EcliptixProtocolConnection {
     }
     
     func getCurrentPeerDhPublicKey() -> Result<Data?, EcliptixProtocolFailure> {
-        return checkDisposed().map { _ in
-            return peerDhPublicKey
+        lock.lock()
+        
+        defer {
+            lock.unlock()
         }
+        
+        return checkDisposed().map { _ in self.peerDhPublicKey != nil ? self.peerDhPublicKey! : nil }
     }
     
     func getCurrentSenderDhPublicKey() -> Result<Data?, EcliptixProtocolFailure> {
+        lock.lock()
+        
+        defer {
+            lock.unlock()
+        }
+        
         return checkDisposed()
             .flatMap { _ in ensureSendingStepInitialized() }
             .flatMap { step in step.readDhPublicKey() }
@@ -718,7 +677,7 @@ final class EcliptixProtocolConnection {
     
     private func secureCleaningLogic() {
         rootKeyHandle?.dispose()
-        sendingStep?.dispose()
+        sendingStep.dispose()
         receivingStep?.dispose()
         clearMessageKeyCache()
         persistentDhPrivateKeyHandle?.dispose()

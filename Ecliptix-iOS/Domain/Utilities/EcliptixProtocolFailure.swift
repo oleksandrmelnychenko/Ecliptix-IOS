@@ -38,7 +38,7 @@ enum EcliptixProtocolFailureType: Error {
     case unexpectedError
 }
 
-public struct EcliptixProtocolFailure: CustomStringConvertible, Equatable, Hashable, Error, LocalizedError {
+public struct EcliptixProtocolFailure: CustomStringConvertible, Equatable, Hashable, Error, LocalizedError, FailureBaseProtocol {
     let type: EcliptixProtocolFailureType
     let message: String
     let innerError: Error?
@@ -53,21 +53,29 @@ public struct EcliptixProtocolFailure: CustomStringConvertible, Equatable, Hasha
         return message
     }
     
-    // Maybe not needed
-//    public static func toGrpcStatus(_ failure: EcliptixProtocolFailure) -> Status {
-//        let code: Status.Code
-//        switch failure.type {
-//        case .invalidInput:
-//            code = .invalidArgument
-//        case .objectDisposed, .ephemeralMissing, .stateMissing:
-//            code = .failedPrecondition
-//        default:
-//            code = .internalError
-//        }
-//
-//        let message = (code == .internalError) ? "An internal error occurred." : failure.message
-//        return Status(code: code, message: message)
-//    }
+    func toStructuredLog() -> Any {
+        return [
+            "protocolFailureType": String(describing: type),
+            "message": message,
+            "innerError": innerError?.localizedDescription ?? "nil",
+            "timestamp": ISO8601DateFormatter().string(from: Date())
+        ]
+    }
+    
+    func toGrpcStatus() -> GRPC.GRPCStatus {
+        let code: GRPCStatus.Code
+        switch type {
+        case .invalidInput, .peerPubKeyFailed, .bufferTooSmall, .dataTooLarge:
+            code = .invalidArgument
+        case .objectDisposed, .ephemeralMissing, .stateMissing:
+            code = .failedPrecondition
+        default:
+            code = .internalError
+        }
+
+        let grpcMessage = (code == .internalError) ? "An internal error occurred." : message
+        return GRPCStatus(code: code, message: grpcMessage)
+    }
     
     // MARK: - Factory Methods
     static func generic(_ details: String? = nil, inner: Error? = nil) -> EcliptixProtocolFailure {

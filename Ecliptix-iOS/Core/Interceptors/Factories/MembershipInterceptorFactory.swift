@@ -20,14 +20,42 @@ final class MembershipInterceptorFactory: Ecliptix_Proto_Membership_MembershipSe
         self.deviceId = deviceId
     }
 
-    func makeUpdateMembershipWithSecureKeyInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+//    func makeUpdateMembershipWithSecureKeyInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+//        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
+//            appInstanceId: appInstanceId,
+//            deviceId: deviceId
+//        )]
+//    }
+//
+//    func makeSignInMembershipInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+//        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
+//            appInstanceId: appInstanceId,
+//            deviceId: deviceId
+//        )]
+//    }
+    
+    func makeOpaqueRegistrationInitRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
             appInstanceId: appInstanceId,
             deviceId: deviceId
         )]
     }
-
-    func makeSignInMembershipInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+    
+    func makeOpaqueRegistrationCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
+            appInstanceId: appInstanceId,
+            deviceId: deviceId
+        )]
+    }
+    
+    func makeOpaqueSignInInitRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
+            appInstanceId: appInstanceId,
+            deviceId: deviceId
+        )]
+    }
+    
+    func makeOpaqueSignInCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
             appInstanceId: appInstanceId,
             deviceId: deviceId

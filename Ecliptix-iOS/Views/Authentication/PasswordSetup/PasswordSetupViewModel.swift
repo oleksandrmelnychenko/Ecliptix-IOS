@@ -267,87 +267,87 @@ final class PasswordSetupViewModel: ObservableObject {
             self.isLoading = true
         }
         
-        var rentedPasswordBytes: Data?
-        var localSaltForEncryption: Data?
-        var localDataEncryptionKey: Data?
-        
-        defer {
-            if rentedPasswordBytes != nil {
-                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
-                rentedPasswordBytes!.removeAll()
-            }
-            
-            if localSaltForEncryption != nil {
-                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
-                localSaltForEncryption!.removeAll()
-            }
-            
-            if localDataEncryptionKey != nil {
-                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
-                localDataEncryptionKey!.removeAll()
-            }
-            
-            self.isLoading = false
-        }
-        
-        do {
-            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
-            var passwordSpan = rentedPasswordBytes!
-            let readResult = passwordSpan.withUnsafeMutableBytes { destPtr in
-                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
-            }
-            if readResult.isErr {
-                throw try readResult.unwrapErr()
-            }
-            
-            guard let passwordString = String(data: passwordSpan, encoding: .utf8) else {
-                errorMessage = "Password contains invalid characters for string conversion."
-                return
-            }
-            
-            let verifierResult = self.passwordManager.hashPassword(passwordString)
-            if verifierResult.isErr {
-                throw try verifierResult.unwrapErr()
-            }
-            
-            let passwordVerifierForServer = try verifierResult.unwrap()
-            
-            var request = Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest()
-            request.membershipIdentifier = self.verificationSessionId
-            request.secureKey = Data(passwordVerifierForServer.utf8)
-            
-            let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-            
-            _ = try await networkController.executeServiceAction(
-                connectId: connectId,
-                serviceAction: .updateMembershipWithSecureKey,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { payload in
-                    
-                    do {
-                        let createMembershipResponse = try Utilities.parseFromBytes(
-                            Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.self,
-                            data: payload)
-                        
-                        if createMembershipResponse.result == .succeeded {
-                            self.navigation.navigate(to: .passPhaseRegistration)
-                        }
-                        
-                        return .success(.value)
-                    } catch {
-                        await MainActor.run {
-                            self.isLoading = false
-                            self.errorMessage = "Failed to parse server response"
-                        }
-                        return .failure(.generic("Deserialization failed", inner: error))
-                    }
-                })
-        } catch {
-            await MainActor.run {
-                self.errorMessage = "Submission failed: \(error)"
-            }
-        }
+//        var rentedPasswordBytes: Data?
+//        var localSaltForEncryption: Data?
+//        var localDataEncryptionKey: Data?
+//        
+//        defer {
+//            if rentedPasswordBytes != nil {
+//                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
+//                rentedPasswordBytes!.removeAll()
+//            }
+//            
+//            if localSaltForEncryption != nil {
+//                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
+//                localSaltForEncryption!.removeAll()
+//            }
+//            
+//            if localDataEncryptionKey != nil {
+//                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
+//                localDataEncryptionKey!.removeAll()
+//            }
+//            
+//            self.isLoading = false
+//        }
+//        
+//        do {
+//            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
+//            var passwordSpan = rentedPasswordBytes!
+//            let readResult = passwordSpan.withUnsafeMutableBytes { destPtr in
+//                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
+//            }
+//            if readResult.isErr {
+//                throw try readResult.unwrapErr()
+//            }
+//            
+//            guard let passwordString = String(data: passwordSpan, encoding: .utf8) else {
+//                errorMessage = "Password contains invalid characters for string conversion."
+//                return
+//            }
+//            
+//            let verifierResult = self.passwordManager.hashPassword(passwordString)
+//            if verifierResult.isErr {
+//                throw try verifierResult.unwrapErr()
+//            }
+//            
+//            let passwordVerifierForServer = try verifierResult.unwrap()
+//            
+//            var request = Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyRequest()
+//            request.membershipIdentifier = self.verificationSessionId
+//            request.secureKey = Data(passwordVerifierForServer.utf8)
+//            
+//            let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+//            
+//            _ = try await networkController.executeServiceAction(
+//                connectId: connectId,
+//                serviceAction: .updateMembershipWithSecureKey,
+//                plainBuffer: try request.serializedData(),
+//                flowType: .single,
+//                onSuccessCallback: { payload in
+//                    
+//                    do {
+//                        let createMembershipResponse = try Utilities.parseFromBytes(
+//                            Ecliptix_Proto_Membership_UpdateMembershipWithSecureKeyResponse.self,
+//                            data: payload)
+//                        
+//                        if createMembershipResponse.result == .succeeded {
+//                            self.navigation.navigate(to: .passPhaseRegistration)
+//                        }
+//                        
+//                        return .success(.value)
+//                    } catch {
+//                        await MainActor.run {
+//                            self.isLoading = false
+//                            self.errorMessage = "Failed to parse server response"
+//                        }
+//                        return .failure(.generic("Deserialization failed", inner: error))
+//                    }
+//                })
+//        } catch {
+//            await MainActor.run {
+//                self.errorMessage = "Submission failed: \(error)"
+//            }
+//        }
     }
     
     private static func computeConnectId(pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType) -> UInt32 {

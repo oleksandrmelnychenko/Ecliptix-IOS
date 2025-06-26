@@ -10,9 +10,9 @@ import OrderedCollections
 
 final class EcliptixProtocolChainStep {
     private static let defaultCacheWindowSize: UInt32 = 1000
-    private static let okResult = Result<Unit, EcliptixProtocolFailure>.success(Unit())
+    private static let okResult = Result<Unit, EcliptixProtocolFailure>.success(.value)
 
-    private var _chainKeyHandle: SodiumSecureMemoryHandle
+    private var chainKeyHandle: SodiumSecureMemoryHandle
     private var dhPrivateKeyHandle: SodiumSecureMemoryHandle?
     private var dhPublicKey: Data?
     private var currentIndex: UInt32 = 0
@@ -31,14 +31,13 @@ final class EcliptixProtocolChainStep {
         cacheWindowSize: UInt32
     ) {
         self.stepType = stepType
-        self._chainKeyHandle = chainKeyHandle
+        self.chainKeyHandle = chainKeyHandle
         self.dhPrivateKeyHandle = dhPrivateKeyHandle
         self.dhPublicKey = dhPublicKey
         self.cacheWindow = cacheWindowSize
         self.currentIndex = 0
         self.isNewChain = false
         self.disposed = false
-        debugPrint("[ShieldChainStep] Created chain step of type \(stepType)")
     }
 
     deinit {
@@ -50,93 +49,21 @@ final class EcliptixProtocolChainStep {
     }
     
     func getCurrentIndex() -> Result<UInt32, EcliptixProtocolFailure> {
-        return disposed
+        return self.disposed
             ? .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
-            : .success(currentIndex)
+            : .success(self.currentIndex)
     }
 
-    func setCurrentIndex(_ value: UInt32) -> Result<Unit, EcliptixProtocolFailure> {
-        if disposed {
+    internal func setCurrentIndex(_ value: UInt32) -> Result<Unit, EcliptixProtocolFailure> {
+        if self.disposed {
             return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         }
         
-        if currentIndex != value {
-            debugPrint("[ShieldChainStep] Setting current index from \(currentIndex) to \(value)")
-            currentIndex = value
+        if self.currentIndex != value {
+            self.currentIndex = value
         }
         
-        return .success(Unit.value)
-    }
-    
-    func pruneOldKeys(messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) {
-        if disposed || cacheWindow == 0 || messageKeys.isEmpty { return }
-        
-        do {
-            let currentIndexResult = getCurrentIndex()
-            if currentIndexResult.isErr {
-                return;
-            }
-            let indexToPruneAgainst: UInt32 = try currentIndexResult.unwrap()
-            
-            let minIndexToKeep: UInt32
-            if indexToPruneAgainst >= cacheWindow {
-                minIndexToKeep = indexToPruneAgainst - cacheWindow + 1
-            } else {
-                minIndexToKeep = 0
-            }
-            
-            debugPrint("[ShieldChainStep] Pruning old keys. Current Index: \(indexToPruneAgainst), Min Index to Keep: \(minIndexToKeep)")
-            
-            // Find keys to remove (less than minIndexToKeep)
-            let keysToRemove: [UInt32] = messageKeys.keys.filter { $0 < minIndexToKeep }
-            
-            for keyIndex in keysToRemove {
-                if let messageKeyToDispose = messageKeys.removeValue(forKey: keyIndex) {
-                    messageKeyToDispose.dispose()
-                    debugPrint("[ShieldChainStep] Removed old key at index \(keyIndex)")
-                }
-            }
-        }
-        catch {
-            debugPrint("[ShieldChainStep] Error during pruning old keys: \(error)")
-            return
-        }
-    }
-    
-    private func dispose(disposing: Bool) {
-        guard !disposed else { return }
-        disposed = true
-        debugPrint("[ShieldChainStep] Disposing chain step of type \(stepType)")
-
-        _chainKeyHandle.dispose()
-        dhPrivateKeyHandle?.dispose()
-        _ = Self.wipeIfNotNil(&dhPublicKey)
-
-        dhPrivateKeyHandle = nil
-        dhPublicKey = nil
-    }
-    
-    private static func wipeIfNotNil(_ data: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
-        if data == nil {
-            return .success(Unit.value)
-        }
-        else {
-            return wipeIfNotNil(&data!)
-        }
-    }
-    
-    private static func wipeIfNotNil(_ data: inout Data) -> Result<Unit, EcliptixProtocolFailure> {
-        return SodiumInterop.secureWipe(&data).mapSodiumFailure()
-    }
-
-    private final class DhKeyInfo {
-        var dhPrivateKeyHandle: SodiumSecureMemoryHandle?
-        var dhPublicKeyCloned: Data?
-
-        init(dhPrivateKeyHandle: SodiumSecureMemoryHandle?, dhPublicKeyCloned: Data?) {
-            self.dhPrivateKeyHandle = dhPrivateKeyHandle
-            self.dhPublicKeyCloned = dhPublicKeyCloned
-        }
+        return .success(.value)
     }
     
     static func create(
@@ -146,15 +73,14 @@ final class EcliptixProtocolChainStep {
         initialDhPublicKey: inout Data?,
         cacheWindowSize: UInt32 = defaultCacheWindowSize
     ) -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
-        debugPrint("[ShieldChainStep] Creating chain step of type \(stepType)")
-
-        return Result<Unit, EcliptixProtocolFailure>.success(Unit())
+        
+        return Result<Unit, EcliptixProtocolFailure>.success(.value)
             .flatMap { _ in validateInitialChainKey(initialChainKey) }
             .flatMap { _ in validateAndPrepareDhKeys(&initialDhPrivateKey, &initialDhPublicKey) }
             .flatMap { dhInfo in
                 allocateAndWriteChainKey(&initialChainKey)
                     .flatMap { chainKeyHandle in
-                        let actualCacheWindow: UInt32 = cacheWindowSize > 0 ? cacheWindowSize : defaultCacheWindowSize
+                        let actualCacheWindow: UInt32 = cacheWindowSize > 0 ? cacheWindowSize : Self.defaultCacheWindowSize
                         let step = EcliptixProtocolChainStep(
                             stepType: stepType,
                             chainKeyHandle: chainKeyHandle,
@@ -162,30 +88,169 @@ final class EcliptixProtocolChainStep {
                             dhPublicKey: &dhInfo.dhPublicKeyCloned,
                             cacheWindowSize: actualCacheWindow
                         )
-                        debugPrint("[ShieldChainStep] Chain step created successfully.")
                         return .success(step)
                     }
                     .mapError { err in
-                        debugPrint("[ShieldChainStep] Error creating chain step: \(err.message)")
                         dhInfo.dhPrivateKeyHandle?.dispose()
                         _ = wipeIfNotNil(&dhInfo.dhPublicKeyCloned)
                         return err
                     }
             }
     }
+    
+    internal func getOrDeriveKeyFor(targetIndex: UInt32, messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
+        if self.disposed {
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
+        }
+        
+        do {
+            let cachedKey = messageKeys[targetIndex]
+            
+            if cachedKey != nil {
+                return .success(cachedKey!)
+            }
+
+            let currentIndexResult = getCurrentIndex()
+            if currentIndexResult.isErr {
+                return .failure(try currentIndexResult.unwrapErr())
+            }
+            
+            let currentIndex = try currentIndexResult.unwrap()
+            
+            if targetIndex <= currentIndex {
+                return .failure(.invalidInput("[\(stepType)] Requested index \(targetIndex) is not future (current: \(currentIndex)) and not cached."))
+            }
+            
+            let chainKeyResult = self.chainKeyHandle.readBytes(length: Constants.x25519KeySize).mapSodiumFailure()
+            if chainKeyResult.isErr {
+                return .failure(try chainKeyResult.unwrapErr())
+            }
+            
+            var chainKey = try chainKeyResult.unwrap()
+            
+            defer {
+                _ = Self.wipeIfNotNil(&chainKey)
+            }
+            
+            var nextChainKey = Data(count: Constants.x25519KeySize)
+            var msgKey = Data(count: Constants.aesKeySize)
+            
+            
+            for idx in (currentIndex + 1)...targetIndex {
+                do {
+                    var saltHkdfMsg: Data? = nil
+                    let hkdfMsg = try HkdfSha256(ikm: &chainKey, salt: &saltHkdfMsg)
+                    try hkdfMsg.expand(info: Constants.msgInfo, output: &msgKey)
+
+                    var saltHkdfChain: Data? = nil
+                    let hkdfChain = try HkdfSha256(ikm: &chainKey, salt: &saltHkdfChain)
+                    try hkdfChain.expand(info: Constants.chainInfo, output: &nextChainKey)
+                } catch {
+                    return .failure(.deriveKey("HKDF failed during derivation at index \(idx).", inner: error))
+                }
+                                
+                let keyResult = EcliptixMessageKey.new(index: idx, keyMaterial: &msgKey)
+                if keyResult.isErr {
+                    return .failure(try keyResult.unwrapErr())
+                }
+                
+                let messageKey = try keyResult.unwrap()
+                                
+                if messageKeys[idx] != nil {
+                    messageKey.dispose()
+                    return .failure(.generic("Key for index \(idx) unexpectedly appeared during derivation."))
+                }
+                messageKeys[idx] = messageKey
+        
+                let writeResult = nextChainKey.withUnsafeBytes { bufferPointer in
+                    self.chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
+                }
+
+                if writeResult.isErr {
+                    messageKeys.removeValue(forKey: idx)?.dispose()
+                    return .failure(try writeResult.unwrapErr())
+                }
+                
+                chainKey = nextChainKey
+            }
+            
+            let setIndexResult = setCurrentIndex(targetIndex)
+            if setIndexResult.isErr {
+                return .failure(try setIndexResult.unwrapErr())
+            }
+            
+            pruneOldKeys(messageKeys: &messageKeys)
+            
+            if let finalKey = messageKeys[targetIndex] {
+                return .success(finalKey)
+            } else {
+                return .failure(.generic("Derived key for index \(targetIndex) missing after derivation loop."))
+            }
+            
+        } catch {
+            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
+            return .failure(.generic("Error during get or derive key.", inner: error))
+        }
+    }
+
+    internal func updateKeysAfterDhRatchet(newChainKey: inout Data, newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
+        
+        return .success(.value)
+            .flatMap { _ in checkDisposed() }
+            .flatMap { _ in Self.validateNewChainKey(newChainKey) }
+            .flatMap { _ in newChainKey.withUnsafeBytes { bufferPointer in
+                    self.chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
+                }
+            }
+            .flatMap { _ in setCurrentIndex(0) }
+            .flatMap { _ in handleDhKeyUpdate(newDhPrivateKey: &newDhPrivateKey, newDhPublicKey: &newDhPublicKey) }
+            .map { _ in
+                self.isNewChain = self.stepType == .sender
+                return .value
+            }
+    }
+    
+    func readDhPublicKey() -> Result<Data?, EcliptixProtocolFailure> {
+        return checkDisposed().map { _ in
+            let result = self.dhPublicKey
+            return result
+        }
+    }
+    
+    internal func pruneOldKeys(messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) {
+        if disposed || cacheWindow == 0 || messageKeys.isEmpty { return }
+        
+        do {
+            let currentIndexResult = getCurrentIndex()
+            if currentIndexResult.isErr {
+                return;
+            }
+            let indexToPruneAgainst: UInt32 = try currentIndexResult.unwrap()
+            
+            let minIndexToKeep = indexToPruneAgainst >= self.cacheWindow ? indexToPruneAgainst - self.cacheWindow + 1 : 0
+                        
+            let keysToRemove: [UInt32] = messageKeys.keys.filter { $0 < minIndexToKeep }
+            
+            for keyIndex in keysToRemove {
+                if let messageKeyToDispose = messageKeys.removeValue(forKey: keyIndex) {
+                    messageKeyToDispose.dispose()
+                 }
+            }
+        }
+        catch {
+            debugPrint("[ShieldChainStep] Error during pruning old keys: \(error)")
+            return
+        }
+    }
 
     private static func validateInitialChainKey(_ initialChainKey: Data) -> Result<Unit, EcliptixProtocolFailure> {
         guard initialChainKey.count == Constants.x25519KeySize else {
             return .failure(.invalidInput("Initial chain key must be \(Constants.x25519KeySize) bytes."))
         }
-        return .success(Unit.value)
+        return .success(.value)
     }
 
-    private static func validateAndPrepareDhKeys(
-        _ initialDhPrivateKey: inout Data?,
-        _ initialDhPublicKey: inout Data?
-    ) -> Result<DhKeyInfo, EcliptixProtocolFailure> {
-        debugPrint("[ShieldChainStep] Validating and preparing DH keys")
+    private static func validateAndPrepareDhKeys(_ initialDhPrivateKey: inout Data?, _ initialDhPublicKey: inout Data?) -> Result<DhKeyInfo, EcliptixProtocolFailure> {
         if initialDhPrivateKey == nil && initialDhPublicKey == nil {
             return .success(DhKeyInfo(dhPrivateKeyHandle: nil, dhPublicKeyCloned: nil))
         }
@@ -205,7 +270,7 @@ final class EcliptixProtocolChainStep {
         var dhPrivateKeyHandle: SodiumSecureMemoryHandle?
         
         return SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-            .flatMap { handle -> Result<Unit, EcliptixProtocolFailure> in
+            .flatMap { handle in
                 dhPrivateKeyHandle = handle
                 debugPrint("[ShieldChainStep] Writing initial DH private key: \(initialDhPrivateKey!.hexEncodedString())")
                                 
@@ -216,6 +281,7 @@ final class EcliptixProtocolChainStep {
             .map { _ in
                 let dhPublicKeyCloned = initialDhPublicKey!
                 debugPrint("[ShieldChainStep] Cloned DH public key: \(dhPublicKeyCloned.hexEncodedString())")
+                
                 return DhKeyInfo(dhPrivateKeyHandle: dhPrivateKeyHandle, dhPublicKeyCloned: dhPublicKeyCloned)
             }
             .mapError { err in
@@ -228,197 +294,18 @@ final class EcliptixProtocolChainStep {
         var chainKeyHandle: SodiumSecureMemoryHandle? = nil
 
         return SodiumSecureMemoryHandle.allocate(length: Constants.x25519KeySize).mapSodiumFailure()
-            .flatMap { handle -> Result<Unit, EcliptixProtocolFailure> in
+            .flatMap { handle in
                 chainKeyHandle = handle
-                debugPrint("[ShieldChainStep] Writing initial chain key: \(initialChainKey.hexEncodedString())")
+                
                 return initialChainKey.withUnsafeBytes { bufferPointer in
                     handle.write(data: bufferPointer).mapSodiumFailure()
                 }
             }
             .map { _ in chainKeyHandle! }
             .mapError { err in
-                debugPrint("[ShieldChainStep] Error allocating chain key: \(err.message)")
                 chainKeyHandle?.dispose()
                 return err
             }
-    }
-
-    func getOrDeriveKeyFor(targetIndex: UInt32, messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
-        if disposed {
-            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
-        }
-
-        var chainKey: Data?
-        
-        defer {
-            _ = Self.wipeIfNotNil(&chainKey)
-        }
-        
-        do {
-            let cachedKey = messageKeys[targetIndex]
-            
-            if cachedKey != nil {
-                debugPrint("[ShieldChainStep] Returning cached key for index \(targetIndex)")
-                return .success(cachedKey!)
-            }
-
-            let currentIndexResult = getCurrentIndex()
-            if currentIndexResult.isErr {
-                return .failure(try currentIndexResult.unwrapErr())
-            }
-            
-            let currentIndex = try currentIndexResult.unwrap()
-            
-            if targetIndex <= currentIndex {
-                return .failure(.invalidInput("[\(stepType)] Requested index \(targetIndex) is not future (current: \(currentIndex)) and not cached."))
-            }
-            
-            debugPrint("[ShieldChainStep] Starting derivation for target index: \(targetIndex), current index: \(currentIndex)")
-
-            let chainKeyResult = _chainKeyHandle.readBytes(length: Constants.x25519KeySize).mapSodiumFailure()
-            if chainKeyResult.isErr {
-                return .failure(try chainKeyResult.unwrapErr())
-            }
-            
-            chainKey = try chainKeyResult.unwrap()
-            
-            var currentChainKey = Data(count: Constants.x25519KeySize)
-            var nextChainKey = Data(count: Constants.x25519KeySize)
-            var msgKey = Data(count: Constants.aesKeySize)
-            
-            currentChainKey.replaceSubrange(0..<Constants.x25519KeySize, with: chainKey!)
-            
-            for idx in (currentIndex + 1)...targetIndex {
-                debugPrint("[ShieldChainStep] Deriving key for index: \(idx)")
-                
-                do {
-                    var saltHkdfMsg: Data? = nil
-                    let hkdfMsg = try HkdfSha256(ikm: &currentChainKey, salt: &saltHkdfMsg)
-                    try hkdfMsg.expand(info: Constants.msgInfo, output: &msgKey)
-
-                    var saltHkdfChain: Data? = nil
-                    let hkdfChain = try HkdfSha256(ikm: &currentChainKey, salt: &saltHkdfChain)
-                    try hkdfChain.expand(info: Constants.chainInfo, output: &nextChainKey)
-                } catch {
-                    debugPrint("[ShieldChainStep] Error deriving keys at index \(idx): \(error)")
-                    return .failure(.deriveKey("HKDF failed during derivation at index \(idx).", inner: error))
-                }
-                
-//                var msgKeyClone = msgKey
-                
-                let keyResult = EcliptixMessageKey.new(index: idx, keyMaterial: &msgKey)
-                if keyResult.isErr {
-                    return .failure(try keyResult.unwrapErr())
-                }
-                
-                let messageKey = try keyResult.unwrap()
-                                
-                if messageKeys[idx] != nil {
-                    messageKey.dispose()
-                    return .failure(.generic("Key for index \(idx) unexpectedly appeared during derivation."))
-                }
-                messageKeys[idx] = messageKey
-        
-                let writeResult = nextChainKey.withUnsafeBytes { bufferPointer in
-                    _chainKeyHandle.write(data: bufferPointer)
-                }.mapSodiumFailure()
-
-                if writeResult.isErr {
-                    messageKeys.removeValue(forKey: idx)?.dispose()
-                    return .failure(try writeResult.unwrapErr())
-                }
-                
-                currentChainKey.replaceSubrange(0..<Constants.x25519KeySize, with: nextChainKey)
-            }
-            
-            let setIndexResult = setCurrentIndex(targetIndex)
-            if setIndexResult.isErr {
-                return .failure(try setIndexResult.unwrapErr())
-            }
-            
-            pruneOldKeys(messageKeys: &messageKeys)
-            
-            if let finalKey = messageKeys[targetIndex] {
-                debugPrint("[ShieldChainStep] Derived key for index \(targetIndex) successfully.")
-                return .success(finalKey)
-            } else {
-                debugPrint("[ShieldChainStep] Derived key for index \(targetIndex) not found in cache.")
-                return .failure(.generic("Derived key for index \(targetIndex) missing after derivation loop."))
-            }
-            
-        } catch {
-            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
-            return .failure(.generic("Error during get or derive key.", inner: error))
-        }
-    }
-
-    func updateKeysAfterDhRatchet(newChainKey: inout Data, newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
-        debugPrint("[ShieldChainStep] Updating keys after DH ratchet for \(stepType)")
-        
-        return .success(Unit())
-            .flatMap { _ in checkDisposed() }
-            .flatMap { _ in Self.validateNewChainKey(newChainKey) }
-//            .flatMap { _ in
-//                debugPrint("[ShieldChainStep] Writing new chain key: \(newChainKey.hexEncodedString())")
-//                return newChainKey.withUnsafeBytes { bufferPointer in
-//                    _chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
-//                }
-//            }
-            .flatMap { _ in newChainKey.withUnsafeBytes { bufferPointer in
-                    self._chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
-                }
-            }
-            .flatMap { _ in setCurrentIndex(0) }
-            .flatMap { _ in handleDhKeyUpdate(newDhPrivateKey: &newDhPrivateKey, newDhPublicKey: &newDhPublicKey) }
-            .map { _ in
-                isNewChain = stepType == .sender
-                debugPrint("[ShieldChainStep] Keys updated successfully. IsNewChain: \(self.isNewChain)")
-                return .value
-            }
-    }
-    
-    
-    private func handleDhKeyUpdate(newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
-        if newDhPrivateKey == nil && newDhPublicKey == nil {
-            return Self.okResult
-        }
-
-        var privateKey = newDhPrivateKey
-        var publicKey = newDhPublicKey
-        
-        defer {
-            _ = Self.wipeIfNotNil(&privateKey)
-            _ = Self.wipeIfNotNil(&publicKey)
-        }
-        
-        return EcliptixProtocolChainStep.validateAll(
-            { EcliptixProtocolChainStep.validateDhKeysNotNull(privateKey: privateKey, publicKey: publicKey) },
-            { EcliptixProtocolChainStep.validateDhPrivateKeySize(privateKey: privateKey) },
-            { EcliptixProtocolChainStep.validateDhPublicKeySize(publicKey: publicKey) }
-        ).flatMap { _ in
-            print("[ShieldChainStep] Updating DH keys.")
-
-            let handleResult = ensureDhPrivateKeyHandle()
-            if handleResult.isErr {
-                return handleResult.mapError { err in
-                    return err
-                }
-            }
-
-            let writeResult = newDhPrivateKey!.withUnsafeBytes { bufferPointer in
-                dhPrivateKeyHandle!.write(data: bufferPointer).mapSodiumFailure()
-            }
-            if writeResult.isErr {
-                return writeResult.mapError { err in
-                    return err
-                }
-            }
-
-            _ = Self.wipeIfNotNil(&dhPublicKey)
-            dhPublicKey = newDhPublicKey!
-
-            return Self.okResult
-        }
     }
     
     private static func validateAll(_ validators: (() -> Result<Unit, EcliptixProtocolFailure>)?...) -> Result<Unit, EcliptixProtocolFailure> {
@@ -437,39 +324,11 @@ final class EcliptixProtocolChainStep {
         return okResult
     }
 
-    
-    private func checkDisposed() -> Result<Unit, EcliptixProtocolFailure> {
-        if disposed {
-            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
-        } else {
-            return .success(.value)
-        }
-    }
-
     private static func validateNewChainKey(_ newChainKey: Data) -> Result<Unit, EcliptixProtocolFailure> {
         if newChainKey.count == Constants.x25519KeySize {
             return .success(.value)
         } else {
             return .failure(.invalidInput("New chain key must be \(Constants.x25519KeySize) bytes."))
-        }
-    }
-    
-    private func ensureDhPrivateKeyHandle() -> Result<Unit, EcliptixProtocolFailure> {
-        if dhPrivateKeyHandle != nil {
-            return EcliptixProtocolChainStep.okResult
-        }
-
-        do {
-            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-            if allocResult.isErr {
-                return .failure(try allocResult.unwrapErr())
-            }
-            
-            dhPrivateKeyHandle = try allocResult.unwrap()
-            return Self.okResult
-        } catch {
-            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
-            return .failure(.generic("Failed to allocate memory for DH private key.", inner: error))
         }
     }
     
@@ -504,12 +363,108 @@ final class EcliptixProtocolChainStep {
             ? okResult
             : .failure(.invalidInput("DH public key must be \(Constants.x25519KeySize) bytes."))
     }
+    
+    private static func wipeIfNotNil(_ data: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
+        if data == nil {
+            return .success(Unit.value)
+        }
+        else {
+            return wipeIfNotNil(&data!)
+        }
+    }
+    
+    private static func wipeIfNotNil(_ data: inout Data) -> Result<Unit, EcliptixProtocolFailure> {
+        return SodiumInterop.secureWipe(&data).mapSodiumFailure()
+    }
+    
+    private func handleDhKeyUpdate(newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
+        if newDhPrivateKey == nil && newDhPublicKey == nil {
+            return Self.okResult
+        }
+        
+        defer {
+            _ = Self.wipeIfNotNil(&newDhPrivateKey)
+            _ = Self.wipeIfNotNil(&newDhPublicKey)
+        }
+        
+        let privateCopy = newDhPrivateKey
+        let publicCopy = newDhPublicKey
+        
+        return EcliptixProtocolChainStep.validateAll(
+            { EcliptixProtocolChainStep.validateDhKeysNotNull(privateKey: privateCopy, publicKey: publicCopy) },
+            { EcliptixProtocolChainStep.validateDhPrivateKeySize(privateKey: privateCopy) },
+            { EcliptixProtocolChainStep.validateDhPublicKeySize(publicKey: publicCopy) }
+        ).flatMap { _ in
+            let handleResult = ensureDhPrivateKeyHandle()
+            if handleResult.isErr {
+                return handleResult.mapError { err in
+                    return err
+                }
+            }
 
-    func readDhPublicKey() -> Result<Data?, EcliptixProtocolFailure> {
-        return checkDisposed().map { _ in
-            let result = dhPublicKey
-            debugPrint("[ShieldChainStep] Read DH public key: \(result?.hexEncodedString() ?? "nil")")
-            return result
+            let writeResult = privateCopy!.withUnsafeBytes { bufferPointer in
+                self.dhPrivateKeyHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }
+            if writeResult.isErr {
+                return writeResult.mapError { err in
+                    return err
+                }
+            }
+
+            _ = Self.wipeIfNotNil(&self.dhPublicKey)
+            self.dhPublicKey = publicCopy!
+
+            return Self.okResult
+        }
+    }
+    
+    private func checkDisposed() -> Result<Unit, EcliptixProtocolFailure> {
+        if disposed {
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
+        } else {
+            return .success(.value)
+        }
+    }
+    
+    private func ensureDhPrivateKeyHandle() -> Result<Unit, EcliptixProtocolFailure> {
+        if dhPrivateKeyHandle != nil {
+            return EcliptixProtocolChainStep.okResult
+        }
+
+        do {
+            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+            if allocResult.isErr {
+                return .failure(try allocResult.unwrapErr())
+            }
+            
+            dhPrivateKeyHandle = try allocResult.unwrap()
+            return Self.okResult
+        } catch {
+            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
+            return .failure(.generic("Failed to allocate memory for DH private key.", inner: error))
+        }
+    }
+    
+    private func dispose(disposing: Bool) {
+        guard !disposed else { return }
+        disposed = true
+        debugPrint("[ShieldChainStep] Disposing chain step of type \(stepType)")
+
+        chainKeyHandle.dispose()
+        dhPrivateKeyHandle?.dispose()
+        _ = Self.wipeIfNotNil(&dhPublicKey)
+
+        dhPrivateKeyHandle = nil
+        dhPublicKey = nil
+    }
+
+    private final class DhKeyInfo {
+        var dhPrivateKeyHandle: SodiumSecureMemoryHandle?
+        var dhPublicKeyCloned: Data?
+
+        init(dhPrivateKeyHandle: SodiumSecureMemoryHandle?, dhPublicKeyCloned: Data?) {
+            self.dhPrivateKeyHandle = dhPrivateKeyHandle
+            self.dhPublicKeyCloned = dhPublicKeyCloned
         }
     }
 }

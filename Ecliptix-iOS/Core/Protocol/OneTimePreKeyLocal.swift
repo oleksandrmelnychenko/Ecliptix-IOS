@@ -33,8 +33,7 @@ public struct OneTimePreKeyLocal {
             securePrivateKey = try allocResult.unwrap()
             
             var tempPrivateKeyBytes: Data?
-            let sodium = Sodium()
-            if let bytes = sodium.randomBytes.buf(length: Constants.x25519PrivateKeySize) {
+            if let bytes = Sodium().randomBytes.buf(length: Constants.x25519PrivateKeySize) {
                 tempPrivateKeyBytes = Data(bytes)
             } else {
                 throw EcliptixProtocolFailure.generic("Failed to generate random bytes")

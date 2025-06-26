@@ -26,7 +26,7 @@ class OneTimePreKeyRecord {
     }
 }
 
-class InternalBundleData {
+struct InternalBundleData {
     let identityEd25519: Data
     let identityX25519: Data
     let signedPreKeyId: UInt32
@@ -55,7 +55,7 @@ class InternalBundleData {
 }
 
 
-class LocalPublicKeyBundle {
+class PublicKeyBundle {
     var identityEd25519: Data
     var identityX25519: Data
     var signedPreKeyId: UInt32
@@ -97,12 +97,12 @@ class LocalPublicKeyBundle {
         return proto
     }
     
-    static func fromProtobufExchange(_ proto: Ecliptix_Proto_PublicKeyBundle?) -> Result<LocalPublicKeyBundle, EcliptixProtocolFailure> {
+    static func fromProtobufExchange(_ proto: Ecliptix_Proto_PublicKeyBundle?) -> Result<PublicKeyBundle, EcliptixProtocolFailure> {
         guard var proto = proto else {
             return .failure(.invalidInput("Inpout Protobuf bundle cannot be nil."))
         }
         
-        return Result<LocalPublicKeyBundle, EcliptixProtocolFailure>.Try {
+        return Result<PublicKeyBundle, EcliptixProtocolFailure>.Try {
             var identityEd25519 = Data(proto.identityPublicKey)
             var identityX25519 = Data(proto.identityX25519PublicKey)
             var signedPreKeyPublic = Data(proto.signedPreKeyPublicKey)
@@ -148,7 +148,7 @@ class LocalPublicKeyBundle {
                 ephemeralX25519: ephemeralX25519
             )
             
-            let localPublicKeyBundle = LocalPublicKeyBundle(&internalData)
+            let localPublicKeyBundle = PublicKeyBundle(&internalData)
             
             return localPublicKeyBundle
         }.mapError { error in

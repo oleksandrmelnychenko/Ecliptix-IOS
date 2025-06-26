@@ -16,12 +16,22 @@ internal protocol Ecliptix_Proto_Membership_MembershipServicesClientProtocol: GR
   var serviceName: String { get }
   var interceptors: Ecliptix_Proto_Membership_MembershipServicesClientInterceptorFactoryProtocol? { get }
 
-  func updateMembershipWithSecureKey(
+  func opaqueRegistrationInitRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
 
-  func signInMembership(
+  func opaqueRegistrationCompleteRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func opaqueSignInInitRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func opaqueSignInCompleteRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
@@ -32,39 +42,75 @@ extension Ecliptix_Proto_Membership_MembershipServicesClientProtocol {
     return "ecliptix.proto.membership.MembershipServices"
   }
 
-  /// Unary call to UpdateMembershipWithSecureKey
+  /// Unary call to OpaqueRegistrationInitRequest
   ///
   /// - Parameters:
-  ///   - request: Request to send to UpdateMembershipWithSecureKey.
+  ///   - request: Request to send to OpaqueRegistrationInitRequest.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func updateMembershipWithSecureKey(
+  internal func opaqueRegistrationInitRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
     return self.makeUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.updateMembershipWithSecureKey.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationInitRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateMembershipWithSecureKeyInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationInitRequestInterceptors() ?? []
     )
   }
 
-  /// Unary call to SignInMembership
+  /// Unary call to OpaqueRegistrationCompleteRequest
   ///
   /// - Parameters:
-  ///   - request: Request to send to SignInMembership.
+  ///   - request: Request to send to OpaqueRegistrationCompleteRequest.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func signInMembership(
+  internal func opaqueRegistrationCompleteRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
     return self.makeUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.signInMembership.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationCompleteRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeSignInMembershipInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationCompleteRequestInterceptors() ?? []
+    )
+  }
+
+  /// Unary call to OpaqueSignInInitRequest
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to OpaqueSignInInitRequest.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func opaqueSignInInitRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInInitRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInInitRequestInterceptors() ?? []
+    )
+  }
+
+  /// Unary call to OpaqueSignInCompleteRequest
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to OpaqueSignInCompleteRequest.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func opaqueSignInCompleteRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInCompleteRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInCompleteRequestInterceptors() ?? []
     )
   }
 }
@@ -131,12 +177,22 @@ internal protocol Ecliptix_Proto_Membership_MembershipServicesAsyncClientProtoco
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Ecliptix_Proto_Membership_MembershipServicesClientInterceptorFactoryProtocol? { get }
 
-  func makeUpdateMembershipWithSecureKeyCall(
+  func makeOpaqueRegistrationInitRequestCall(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
 
-  func makeSignInMembershipCall(
+  func makeOpaqueRegistrationCompleteRequestCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func makeOpaqueSignInInitRequestCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func makeOpaqueSignInCompleteRequestCall(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
@@ -152,54 +208,102 @@ extension Ecliptix_Proto_Membership_MembershipServicesAsyncClientProtocol {
     return nil
   }
 
-  internal func makeUpdateMembershipWithSecureKeyCall(
+  internal func makeOpaqueRegistrationInitRequestCall(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
     return self.makeAsyncUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.updateMembershipWithSecureKey.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationInitRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateMembershipWithSecureKeyInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationInitRequestInterceptors() ?? []
     )
   }
 
-  internal func makeSignInMembershipCall(
+  internal func makeOpaqueRegistrationCompleteRequestCall(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
     return self.makeAsyncUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.signInMembership.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationCompleteRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeSignInMembershipInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationCompleteRequestInterceptors() ?? []
+    )
+  }
+
+  internal func makeOpaqueSignInInitRequestCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInInitRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInInitRequestInterceptors() ?? []
+    )
+  }
+
+  internal func makeOpaqueSignInCompleteRequestCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInCompleteRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInCompleteRequestInterceptors() ?? []
     )
   }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Ecliptix_Proto_Membership_MembershipServicesAsyncClientProtocol {
-  internal func updateMembershipWithSecureKey(
+  internal func opaqueRegistrationInitRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) async throws -> Ecliptix_Proto_CipherPayload {
     return try await self.performAsyncUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.updateMembershipWithSecureKey.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationInitRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateMembershipWithSecureKeyInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationInitRequestInterceptors() ?? []
     )
   }
 
-  internal func signInMembership(
+  internal func opaqueRegistrationCompleteRequest(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
   ) async throws -> Ecliptix_Proto_CipherPayload {
     return try await self.performAsyncUnaryCall(
-      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.signInMembership.path,
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationCompleteRequest.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeSignInMembershipInterceptors() ?? []
+      interceptors: self.interceptors?.makeOpaqueRegistrationCompleteRequestInterceptors() ?? []
+    )
+  }
+
+  internal func opaqueSignInInitRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) async throws -> Ecliptix_Proto_CipherPayload {
+    return try await self.performAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInInitRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInInitRequestInterceptors() ?? []
+    )
+  }
+
+  internal func opaqueSignInCompleteRequest(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) async throws -> Ecliptix_Proto_CipherPayload {
+    return try await self.performAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInCompleteRequest.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeOpaqueSignInCompleteRequestInterceptors() ?? []
     )
   }
 }
@@ -223,11 +327,17 @@ internal struct Ecliptix_Proto_Membership_MembershipServicesAsyncClient: Eclipti
 
 internal protocol Ecliptix_Proto_Membership_MembershipServicesClientInterceptorFactoryProtocol: Sendable {
 
-  /// - Returns: Interceptors to use when invoking 'updateMembershipWithSecureKey'.
-  func makeUpdateMembershipWithSecureKeyInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+  /// - Returns: Interceptors to use when invoking 'opaqueRegistrationInitRequest'.
+  func makeOpaqueRegistrationInitRequestInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 
-  /// - Returns: Interceptors to use when invoking 'signInMembership'.
-  func makeSignInMembershipInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+  /// - Returns: Interceptors to use when invoking 'opaqueRegistrationCompleteRequest'.
+  func makeOpaqueRegistrationCompleteRequestInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when invoking 'opaqueSignInInitRequest'.
+  func makeOpaqueSignInInitRequestInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when invoking 'opaqueSignInCompleteRequest'.
+  func makeOpaqueSignInCompleteRequestInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 }
 
 internal enum Ecliptix_Proto_Membership_MembershipServicesClientMetadata {
@@ -235,21 +345,35 @@ internal enum Ecliptix_Proto_Membership_MembershipServicesClientMetadata {
     name: "MembershipServices",
     fullName: "ecliptix.proto.membership.MembershipServices",
     methods: [
-      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.updateMembershipWithSecureKey,
-      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.signInMembership,
+      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationInitRequest,
+      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueRegistrationCompleteRequest,
+      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInInitRequest,
+      Ecliptix_Proto_Membership_MembershipServicesClientMetadata.Methods.opaqueSignInCompleteRequest,
     ]
   )
 
   internal enum Methods {
-    internal static let updateMembershipWithSecureKey = GRPCMethodDescriptor(
-      name: "UpdateMembershipWithSecureKey",
-      path: "/ecliptix.proto.membership.MembershipServices/UpdateMembershipWithSecureKey",
+    internal static let opaqueRegistrationInitRequest = GRPCMethodDescriptor(
+      name: "OpaqueRegistrationInitRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueRegistrationInitRequest",
       type: GRPCCallType.unary
     )
 
-    internal static let signInMembership = GRPCMethodDescriptor(
-      name: "SignInMembership",
-      path: "/ecliptix.proto.membership.MembershipServices/SignInMembership",
+    internal static let opaqueRegistrationCompleteRequest = GRPCMethodDescriptor(
+      name: "OpaqueRegistrationCompleteRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueRegistrationCompleteRequest",
+      type: GRPCCallType.unary
+    )
+
+    internal static let opaqueSignInInitRequest = GRPCMethodDescriptor(
+      name: "OpaqueSignInInitRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueSignInInitRequest",
+      type: GRPCCallType.unary
+    )
+
+    internal static let opaqueSignInCompleteRequest = GRPCMethodDescriptor(
+      name: "OpaqueSignInCompleteRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueSignInCompleteRequest",
       type: GRPCCallType.unary
     )
   }
@@ -259,9 +383,13 @@ internal enum Ecliptix_Proto_Membership_MembershipServicesClientMetadata {
 internal protocol Ecliptix_Proto_Membership_MembershipServicesProvider: CallHandlerProvider {
   var interceptors: Ecliptix_Proto_Membership_MembershipServicesServerInterceptorFactoryProtocol? { get }
 
-  func updateMembershipWithSecureKey(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+  func opaqueRegistrationInitRequest(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
 
-  func signInMembership(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+  func opaqueRegistrationCompleteRequest(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+
+  func opaqueSignInInitRequest(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+
+  func opaqueSignInCompleteRequest(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
 }
 
 extension Ecliptix_Proto_Membership_MembershipServicesProvider {
@@ -276,22 +404,40 @@ extension Ecliptix_Proto_Membership_MembershipServicesProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "UpdateMembershipWithSecureKey":
+    case "OpaqueRegistrationInitRequest":
       return UnaryServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
-        interceptors: self.interceptors?.makeUpdateMembershipWithSecureKeyInterceptors() ?? [],
-        userFunction: self.updateMembershipWithSecureKey(request:context:)
+        interceptors: self.interceptors?.makeOpaqueRegistrationInitRequestInterceptors() ?? [],
+        userFunction: self.opaqueRegistrationInitRequest(request:context:)
       )
 
-    case "SignInMembership":
+    case "OpaqueRegistrationCompleteRequest":
       return UnaryServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
-        interceptors: self.interceptors?.makeSignInMembershipInterceptors() ?? [],
-        userFunction: self.signInMembership(request:context:)
+        interceptors: self.interceptors?.makeOpaqueRegistrationCompleteRequestInterceptors() ?? [],
+        userFunction: self.opaqueRegistrationCompleteRequest(request:context:)
+      )
+
+    case "OpaqueSignInInitRequest":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeOpaqueSignInInitRequestInterceptors() ?? [],
+        userFunction: self.opaqueSignInInitRequest(request:context:)
+      )
+
+    case "OpaqueSignInCompleteRequest":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeOpaqueSignInCompleteRequestInterceptors() ?? [],
+        userFunction: self.opaqueSignInCompleteRequest(request:context:)
       )
 
     default:
@@ -306,12 +452,22 @@ internal protocol Ecliptix_Proto_Membership_MembershipServicesAsyncProvider: Cal
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Ecliptix_Proto_Membership_MembershipServicesServerInterceptorFactoryProtocol? { get }
 
-  func updateMembershipWithSecureKey(
+  func opaqueRegistrationInitRequest(
     request: Ecliptix_Proto_CipherPayload,
     context: GRPCAsyncServerCallContext
   ) async throws -> Ecliptix_Proto_CipherPayload
 
-  func signInMembership(
+  func opaqueRegistrationCompleteRequest(
+    request: Ecliptix_Proto_CipherPayload,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Ecliptix_Proto_CipherPayload
+
+  func opaqueSignInInitRequest(
+    request: Ecliptix_Proto_CipherPayload,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Ecliptix_Proto_CipherPayload
+
+  func opaqueSignInCompleteRequest(
     request: Ecliptix_Proto_CipherPayload,
     context: GRPCAsyncServerCallContext
   ) async throws -> Ecliptix_Proto_CipherPayload
@@ -336,22 +492,40 @@ extension Ecliptix_Proto_Membership_MembershipServicesAsyncProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "UpdateMembershipWithSecureKey":
+    case "OpaqueRegistrationInitRequest":
       return GRPCAsyncServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
-        interceptors: self.interceptors?.makeUpdateMembershipWithSecureKeyInterceptors() ?? [],
-        wrapping: { try await self.updateMembershipWithSecureKey(request: $0, context: $1) }
+        interceptors: self.interceptors?.makeOpaqueRegistrationInitRequestInterceptors() ?? [],
+        wrapping: { try await self.opaqueRegistrationInitRequest(request: $0, context: $1) }
       )
 
-    case "SignInMembership":
+    case "OpaqueRegistrationCompleteRequest":
       return GRPCAsyncServerHandler(
         context: context,
         requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
-        interceptors: self.interceptors?.makeSignInMembershipInterceptors() ?? [],
-        wrapping: { try await self.signInMembership(request: $0, context: $1) }
+        interceptors: self.interceptors?.makeOpaqueRegistrationCompleteRequestInterceptors() ?? [],
+        wrapping: { try await self.opaqueRegistrationCompleteRequest(request: $0, context: $1) }
+      )
+
+    case "OpaqueSignInInitRequest":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeOpaqueSignInInitRequestInterceptors() ?? [],
+        wrapping: { try await self.opaqueSignInInitRequest(request: $0, context: $1) }
+      )
+
+    case "OpaqueSignInCompleteRequest":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeOpaqueSignInCompleteRequestInterceptors() ?? [],
+        wrapping: { try await self.opaqueSignInCompleteRequest(request: $0, context: $1) }
       )
 
     default:
@@ -362,13 +536,21 @@ extension Ecliptix_Proto_Membership_MembershipServicesAsyncProvider {
 
 internal protocol Ecliptix_Proto_Membership_MembershipServicesServerInterceptorFactoryProtocol: Sendable {
 
-  /// - Returns: Interceptors to use when handling 'updateMembershipWithSecureKey'.
+  /// - Returns: Interceptors to use when handling 'opaqueRegistrationInitRequest'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makeUpdateMembershipWithSecureKeyInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+  func makeOpaqueRegistrationInitRequestInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 
-  /// - Returns: Interceptors to use when handling 'signInMembership'.
+  /// - Returns: Interceptors to use when handling 'opaqueRegistrationCompleteRequest'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makeSignInMembershipInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+  func makeOpaqueRegistrationCompleteRequestInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when handling 'opaqueSignInInitRequest'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeOpaqueSignInInitRequestInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when handling 'opaqueSignInCompleteRequest'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeOpaqueSignInCompleteRequestInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 }
 
 internal enum Ecliptix_Proto_Membership_MembershipServicesServerMetadata {
@@ -376,21 +558,35 @@ internal enum Ecliptix_Proto_Membership_MembershipServicesServerMetadata {
     name: "MembershipServices",
     fullName: "ecliptix.proto.membership.MembershipServices",
     methods: [
-      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.updateMembershipWithSecureKey,
-      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.signInMembership,
+      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.opaqueRegistrationInitRequest,
+      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.opaqueRegistrationCompleteRequest,
+      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.opaqueSignInInitRequest,
+      Ecliptix_Proto_Membership_MembershipServicesServerMetadata.Methods.opaqueSignInCompleteRequest,
     ]
   )
 
   internal enum Methods {
-    internal static let updateMembershipWithSecureKey = GRPCMethodDescriptor(
-      name: "UpdateMembershipWithSecureKey",
-      path: "/ecliptix.proto.membership.MembershipServices/UpdateMembershipWithSecureKey",
+    internal static let opaqueRegistrationInitRequest = GRPCMethodDescriptor(
+      name: "OpaqueRegistrationInitRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueRegistrationInitRequest",
       type: GRPCCallType.unary
     )
 
-    internal static let signInMembership = GRPCMethodDescriptor(
-      name: "SignInMembership",
-      path: "/ecliptix.proto.membership.MembershipServices/SignInMembership",
+    internal static let opaqueRegistrationCompleteRequest = GRPCMethodDescriptor(
+      name: "OpaqueRegistrationCompleteRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueRegistrationCompleteRequest",
+      type: GRPCCallType.unary
+    )
+
+    internal static let opaqueSignInInitRequest = GRPCMethodDescriptor(
+      name: "OpaqueSignInInitRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueSignInInitRequest",
+      type: GRPCCallType.unary
+    )
+
+    internal static let opaqueSignInCompleteRequest = GRPCMethodDescriptor(
+      name: "OpaqueSignInCompleteRequest",
+      path: "/ecliptix.proto.membership.MembershipServices/OpaqueSignInCompleteRequest",
       type: GRPCCallType.unary
     )
   }

@@ -10,14 +10,6 @@ import XCTest
 
 final class Ecliptix_iOSTests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
     func testExample() throws {
         // Setup identities and create two sessions (Alice and Bob)
         let aliceMaterialResult = EcliptixSystemIdentityKeys.create(oneTimeKeyCount: 1)
@@ -41,38 +33,57 @@ final class Ecliptix_iOSTests: XCTestCase {
         let exchangeType = Ecliptix_Proto_PubKeyExchangeType.dataCenterEphemeralConnect
         
         // Alice initiates exchange
-        let aliceInitialMsg = try aliceSystem.beginDataCenterPubKeyExchange(
+        let aliceInitialMsgResult = try aliceSystem.beginDataCenterPubKeyExchange(
             connectId: connectId,
             exchangeType: exchangeType
         )
-        let bobResponseMsg = try bobSystem.processAndRespondToPubKeyExchange(
+        if aliceInitialMsgResult.isErr {
+            XCTFail("Failed to create Alice initial message")
+            return
+        }
+        var aliceInitialMsg = try aliceInitialMsgResult.unwrap()
+        
+        let bobResponseMsgResult = try bobSystem.processAndRespondToPubKeyExchange(
             connectId: connectId,
-            peerInitialMessageProto: aliceInitialMsg
+            peerInitialMessageProto: &aliceInitialMsg
         )
-        try aliceSystem.completeDataCenterPubKeyExchange(
-            connectId: connectId,
-            exchangeType: exchangeType,
-            peerMessage: bobResponseMsg
-        )
+        if bobResponseMsgResult.isErr {
+            XCTFail("Failed to process Bob response message")
+            return
+        }
+        var bobResponseMsg = try bobResponseMsgResult.unwrap()
+        
+        let completeDataCenterPubKeyExchangeResult = try aliceSystem.completeDataCenterPubKeyExchange(exchangeType: exchangeType, peerMessage: &bobResponseMsg)
+        if completeDataCenterPubKeyExchangeResult.isErr {
+            XCTFail("Failed to complete data center pub key exchange")
+            return
+        }
         
         var ratchetTriggered = false
         
         for i in 1...10 {
             let msgData = "Msg \(i)".data(using: .utf8)!
-            let cipher = try aliceSystem.produceOutboundMessage(
-                connectId: connectId,
-                exchangeType: exchangeType,
+            let cipherResult = try aliceSystem.produceOutboundMessage(
                 plainPayload: msgData)
+            
+            if cipherResult.isErr {
+                XCTFail("Failed to produce ciphertext for message \(i)")
+                return
+            }
+            let cipher = try cipherResult.unwrap()
             
             if !cipher.dhPublicKey.isEmpty {
                 ratchetTriggered = true
                 print("Ratchet triggered at message \(i)")
             }
             
-            _ = try bobSystem.processInboundMessage(
-                sessionId: connectId,
-                exchangeType: exchangeType,
+            let processInboundMessageResult = try bobSystem.processInboundMessage(
                 cipherPayloadProto: cipher)
+            
+            if processInboundMessageResult.isErr {
+                XCTFail("Failed to process inbound message \(i)")
+                return
+            }
         }
         
         XCTAssertTrue(ratchetTriggered, "DH ratchet did not trigger at interval 10.")

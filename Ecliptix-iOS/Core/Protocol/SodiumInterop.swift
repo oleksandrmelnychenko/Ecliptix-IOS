@@ -82,13 +82,10 @@ final class SodiumInterop {
     static func generateX25519KeyPair(keyPurpose: String) -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure>
         {
         var skHandle: SodiumSecureMemoryHandle? = nil;
-//        var skBytes: Data?  = nil;
         var tempPrivCopy: Data?  = nil;
         
         do
         {
-            debugPrint("[ShieldSession] Generating X25519 key pair for \(keyPurpose)")
-            
             let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize)
             if allocResult.isErr {
                 return .failure(try allocResult.unwrapErr().toEcliptixProtocolFailure());
@@ -142,18 +139,14 @@ final class SodiumInterop {
                 return .failure(.generic("Derived \(keyPurpose) public key has incorrect size."))
             }
             
-            debugPrint("[ShieldSession] Generated \(keyPurpose) Public Key: \(pkBytes.hexEncodedString())")
             return .success((skHandle!, pkBytes))
         }
         catch
         {
-            debugPrint("[ShieldSession] Error generating \(keyPurpose) key pair: \(error.localizedDescription)")
             skHandle?.dispose()
-
             if tempPrivCopy != nil {
                 _ = SodiumInterop.secureWipe(&tempPrivCopy)
             }
-
             return .failure(.keyGeneration("Unexpected error generating \(keyPurpose) key pair.", inner: error))
         }
     }

@@ -22,7 +22,7 @@ final class NetworkController {
             let identityKeys = try EcliptixSystemIdentityKeys.create(oneTimeKeyCount: oneTimeKeyCount).unwrap()
             let protocolSystem = EcliptixProtocolSystem(ecliptixSystemIdentityKeys: identityKeys)
             let context = EcliptixConnectionContext(pubKeyExchangeType: pubKeyExchangeType, ecliptixProtocolSystem: protocolSystem)
-            connections[connectId] = context
+            self.connections[connectId] = context
         } catch {
             debugPrint("Failed during creating Ecliptix system: \(error.localizedDescription)")
         }
@@ -45,14 +45,12 @@ final class NetworkController {
         
         func buildRequest() throws -> ServiceRequest {
             let outboundPayload = try protocolSystem.produceOutboundMessage(
-                connectId: connectId,
-                exchangeType: pubKeyExchangeType,
                 plainPayload: plainBuffer
             )
             return ServiceRequest.new(
                 actionType: flowType,
                 rcpServiceMethod: serviceAction,
-                payload: outboundPayload,
+                payload: try outboundPayload.unwrap(),
                 encryptedChunls: []
             )
         }
@@ -116,8 +114,8 @@ final class NetworkController {
                     }
 
                     let inboundPayload = try callResult.unwrap()
-                    let decryptedData = try protocolSystem.processInboundMessage(sessionId: connectId, exchangeType: pubKeyExchangeType, cipherPayloadProto: inboundPayload)
-                    let callbackOutcome = await onSuccessCallback(decryptedData)
+                    let decryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: inboundPayload)
+                    let callbackOutcome = await onSuccessCallback(try decryptedData.unwrap())
                     if callbackOutcome.isErr {
                         return callbackOutcome
                     }
@@ -130,13 +128,14 @@ final class NetworkController {
                     try await withTaskCancellationHandler(operation: {
                         for try await streamItem in inboundStream.stream {
                             if streamItem.isErr {
-                                throw try streamItem.unwrapErr()
+//                                throw try streamItem.unwrapErr()
+                                continue
                             }
 
                             let streamPayload = try streamItem.unwrap()
-                            let streamDecryptedData = try protocolSystem.processInboundMessage(sessionId: connectId, exchangeType: pubKeyExchangeType, cipherPayloadProto: streamPayload)
+                            let streamDecryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: streamPayload)
 
-                            let streamCallbackOutcome = await onSuccessCallback(streamDecryptedData)
+                            let streamCallbackOutcome = await onSuccessCallback(try streamDecryptedData.unwrap())
                             if streamCallbackOutcome.isErr {
                                 debugPrint("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
                             }
@@ -171,9 +170,10 @@ final class NetworkController {
             
             let pubKeyExchange = try protocolSystem.beginDataCenterPubKeyExchange(connectId: connectId, exchangeType: pubKeyExchangeType)
             
-            let action = PubKeyExchangeActionInvokable.new(jobType: .single, method: .dataCenterPubKeyExchange, pubKeyExchange: pubKeyExchange, callback: { peerPubKeyExchange in
+            let action = PubKeyExchangeActionInvokable.new(jobType: .single, method: .dataCenterPubKeyExchange, pubKeyExchange: try pubKeyExchange.unwrap(), callback: { peerPubKeyExchange in
                 do {
-                    try protocolSystem.completeDataCenterPubKeyExchange(connectId: connectId, exchangeType: pubKeyExchangeType, peerMessage: peerPubKeyExchange)
+                    var peerPubKeyExchangeCopy = peerPubKeyExchange
+                    _ = try protocolSystem.completeDataCenterPubKeyExchange(exchangeType: .dataCenterEphemeralConnect, peerMessage: &peerPubKeyExchangeCopy)
                 } catch {
                     debugPrint("Failed to complete key exchange: \(error)")
                 }

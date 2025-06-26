@@ -15,7 +15,6 @@ struct Unit: Equatable, Hashable, CustomStringConvertible {
     }
 
     func hash(into hasher: inout Hasher) {
-        // Constant hash value
         hasher.combine(0)
     }
 

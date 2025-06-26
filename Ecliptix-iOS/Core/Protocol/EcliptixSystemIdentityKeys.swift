@@ -74,27 +74,27 @@ final class EcliptixSystemIdentityKeys {
         var opks: [OneTimePreKeyLocal]? = nil
 
         let overallResult = generateEd25519Keys()
-            .flatMap { edKeys -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> in
+            .flatMap { edKeys in
                 edSkHandle = edKeys.skHandle
                 edPk = edKeys.pk
                 return generateX25519IdentityKeys()
             }
-            .flatMap { idKeys -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> in
+            .flatMap { idKeys in
                 idXSkHandle = idKeys.skHandle
                 idXPk = idKeys.pk
                 spkId = generateRandomUInt32()
                 return generateX25519SignedPreKey(id: spkId)
             }
-            .flatMap { spkKeys -> Result<Data, EcliptixProtocolFailure> in
+            .flatMap { spkKeys in
                 spkSkHandle = spkKeys.skHandle
                 spkPk = spkKeys.pk
                 return signSignedPreKey(edSkHandle: edSkHandle!, spkPk: &spkPk!)
             }
-            .flatMap { signature -> Result<[OneTimePreKeyLocal], EcliptixProtocolFailure> in
+            .flatMap { signature in
                 spkSig = signature
                 return generateOneTimePreKeys(count: oneTimeKeyCount)
             }
-            .flatMap { generatedOpks -> Result<EcliptixSystemIdentityKeys, EcliptixProtocolFailure> in
+            .flatMap { generatedOpks in
                 opks = generatedOpks
                 
                 let material = EcliptixSystemIdentityKeys(edSk: edSkHandle!, edPk: &edPk!, idSk: idXSkHandle!, idPk: &idXPk!, spkId: spkId, spkSk: spkSkHandle!, spkPk: &spkPk!, spkSig: &spkSig!, opks: &opks!)
@@ -113,27 +113,27 @@ final class EcliptixSystemIdentityKeys {
     }
 
     
-    public func createPublicBundle() -> Result<LocalPublicKeyBundle, EcliptixProtocolFailure> {
+    public func createPublicBundle() -> Result<PublicKeyBundle, EcliptixProtocolFailure> {
         if disposed {
             return .failure(.objectDisposed(String(describing: EcliptixSystemIdentityKeys.self)))
         }
         
-        return Result<LocalPublicKeyBundle, EcliptixProtocolFailure>.Try {
-            var opkRecords: [OneTimePreKeyRecord] = try oneTimePreKeysInternal.compactMap { opkLocal in
+        return Result<PublicKeyBundle, EcliptixProtocolFailure>.Try {
+            let opkRecords: [OneTimePreKeyRecord] = try self.oneTimePreKeysInternal.compactMap { opkLocal in
                 let opkKeyCreateResult = OneTimePreKeyRecord.create(preKeyId: opkLocal.preKeyId, publicKey: opkLocal.publicKey)
                 return opkKeyCreateResult.isOk ? try opkKeyCreateResult.unwrap() : nil
             }
             
             var internalBundle = InternalBundleData(
-                identityEd25519: ed25519PublicKey,
-                identityX25519: identityX25519PublicKey,
-                signedPreKeyId: signedPreKeyId,
-                signedPreKeyPublic: signedPreKeyPublic,
-                signedPreKeySignature: signedPreKeySignature,
+                identityEd25519: self.ed25519PublicKey,
+                identityX25519: self.identityX25519PublicKey,
+                signedPreKeyId: self.signedPreKeyId,
+                signedPreKeyPublic: self.signedPreKeyPublic,
+                signedPreKeySignature: self.signedPreKeySignature,
                 oneTimePreKeys: opkRecords,
-                ephemeralX25519: ephemeralX25519PublicKey)
+                ephemeralX25519: self.ephemeralX25519PublicKey)
             
-            let localBundle = LocalPublicKeyBundle(&internalBundle)
+            let localBundle = PublicKeyBundle(&internalBundle)
             
             return localBundle
         }.mapError { error in
@@ -147,28 +147,27 @@ final class EcliptixSystemIdentityKeys {
             return
         }
 
-        ephemeralSecretKeyHandle?.dispose()
-        ephemeralSecretKeyHandle = nil
-        
-        if ephemeralX25519PublicKey != nil {
-            _ = SodiumInterop.secureWipe(&ephemeralX25519PublicKey)
-        }
-        ephemeralX25519PublicKey = nil
+        self.ephemeralSecretKeyHandle?.dispose()
+        _ = SodiumInterop.secureWipe(&self.ephemeralX25519PublicKey)
 
-        let generationResult = Self.generateX25519KeyPair(keyPurpose: "Ephemeral")
+        let generationResult = SodiumInterop.generateX25519KeyPair(keyPurpose: "Ephemeral")
         
-        _ = generationResult.map { keys in
-            ephemeralSecretKeyHandle = keys.skHandle
-            ephemeralX25519PublicKey = keys.pk
-            return Unit.value
+        if generationResult.isOk {
+            _ = generationResult.map { keys in
+                self.ephemeralSecretKeyHandle = keys.skHandle
+                self.ephemeralX25519PublicKey = keys.pk
+                
+                return keys
+            }
+        } else {
+            self.ephemeralSecretKeyHandle = nil
+            self.ephemeralX25519PublicKey = nil
         }
+        
     }
 
     
-    public func x3dhDeriveSharedSecret(
-        remoteBundle: LocalPublicKeyBundle,
-        info: Data
-    ) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
+    public func x3dhDeriveSharedSecret(remoteBundle: PublicKeyBundle, info: Data) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
         var ephemeralHandleUsed: SodiumSecureMemoryHandle? = nil
         var secureOutputHandle: SodiumSecureMemoryHandle? = nil
         
@@ -178,17 +177,13 @@ final class EcliptixSystemIdentityKeys {
         var dh2: Data? = nil
         var dh3: Data? = nil
         var dh4: Data? = nil
+        var ikmBytes: Data? = nil
         var dhConcatBytes: Data? = nil
         var hkdfOutput: Data? = nil
-        
-        var infoCopy: Data = info
-        
+                
         defer {
             ephemeralHandleUsed?.dispose()
             secureOutputHandle?.dispose()
-            if infoCopy != nil {
-                _ = SodiumInterop.secureWipe(&infoCopy)
-            }
             if ephemeralSecretCopy != nil {
                 _ = SodiumInterop.secureWipe(&ephemeralSecretCopy)
             }
@@ -216,8 +211,12 @@ final class EcliptixSystemIdentityKeys {
         }
         
         do {
+            let hkdfInfoValidationResult = Self.validateHkdfInfo(info)
+            if hkdfInfoValidationResult.isErr {
+                return .failure(try hkdfInfoValidationResult.unwrapErr())
+            }
+            
             let validationResult: Result<Unit, EcliptixProtocolFailure> = checkDisposed()
-                .flatMap { _ in Self.validateHkdfInfo(infoCopy)}
                 .flatMap { _ in Self.validateRemoteBundle(remoteBundle) }
                 .flatMap { _ in ensureLocalKeysValid() }
             
@@ -225,95 +224,63 @@ final class EcliptixSystemIdentityKeys {
                 return .failure(try validationResult.unwrapErr())
             }
             
-            let processResult: Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> = ephemeralSecretKeyHandle!.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-                .flatMap { ephBytes -> Result<Data, EcliptixProtocolFailure> in
-                    ephemeralSecretCopy = ephBytes
-                    return self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-                }
-                .flatMap { idBytes -> Result<(dh1: Data, dh2: Data, dh3: Data, dh4: Data?), EcliptixProtocolFailure> in
-                    identitySecretCopy = idBytes
-                    ephemeralHandleUsed = self.ephemeralSecretKeyHandle
-                    self.ephemeralSecretKeyHandle = nil
-                    
-                    return Result<(dh1: Data, dh2: Data, dh3: Data, dh4: Data?), EcliptixProtocolFailure>.Try {
-                        let dh1: Data = try ScalarMult.mult(ephemeralSecretCopy!, remoteBundle.identityX25519)
-                        let dh2: Data = try ScalarMult.mult(ephemeralSecretCopy!, remoteBundle.signedPreKeyPublic)
-                        let dh3: Data = try ScalarMult.mult(identitySecretCopy!, remoteBundle.signedPreKeyPublic)
-                        var dh4: Data? = nil
-                        
-                        let remoteOpk: OneTimePreKeyRecord? = remoteBundle.oneTimePreKeys.first
-                        
-                        if remoteOpk?.publicKey.count == Constants.x25519PublicKeySize {
-                            dh4 = try ScalarMult.mult(ephemeralSecretCopy!, remoteOpk!.publicKey)
-                        }
-
-                        return (dh1: dh1, dh2: dh2, dh3: dh3, dh4: dh4)
-                    }.mapError { error in
-                        .deriveKey("Failed during DH calculation", inner: error)
-                    }
-                }
-                .flatMap { dhResult -> Result<Unit, EcliptixProtocolFailure> in
-                    (dh1, dh2, dh3, dh4) = dhResult
-                    dh1 = dhResult.dh1
-                    dh2 = dhResult.dh2
-                    dh3 = dhResult.dh3
-                    dh4 = dhResult.dh4
-                    
-                    _ = SodiumInterop.secureWipe(&ephemeralSecretCopy)
-                    ephemeralSecretCopy = nil
-                    
-                    _ = SodiumInterop.secureWipe(&identitySecretCopy)
-                    identitySecretCopy = nil
-
-                    dhConcatBytes = Self.concatenateDhResultsInCanonicalOrder(dh1: dh1!, dh2: dh2!, dh3: dh3!, dh4: dh4)
-
-                    hkdfOutput = Data(count: Constants.x25519KeySize)
-                    var capturedInfoCopy = infoCopy
-                    
-                    return Result<Unit, EcliptixProtocolFailure>.Try {
-                        let f32 = Data(repeating: 0xFF, count: Constants.x25519KeySize)
-                        var hkdfSaltSpan: Data? = Data(repeating: 0, count: Constants.x25519KeySize)
-                        var ikm = Data()
-                        ikm.append(f32)
-                        ikm.append(dhConcatBytes!)
-                        let hkdf = try HkdfSha256(ikm: &ikm, salt: &hkdfSaltSpan)
-                        try hkdf.expand(info: capturedInfoCopy, output: &hkdfOutput!)
-                        
-                        return Unit.value
-                    }.mapError { error in
-                        .deriveKey("Failed during HKDF expansion (Bob).", inner: error)
-                    }
-                }
-                .flatMap { _ -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> in
-                    return SodiumSecureMemoryHandle.allocate(length: hkdfOutput!.count).mapSodiumFailure()
-                        .flatMap { allocatedHandle in
-                            return hkdfOutput!.withUnsafeBytes { bufferPointer in
-                                allocatedHandle.write(data: bufferPointer).mapSodiumFailure().map { _ in allocatedHandle }
-                            }
-                        }
-                }
-
-            if processResult.isErr {
-                return processResult
+            let readEphResult = self.ephemeralSecretKeyHandle!.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+            if readEphResult.isErr {
+                return .failure(try readEphResult.unwrapErr())
             }
-            else {
-                secureOutputHandle = try processResult.unwrap()
-                let returnHandle = secureOutputHandle
-                secureOutputHandle = nil
-                return .success(returnHandle!)
+            ephemeralSecretCopy = try readEphResult.unwrap()
+            
+            let readIdResult = self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+            if readIdResult.isErr {
+                return .failure(try readIdResult.unwrapErr())
             }
+            identitySecretCopy = try readIdResult.unwrap()
+            ephemeralHandleUsed = self.ephemeralSecretKeyHandle
+            self.ephemeralSecretKeyHandle = nil
+            
+            let remoteOpk = remoteBundle.oneTimePreKeys.first
+            let useOpk = remoteOpk?.publicKey.count == Constants.x25519PublicKeySize
+
+            dh1 = try ScalarMult.mult(ephemeralSecretCopy!, remoteBundle.identityX25519)
+            dh2 = try ScalarMult.mult(ephemeralSecretCopy!, remoteBundle.signedPreKeyPublic)
+            dh3 = try ScalarMult.mult(identitySecretCopy!, remoteBundle.signedPreKeyPublic)
+            if useOpk {
+                dh4 = try ScalarMult.mult(ephemeralSecretCopy!, remoteOpk!.publicKey)
+            }
+            
+            dhConcatBytes = Data()
+            Self.concatenateDhResults(destination: &dhConcatBytes!, dh1: dh1!, dh2: dh2!, dh3: dh3!, dh4: dh4)
+            
+            let f32 = Data(repeating: 0xFF, count: Constants.x25519KeySize)
+            ikmBytes = f32 + dhConcatBytes!
+            hkdfOutput = Data(count: Constants.x25519KeySize)
+            
+            var hkdfSaltSpan: Data? = nil
+            let hkdf = try HkdfSha256(ikm: &ikmBytes!, salt: &hkdfSaltSpan)
+            try hkdf.expand(info: info, output: &hkdfOutput!)
+            
+            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519KeySize).mapSodiumFailure()
+            if allocResult.isErr {
+                return .failure(try allocResult.unwrapErr())
+            }
+            secureOutputHandle = try allocResult.unwrap()
+            
+            let writeResult = hkdfOutput!.withUnsafeBytes { bufferPointer in
+                secureOutputHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }
+            if writeResult.isErr {
+                return .failure(try writeResult.unwrapErr())
+            }
+            
+            let returnHandle = secureOutputHandle!
+            secureOutputHandle = nil
+            return .success(returnHandle)
         } catch {
             return .failure(.unexpectedError("Unexpected error in \(String(describing: EcliptixSystemIdentityKeys.self)).", inner: error))
         }
     }
     
-    
-    public func calculateSharedSecretAsRecipient(
-        remoteIdentityPublicKeyX: Data,
-        remoteEphemeralPublicKeyX: Data,
-        usedLocalOpkId: UInt32?,
-        info: Data
-    ) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
+    public func calculateSharedSecretAsRecipient(remoteIdentityPublicKeyX: Data, remoteEphemeralPublicKeyX: Data, usedLocalOpkId: UInt32?, info: Data) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
         
         var secureOutputHandle: SodiumSecureMemoryHandle? = nil
         var identitySecretCopy: Data? = nil
@@ -322,23 +289,12 @@ final class EcliptixSystemIdentityKeys {
         var dh1: Data? = nil, dh2: Data? = nil, dh3: Data? = nil, dh4: Data? = nil
         var dhConcatBytes: Data? = nil, hkdfOutput: Data? = nil
         var opkSecretHandle: SodiumSecureMemoryHandle? = nil
-        var remoteIdentityCopy: Data? = nil
-        var remoteEphemeralCopy: Data? = nil
-        var infoCopy: Data? = nil
+        var ikmBytes: Data? = nil
         
         defer {
             secureOutputHandle?.dispose()
-            if remoteIdentityCopy != nil {
-                _ = SodiumInterop.secureWipe(&remoteIdentityCopy)
-            }
-            if remoteEphemeralCopy != nil {
-                _ = SodiumInterop.secureWipe(&remoteEphemeralCopy)
-            }
             if identitySecretCopy != nil {
                 _ = SodiumInterop.secureWipe(&identitySecretCopy)
-            }
-            if infoCopy != nil {
-                _ = SodiumInterop.secureWipe(&infoCopy)
             }
             if identitySecretCopy != nil {
                 _ = SodiumInterop.secureWipe(&identitySecretCopy)
@@ -367,16 +323,23 @@ final class EcliptixSystemIdentityKeys {
             if hkdfOutput != nil {
                 _ = SodiumInterop.secureWipe(&hkdfOutput)
             }
+            if ikmBytes != nil {
+                _ = SodiumInterop.secureWipe(&ikmBytes)
+            }
         }
         
         do {
-            remoteIdentityCopy = remoteIdentityPublicKeyX
-            remoteEphemeralCopy = remoteEphemeralPublicKeyX
-            infoCopy = info
+            let hkdfInfoValidationResult = Self.validateHkdfInfo(info)
+            if hkdfInfoValidationResult.isErr {
+                return .failure(try hkdfInfoValidationResult.unwrapErr())
+            }
+            
+            let remoteRecipientKeysValidationResult = Self.validateRemoteRecipientKeys(remoteIdentityPublicKeyX: remoteIdentityPublicKeyX, remoteEphemeralPublicKeyX: remoteEphemeralPublicKeyX)
+            if remoteRecipientKeysValidationResult.isErr {
+                return .failure(try remoteRecipientKeysValidationResult.unwrapErr())
+            }
             
             let validationResult = checkDisposed()
-                .flatMap { _ in Self.validateHkdfInfo(infoCopy) }
-                .flatMap { _ in Self.validateRemoteRecipientKeys(remoteIdentityPublicKeyX: remoteIdentityCopy, remoteEphemeralPublicKeyX: remoteEphemeralCopy) }
                 .flatMap { _ in ensureLocalRecipientKeysValid() }
             
             if validationResult.isErr {
@@ -391,90 +354,59 @@ final class EcliptixSystemIdentityKeys {
                 opkSecretHandle = try findOpkResult.unwrap()
             }
             
-            let capturedRemoteIdentity: Data = remoteIdentityCopy!
-            let capturedRemoteEphemeral: Data = remoteEphemeralCopy!
-            let capturedInfo: Data = infoCopy!
-            
-            let processResult = self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-                .flatMap { idBytes -> Result<Data, EcliptixProtocolFailure> in
-                    identitySecretCopy = idBytes
-                    return self.signedPreKeySecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-                }
-                .flatMap { spkBytes -> Result<Unit, EcliptixProtocolFailure> in
-                    signedPreKeySecretCopy = spkBytes
-                    if opkSecretHandle != nil {
-                        return opkSecretHandle!.readBytes(length: Constants.x25519PrivateKeySize).map { opkBytes -> Unit in
-                            oneTimePreKeySecretCopy = opkBytes
-                            return Unit.value
-                        }.mapSodiumFailure()
-                    }
-                    
-                    return .success(Unit.value)
-                }
-                .flatMap { _ -> Result<(dh1: Data , dh2: Data, dh3: Data, dh4: Data?), EcliptixProtocolFailure> in
-                    return Result<(dh1: Data , dh2: Data, dh3: Data, dh4: Data?), EcliptixProtocolFailure>.Try {
-                        let dh1: Data = try ScalarMult.mult(identitySecretCopy!, capturedRemoteEphemeral)
-                        let dh2: Data = try ScalarMult.mult(signedPreKeySecretCopy!, capturedRemoteEphemeral)
-                        let dh3: Data = try ScalarMult.mult(signedPreKeySecretCopy!, capturedRemoteIdentity)
-                        let dh4: Data? = oneTimePreKeySecretCopy != nil
-                            ? try ScalarMult.mult(oneTimePreKeySecretCopy!, capturedRemoteEphemeral)
-                            : nil
-                        
-                        return (dh1: dh1, dh2: dh2, dh3: dh3, dh4: dh4)
-                    }.mapError { error in
-                        .deriveKey("Failed during DH calculation (Bob).", inner: error)
-                    }
-                }
-                .flatMap { dhResult -> Result<Unit, EcliptixProtocolFailure> in
-                    dh1 = dhResult.dh1
-                    dh2 = dhResult.dh2
-                    dh3 = dhResult.dh3
-                    dh4 = dhResult.dh4
-                    _ = SodiumInterop.secureWipe(&identitySecretCopy)
-                    identitySecretCopy = nil
-                    _ = SodiumInterop.secureWipe(&signedPreKeySecretCopy)
-                    signedPreKeySecretCopy = nil
-                    if oneTimePreKeySecretCopy != nil {
-                        _ = SodiumInterop.secureWipe(&oneTimePreKeySecretCopy!)
-                        oneTimePreKeySecretCopy = nil
-                    }
-                    
-                    dhConcatBytes = Self.concatenateDhResultsInCanonicalOrder(dh1: dh1!, dh2: dh2!, dh3: dh3!, dh4: dh4)
-                    hkdfOutput = Data(count: Constants.x25519KeySize)
-                    
-                    return Result<Unit, EcliptixProtocolFailure>.Try {
-                        let f32 = Data(repeating: 0xFF, count: Constants.x25519KeySize)
-                        var hkdfSaltSpan: Data? = Data(repeating: 0, count: Constants.x25519KeySize)
-                        var ikm = Data()
-                        ikm.append(f32)
-                        ikm.append(dhConcatBytes!)
-                        let hkdf = try HkdfSha256(ikm: &ikm, salt: &hkdfSaltSpan)
-                        try hkdf.expand(info: capturedInfo, output: &hkdfOutput!)
-                        
-                        return Unit.value
-                    }.mapError { error in
-                        .deriveKey("Failed during HKDF expansion (Bob).", inner: error)
-                    }
-                }
-                .flatMap { _ in
-                    return SodiumSecureMemoryHandle.allocate(length: hkdfOutput!.count)
-                        .flatMap { allocatedHandle in
-                            return hkdfOutput!.withUnsafeBytes { bufferPointer in
-                                allocatedHandle.write(data: bufferPointer).map { _ in allocatedHandle }
-                            }
-                            
-                        }.mapSodiumFailure()
-                }
-            
-            if processResult.isErr {
-                return processResult
+            let readIdResult = self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+            if readIdResult.isErr {
+                return .failure(try readIdResult.unwrapErr())
             }
-            else {
-                secureOutputHandle = try processResult.unwrap()
-                let returnHandle: SodiumSecureMemoryHandle = secureOutputHandle!
-                secureOutputHandle = nil
-                return .success(returnHandle)
+            identitySecretCopy = try readIdResult.unwrap()
+            
+            let readSpkResult = self.signedPreKeySecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+            if readSpkResult.isErr {
+                return .failure(try readSpkResult.unwrapErr())
             }
+            signedPreKeySecretCopy = try readSpkResult.unwrap()
+            
+            if opkSecretHandle != nil {
+                let readOpkResult = opkSecretHandle!.readBytes(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+                if readOpkResult.isErr {
+                    return .failure(try readOpkResult.unwrapErr())
+                }
+                oneTimePreKeySecretCopy = try readOpkResult.unwrap()
+            }
+            
+            dh1 = try ScalarMult.mult(identitySecretCopy!, remoteEphemeralPublicKeyX)
+            dh2 = try ScalarMult.mult(signedPreKeySecretCopy!, remoteEphemeralPublicKeyX)
+            dh3 = try ScalarMult.mult(signedPreKeySecretCopy!, remoteIdentityPublicKeyX)
+            if oneTimePreKeySecretCopy != nil {
+                dh4 = try ScalarMult.mult(oneTimePreKeySecretCopy!, remoteEphemeralPublicKeyX)
+            }
+
+            dhConcatBytes = Data()
+            Self.concatenateDhResults(destination: &dhConcatBytes!, dh1: dh1!, dh2: dh2!, dh3: dh3!, dh4: dh4)
+            
+            let f32 = Data(repeating: 0xFF, count: Constants.x25519KeySize)
+            ikmBytes = f32 + dhConcatBytes!
+            hkdfOutput = Data(capacity: Constants.x25519KeySize)
+            
+            var hkdfSaltSpan: Data? = nil
+            let hkdf = try HkdfSha256(ikm: &ikmBytes!, salt: &hkdfSaltSpan)
+            try hkdf.expand(info: info, output: &hkdfOutput!)
+            
+            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519KeySize).mapSodiumFailure()
+            if allocResult.isErr {
+                return .failure(try allocResult.unwrapErr())
+            }
+            
+            secureOutputHandle = try allocResult.unwrap()
+            let writeResult = hkdfOutput!.withUnsafeBytes { bufferPointer in
+                secureOutputHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }
+            if writeResult.isErr {
+                return .failure(try writeResult.unwrapErr())
+            }
+            let returnHandle = secureOutputHandle!
+            secureOutputHandle = nil
+            return .success(returnHandle)
         } catch {
             return .failure(.deriveKey("Unhandled error during shared secret calculation (Bob).", inner: error))
         }
@@ -483,7 +415,6 @@ final class EcliptixSystemIdentityKeys {
     static func generateEd25519Keys() -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> {
         var skHandle: SodiumSecureMemoryHandle? = nil
         var skBytes: Data? = nil
-        var pkBytes: Data? = nil
         
         defer {
             if skBytes != nil {
@@ -494,105 +425,26 @@ final class EcliptixSystemIdentityKeys {
         return Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure>.Try {
             let edKeyPair = try PublicKeyAuth.generateKeyPair()
             skBytes = edKeyPair.privateKey
-            pkBytes = edKeyPair.publicKey
+            var pkBytes = edKeyPair.publicKey
             
             skHandle = try SodiumSecureMemoryHandle.allocate(length: Constants.ed25519SecretKeySize).unwrap()
-            
-            // Assume everything is successful
-            let writeResult = skBytes!.withUnsafeBytes { bufferPointer in
-                skHandle!.write(data: bufferPointer)
+            _ = try skBytes!.withUnsafeBytes { bufferPointer in
+                try skHandle!.write(data: bufferPointer).unwrap()
             }
 
-            return (skHandle: skHandle!, pk: pkBytes!)
+            return (skHandle: skHandle!, pk: pkBytes)
         }.mapError { ex in
             EcliptixProtocolFailure.keyGeneration("Failed to generate Ed25519 key pair.", inner: ex)
         }
     }
 
     static func generateX25519IdentityKeys() -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> {
-        generateX25519KeyPair(keyPurpose: "Identity")
+        SodiumInterop.generateX25519KeyPair(keyPurpose: "Identity")
     }
 
     static func generateX25519SignedPreKey(id: UInt32) -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> {
-        generateX25519KeyPair(keyPurpose: "Signed PreKey (ID: \(id))")
+        SodiumInterop.generateX25519KeyPair(keyPurpose: "Signed PreKey (ID: \(id))")
     }
-
-    
-    static func generateX25519KeyPair(keyPurpose: String) -> Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure> {
-        var skHandle: SodiumSecureMemoryHandle? = nil
-        var skBytes: Data? = nil
-        var pkBytes: Data? = nil
-        var tempPrivCopy: Data? = nil
-        
-        do {
-            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-            if allocResult.isErr {
-                return .failure(try allocResult.unwrapErr())
-            }
-            
-            skHandle = try allocResult.unwrap()
-            
-            // Generate random private key bytes
-            guard let randomBytes = Sodium().randomBytes.buf(length: Constants.x25519PrivateKeySize) else {
-                return .failure(.generic("Failed to generate random bytes for private key"))
-            }
-            skBytes = Data(randomBytes)
-
-            let writeResult = skBytes!.withUnsafeBytes { bufferPointer in
-                skHandle!.write(data: bufferPointer).mapSodiumFailure()
-            }
-
-            if writeResult.isErr {
-                skHandle?.dispose()
-                return .failure(try writeResult.unwrapErr())
-            }
-            
-            _ = SodiumInterop.secureWipe(&skBytes)
-            skBytes = nil
-            
-            tempPrivCopy = Data(count: Constants.x25519PrivateKeySize)
-            
-            let readResult = tempPrivCopy!.withUnsafeMutableBytes { destPtr in
-                skHandle!.read(into: destPtr).mapSodiumFailure()
-            }
-            
-            if readResult.isErr {
-                skHandle?.dispose()
-                _ = SodiumInterop.secureWipe(&tempPrivCopy)
-                return .failure(try readResult.unwrapErr())
-            }
-            
-            // Derive public key from private key
-            let deriveResult = Result<Data, EcliptixProtocolFailure>.Try {
-                try ScalarMult.base(&tempPrivCopy!)
-            }.mapError { ex in
-                EcliptixProtocolFailure.deriveKey("Failed to derive \(keyPurpose) public key.", inner: ex)
-            }
-            
-            _ = SodiumInterop.secureWipe(&tempPrivCopy)
-            tempPrivCopy = nil
-            
-            if deriveResult.isErr {
-                skHandle?.dispose()
-                return .failure(try deriveResult.unwrapErr())
-            }
-            
-            var pkBytes = try deriveResult.unwrap()
-            if pkBytes.count != Constants.x25519PublicKeySize {
-                skHandle?.dispose()
-                _ = SodiumInterop.secureWipe(&pkBytes)
-                return .failure(.deriveKey("Derived \(keyPurpose) public key has incorrect size."))
-            }
-            
-            return .success((skHandle: skHandle!, pk: pkBytes))
-        } catch {
-            skHandle?.dispose()
-            _ = SodiumInterop.secureWipe(&skBytes)
-            _ = SodiumInterop.secureWipe(&tempPrivCopy)
-            return .failure(.keyGeneration("Unexpected error generating \(keyPurpose) key pair.", inner: error))
-        }
-    }
-
     
     static func signSignedPreKey(edSkHandle: SodiumSecureMemoryHandle, spkPk: inout Data) -> Result<Data, EcliptixProtocolFailure> {
         var tempEdSignKeyCopy: Data?
@@ -604,14 +456,11 @@ final class EcliptixSystemIdentityKeys {
         }
         
         do {
-            tempEdSignKeyCopy = Data(count: Constants.ed25519SecretKeySize)
-            
-            let readResult = tempEdSignKeyCopy!.withUnsafeMutableBytes { destPtr in
-                edSkHandle.read(into: destPtr).mapSodiumFailure()
-            }
+            let readResult = edSkHandle.readBytes(length: Constants.ed25519SecretKeySize).mapSodiumFailure()
             if readResult.isErr {
                 return .failure(try readResult.unwrapErr())
             }
+            tempEdSignKeyCopy = try readResult.unwrap()
             
             let signResult = Result<Data, EcliptixProtocolFailure>.Try {
                 try PublicKeyAuth.signDetached(message: &spkPk, secretKey: &tempEdSignKeyCopy!)
@@ -688,14 +537,16 @@ final class EcliptixSystemIdentityKeys {
     private func checkDisposed() -> Result<Unit, EcliptixProtocolFailure> {
         return disposed
             ? .failure(.objectDisposed(String(describing: EcliptixSystemIdentityKeys.self)))
-            : .success(Unit.value)
+            : .success(.value)
     }
     
     private static func validateHkdfInfo(_ infoCopy: Data?) -> Result<Unit, EcliptixProtocolFailure> {
-        return infoCopy == nil || infoCopy!.isEmpty ? .failure(.deriveKey("HKDF info cannot be empty.")) : .success(Unit.value)
+        return infoCopy == nil || infoCopy!.isEmpty
+        ? .failure(.deriveKey("HKDF info cannot be empty."))
+        : .success(.value)
     }
     
-    private static func validateRemoteBundle(_ remoteBundle: LocalPublicKeyBundle?) -> Result<Unit, EcliptixProtocolFailure> {
+    private static func validateRemoteBundle(_ remoteBundle: PublicKeyBundle?) -> Result<Unit, EcliptixProtocolFailure> {
         if remoteBundle == nil {
             return .failure(.invalidInput("Remote bundle cannot be null."))
         }
@@ -705,104 +556,75 @@ final class EcliptixSystemIdentityKeys {
         if remoteBundle!.signedPreKeyPublic.count != Constants.x25519PublicKeySize {
             return .failure(.peerPubKey("Invalid remote SignedPreKeyPublic key."))
         }
-        return .success(Unit.value)
+        return .success(.value)
     }
 
     private func ensureLocalKeysValid() -> Result<Unit, EcliptixProtocolFailure> {
-        if ephemeralSecretKeyHandle == nil || ephemeralSecretKeyHandle!.isInvalid {
+        if self.ephemeralSecretKeyHandle == nil || self.ephemeralSecretKeyHandle!.isInvalid {
             return .failure(.prepareLocal("Local ephemeral key is missing or invalid."))
         }
-        if identityX25519SecretKeyHandle.isInvalid {
+        if self.identityX25519SecretKeyHandle.isInvalid {
             return .failure(.prepareLocal("Local identity key is missing or invalid."))
         }
-        return .success(Unit.value)
+        return .success(.value)
     }
     
-    private static func concatenateDhResultsInCanonicalOrder(
-        dh1: Data, // dhInitiatorEphResponderId
-        dh2: Data, // dhInitiatorEphResponderSpk
-        dh3: Data, // dhInitiatorIdResponderSpk
-        dh4: Data? // dhInitiatorEphResponderOpk
-    ) -> Data {
-        var result = Data()
-        result.append(dh1)
-        result.append(dh2)
-        result.append(dh3)
+    private static func concatenateDhResults(destination: inout Data, dh1: Data, dh2: Data, dh3: Data, dh4: Data?) {
+        destination.append(dh1)
+        destination.append(dh2)
+        destination.append(dh3)
         if let dh4 = dh4 {
-            result.append(dh4)
-        }
-        return result
-    }
-    
-    public static func verifyRemoteSpkSignature(
-        remoteIdentityEd25519: Data,
-        remoteSpkPublic: Data,
-        remoteSpkSignature: Data
-    ) -> Result<Bool, EcliptixProtocolFailure> {
-        var identityCopy: Data? = nil
-        var spkPublicCopy: Data? = nil
-        var signatureCopy: Data? = nil
-        defer {
-            _ = SodiumInterop.secureWipe(&identityCopy)
-            _ = SodiumInterop.secureWipe(&spkPublicCopy)
-            _ = SodiumInterop.secureWipe(&signatureCopy)
-        }
-        
-        identityCopy = remoteIdentityEd25519
-        spkPublicCopy = remoteSpkPublic
-        signatureCopy = remoteSpkSignature
-        
-        guard identityCopy!.count == Constants.ed25519PublicKeySize else {
-            return .failure(.peerPubKey("Invalid remote Ed25519 identity key length (\(identityCopy!.count))."))
-        }
-        
-        guard spkPublicCopy!.count == Constants.x25519PublicKeySize else {
-            return .failure(.peerPubKey("Invalid remote Signed PreKey public key length (\(spkPublicCopy!.count))."))
-        }
-        
-        guard signatureCopy!.count == Constants.ed25519SignatureSize else {
-            return .failure(.handshake("Invalid remote Signed PreKey signature length (\(signatureCopy!.count))."))
-        }
-        
-        let capturedIdentity = identityCopy!
-        let capturedSpkPublic = spkPublicCopy!
-        let capturedSignature = signatureCopy!
-        
-        return Result<Bool, EcliptixProtocolFailure>.Try {
-            return try PublicKeyAuth.verifyDetached(signature: capturedSignature, message: capturedSpkPublic, publicKey: capturedIdentity)
-        }.mapError { error in
-            .handshake("Internal error during signature verification: \(error.localizedDescription)", inner: error)
+            destination.append(dh4)
         }
     }
     
-    private static func validateRemoteRecipientKeys(
-        remoteIdentityPublicKeyX: Data?,
-        remoteEphemeralPublicKeyX: Data?
-    ) -> Result<Unit, EcliptixProtocolFailure> {
+    public static func verifyRemoteSpkSignature(remoteIdentityEd25519: Data, remoteSpkPublic: Data, remoteSpkSignature: Data) -> Result<Bool, EcliptixProtocolFailure> {
         
-        if remoteIdentityPublicKeyX?.count != Constants.x25519PublicKeySize {
+        guard remoteIdentityEd25519.count == Constants.ed25519PublicKeySize else {
+            return .failure(.peerPubKey("Invalid remote Ed25519 identity key length (\(remoteIdentityEd25519.count))."))
+        }
+        
+        guard remoteSpkPublic.count == Constants.x25519PublicKeySize else {
+            return .failure(.peerPubKey("Invalid remote Signed PreKey public key length (\(remoteSpkPublic.count))."))
+        }
+        
+        guard remoteSpkSignature.count == Constants.ed25519SignatureSize else {
+            return .failure(.handshake("Invalid remote Signed PreKey signature length (\(remoteSpkSignature.count))."))
+        }
+        
+        do {
+            let verificationResult = try PublicKeyAuth.verifyDetached(signature: remoteSpkSignature, message: remoteSpkPublic, publicKey: remoteIdentityEd25519)
+            return verificationResult ? .success(true) : .failure(.handshake("Remote SPK signature verification failed."))
+        } catch {
+            return .failure(.unexpectedError("Failed to verify remote SPK signature: \(error.localizedDescription)."))
+        }
+    }
+    
+    private static func validateRemoteRecipientKeys(remoteIdentityPublicKeyX: Data, remoteEphemeralPublicKeyX: Data) -> Result<Unit, EcliptixProtocolFailure> {
+        
+        guard remoteIdentityPublicKeyX.count == Constants.x25519PublicKeySize else {
             return .failure(.peerPubKey("Invalid remote Identity key length."))
         }
         
-        if remoteEphemeralPublicKeyX?.count != Constants.x25519PublicKeySize {
+        guard remoteEphemeralPublicKeyX.count == Constants.x25519PublicKeySize else {
             return .failure(.peerPubKey("Invalid remote Ephemeral key length."))
         }
         
-        return .success(Unit())
+        return .success(.value)
     }
     
     private func ensureLocalRecipientKeysValid() -> Result<Unit, EcliptixProtocolFailure> {
-        if identityX25519SecretKeyHandle.isInvalid {
+        if self.identityX25519SecretKeyHandle.isInvalid {
             return .failure(.prepareLocal("Local identity key is missing or invalid."))
         }
-        if signedPreKeySecretKeyHandle.isInvalid {
+        if self.signedPreKeySecretKeyHandle.isInvalid {
             return .failure(.prepareLocal("Local signed prekey is missing or invalid."))
         }
-        return .success(Unit())
+        return .success(.value)
     }
 
     private func findLocalOpkHandle(_ opkId: UInt32) -> Result<SodiumSecureMemoryHandle?, EcliptixProtocolFailure> {
-        for opk in oneTimePreKeysInternal where opk.preKeyId == opkId {
+        for opk in self.oneTimePreKeysInternal where opk.preKeyId == opkId {
             if opk.privateKeyHandle.isInvalid {
                 return .failure(.prepareLocal("Local OPK ID \(opkId) found but its handle is invalid."))
             }
@@ -840,9 +662,7 @@ final class EcliptixSystemIdentityKeys {
 }
 
 struct PublicKeyAuth {
-    /// Перевірка Ed25519 підпису (detached)
     static func verifyDetached(signature: Data, message: Data, publicKey: Data) throws -> Bool {
-        // Перевірка довжини
         guard signature.count == Int(crypto_sign_BYTES) else {
             throw VerifyError.invalidSignatureLength(signature.count)
         }
@@ -850,7 +670,6 @@ struct PublicKeyAuth {
             throw VerifyError.invalidPublicKeyLength(publicKey.count)
         }
         
-        // Виклик C-функції
         let result = signature.withUnsafeBytes { sigRawBuffer in
             message.withUnsafeBytes { msgRawBuffer in
                 publicKey.withUnsafeBytes { pkRawBuffer in
@@ -870,7 +689,6 @@ struct PublicKeyAuth {
         return result == 0
     }
     
-    /// Підписування повідомлення (detached) секретним ключем Ed25519
     static func signDetached(message: inout Data, secretKey: inout Data) throws -> Data {
         guard secretKey.count == Int(crypto_sign_SECRETKEYBYTES) else {
             throw SignError.invalidSecretKeyLength(secretKey.count)

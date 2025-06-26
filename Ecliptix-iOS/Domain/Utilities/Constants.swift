@@ -10,6 +10,7 @@ import Foundation
 public struct Constants {
     // Key sizes
     public static let x25519KeySize = 32
+    public static let cacheWindowSize: UInt32 = 1000
     public static let ed25519KeySize = 32
     
     // HKDF Info constants (represented as [UInt8])

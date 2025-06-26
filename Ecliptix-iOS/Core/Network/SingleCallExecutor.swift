@@ -40,15 +40,15 @@ final class SingleCallExecutor {
                     try await self.validatePhoneNumberAsync(payload: request.payload, cancellation: cancellation)
                 }
 
-            case .signIn:
-                return try await wrapCall {
-                    try await self.signInAsync(payload: request.payload, cancellation: cancellation)
-                }
-
-            case .updateMembershipWithSecureKey:
-                return try await wrapCall {
-                    try await self.updateMembershipWithSecureKeyAsync(payload: request.payload, cancellation: cancellation)
-                }
+//            case .signIn:
+//                return try await wrapCall {
+//                    try await self.signInAsync(payload: request.payload, cancellation: cancellation)
+//                }
+//
+//            case .updateMembershipWithSecureKey:
+//                return try await wrapCall {
+//                    try await self.updateMembershipWithSecureKeyAsync(payload: request.payload, cancellation: cancellation)
+//                }
 
             case .verifyOtp:               
                 return try await wrapCall {
@@ -109,27 +109,27 @@ final class SingleCallExecutor {
         )
     }
 
-    private func signInAsync(
-        payload: Ecliptix_Proto_CipherPayload,
-        cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.membershipClient.signInMembership(payload)
-            }
-        )
-    }
-
-    private func updateMembershipWithSecureKeyAsync(
-        payload: Ecliptix_Proto_CipherPayload,
-        cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.membershipClient.updateMembershipWithSecureKey(payload)
-            }
-        )
-    }
+//    private func signInAsync(
+//        payload: Ecliptix_Proto_CipherPayload,
+//        cancellation: CancellationToken
+//    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+//        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
+//            {
+//                try await self.membershipClient.signInMembership(payload)
+//            }
+//        )
+//    }
+//
+//    private func updateMembershipWithSecureKeyAsync(
+//        payload: Ecliptix_Proto_CipherPayload,
+//        cancellation: CancellationToken
+//    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+//
+//        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
+//            {
+//                try await self.membershipClient.updateMembershipWithSecureKey(payload)
+//            }
+//        )
+//    }
 }
 
