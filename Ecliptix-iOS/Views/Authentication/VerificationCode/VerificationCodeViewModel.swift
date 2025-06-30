@@ -175,6 +175,21 @@ final class VerificationCodeViewModel: ObservableObject {
                         if timerTick.alreadyVerified {
                         }
 
+                        if timerTick.status == .failed {
+                        }
+                        
+                        if timerTick.status == .expired {
+                            // redirect to Phone verification view
+                        }
+                        
+                        if timerTick.status == .maxAttemptsReached {
+                            // redirect to Phone verification view
+                        }
+                        
+                        if timerTick.status == .notFound {
+                        }
+                        
+                        
                         if self.verificationSessionIdentifier == nil {
                             self.verificationSessionIdentifier = try Utilities.fromByteStringToGuid(timerTick.sessionIdentifier)
                         }

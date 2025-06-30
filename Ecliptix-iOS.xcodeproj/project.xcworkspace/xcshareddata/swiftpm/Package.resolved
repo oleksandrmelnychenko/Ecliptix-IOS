@@ -1,6 +1,15 @@
 {
-  "originHash" : "b10dd8f07ca24086b9e7c2f82a0ad97eed7c5e5306ab190b8e96df8058284736",
+  "originHash" : "6512afdc61b99479c0ff91ebe1aa5e6beb1799734d0c3b967aed318d1459de27",
   "pins" : [
+    {
+      "identity" : "bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/attaswift/BigInt.git",
+      "state" : {
+        "revision" : "99c4b9fb0f52dc9182aee106b07c3d205583b98c",
+        "version" : "5.6.0"
+      }
+    },
     {
       "identity" : "grpc-swift",
       "kind" : "remoteSourceControl",
@@ -8,6 +17,15 @@
       "state" : {
         "revision" : "a56a157218877ef3e9625f7e1f7b2cb7e46ead1b",
         "version" : "1.26.1"
+      }
+    },
+    {
+      "identity" : "openssl",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzyzanowskim/OpenSSL.git",
+      "state" : {
+        "revision" : "623c84da314e85363236507ca38a4bde65df21c3",
+        "version" : "3.3.3001"
       }
     },
     {

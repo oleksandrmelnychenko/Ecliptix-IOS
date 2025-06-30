@@ -21,6 +21,8 @@
 		11B82C622DF990FD002393C3 /* HeapModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C612DF990FD002393C3 /* HeapModule */; };
 		11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C632DF990FD002393C3 /* OrderedCollections */; };
 		11B82C662DF990FD002393C3 /* _RopeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C652DF990FD002393C3 /* _RopeModule */; };
+		11D660382E0D7B35000066BE /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = 11D660372E0D7B35000066BE /* BigInt */; };
+		11D769022E0E92B000EA5DD3 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 11D769012E0E92B000EA5DD3 /* OpenSSL */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +38,8 @@
 /* Begin PBXFileReference section */
 		1104AAFB2DF6F13A00337328 /* Ecliptix-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ecliptix-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		11AB141C2DFAD497002FCCDC /* Ecliptix-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Ecliptix-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		11D996EF2E0DA6F700D9E746 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../../../../opt/homebrew/Cellar/openssl@3/3.5.0/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
+		11D996F02E0DA6F700D9E746 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../../../../opt/homebrew/Cellar/openssl@3/3.5.0/lib/libssl.3.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -56,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11D660382E0D7B35000066BE /* BigInt in Frameworks */,
 				1183FAB82DF9863C00FF69F1 /* protoc-gen-grpc-swift in Frameworks */,
 				1104AB152DF6F19D00337328 /* Clibsodium in Frameworks */,
 				1183FAB42DF9863C00FF69F1 /* GRPC in Frameworks */,
@@ -66,6 +71,7 @@
 				1183FAB62DF9863C00FF69F1 /* GRPCReflectionService in Frameworks */,
 				11B82C5C2DF990FD002393C3 /* Collections in Frameworks */,
 				11B82C5E2DF990FD002393C3 /* DequeModule in Frameworks */,
+				11D769022E0E92B000EA5DD3 /* OpenSSL in Frameworks */,
 				1104AB172DF6F19D00337328 /* Sodium in Frameworks */,
 				11B82C622DF990FD002393C3 /* HeapModule in Frameworks */,
 				11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */,
@@ -105,6 +111,8 @@
 		1104ABE22DF6F5A900337328 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				11D996EF2E0DA6F700D9E746 /* libcrypto.3.dylib */,
+				11D996F02E0DA6F700D9E746 /* libssl.3.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -143,6 +151,8 @@
 				11B82C612DF990FD002393C3 /* HeapModule */,
 				11B82C632DF990FD002393C3 /* OrderedCollections */,
 				11B82C652DF990FD002393C3 /* _RopeModule */,
+				11D660372E0D7B35000066BE /* BigInt */,
+				11D769012E0E92B000EA5DD3 /* OpenSSL */,
 			);
 			productName = "Ecliptix-iOS";
 			productReference = 1104AAFB2DF6F13A00337328 /* Ecliptix-iOS.app */;
@@ -204,6 +214,8 @@
 				1104AB182DF6F1BC00337328 /* XCRemoteSwiftPackageReference "swift-atomics" */,
 				1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */,
 				11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */,
+				11D769002E0E92B000EA5DD3 /* XCRemoteSwiftPackageReference "OpenSSL" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1104AAFC2DF6F13A00337328 /* Products */;
@@ -390,6 +402,7 @@
 				DEVELOPMENT_TEAM = 72C73YMCA9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -399,10 +412,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ivan.Ecliptix-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -418,6 +433,7 @@
 				DEVELOPMENT_TEAM = 72C73YMCA9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,10 +443,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ivan.Ecliptix-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -537,6 +555,22 @@
 				minimumVersion = 1.2.0;
 			};
 		};
+		11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/attaswift/BigInt.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.4.0;
+			};
+		};
+		11D769002E0E92B000EA5DD3 /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.3.3001;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -609,6 +643,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = _RopeModule;
+		};
+		11D660372E0D7B35000066BE /* BigInt */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */;
+			productName = BigInt;
+		};
+		11D769012E0E92B000EA5DD3 /* OpenSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11D769002E0E92B000EA5DD3 /* XCRemoteSwiftPackageReference "OpenSSL" */;
+			productName = OpenSSL;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

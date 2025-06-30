@@ -433,7 +433,7 @@ final class EcliptixProtocolConnection {
             return .success(.value)
         }
         
-        let keysDiffer = peerDhPublicKey == nil || receivedDhPublicKeyBytes != receivedDhPublicKeyBytes
+        let keysDiffer = peerDhPublicKey == nil || peerDhPublicKey != receivedDhPublicKeyBytes
         
         if !keysDiffer {
             return .success(.value)
@@ -487,7 +487,7 @@ final class EcliptixProtocolConnection {
             _ = EcliptixProtocolConnection.wipeIfNotNil(&newDhPrivateKey)
             
             if hkdfOutput != nil {
-                hkdfOutput!.resetBytes(in: 0...hkdfOutput!.count)
+                hkdfOutput!.resetBytes(in: 0..<hkdfOutput!.count)
                 hkdfOutput!.removeAll()
             }
             newEphemeralSkHandle?.dispose()

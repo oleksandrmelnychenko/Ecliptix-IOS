@@ -11,7 +11,8 @@ public enum RcpServiceAction {
     case validatePhoneNumber
     case verifyOtp
     case initiateVerification
-    case initialResendVerification
-    case signIn
-    case updateMembershipWithSecureKey
+    case opaqueRegistrationInit
+    case opaqueRegistrationComplete
+    case opaqueSignInInit
+    case opaqueSignInComplete
 }
