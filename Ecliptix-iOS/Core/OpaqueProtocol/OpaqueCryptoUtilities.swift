@@ -197,46 +197,128 @@ class OpaqueCryptoUtilities {
             return .failure(.encryptFailed("Invalid key length"))
         }
 
-        let symmetricKey = SymmetricKey(data: key)
-        let nonceBytes = (0..<OpaqueConstants.aesGcmNonceLengthBytes).map { _ in UInt8.random(in: 0...255) }
-        let nonce = try! AES.GCM.Nonce(data: Data(nonceBytes))
+        let ctx = EVP_CIPHER_CTX_new()
+        defer { EVP_CIPHER_CTX_free(ctx) }
 
-        do {
-            let sealedBox = try AES.GCM.seal(plaintext, using: symmetricKey, nonce: nonce, authenticating: associatedData ?? Data())
-            var combined = Data()
-            combined.append(contentsOf: nonceBytes)
-            combined.append(sealedBox.ciphertext)
-            combined.append(sealedBox.tag)
-            return .success(combined)
-        } catch {
-            return .failure(.encryptFailed(error.localizedDescription))
+        var outLen: Int32 = 0
+        var tag = Data(count: 16)
+        var ciphertext = Data(count: plaintext.count + 16) // + block size just in case
+
+        // Nonce
+        let nonce = (0..<OpaqueConstants.aesGcmNonceLengthBytes).map { _ in UInt8.random(in: 0...255) }
+        let nonceData = Data(nonce)
+
+        // Init encryption
+        guard EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
+            return .failure(.encryptFailed("Init failed"))
         }
+
+        guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Int32(nonceData.count), nil) == 1 else {
+            return .failure(.encryptFailed("Setting IV length failed"))
+        }
+
+        // Set key and IV
+        key.withUnsafeBytes { keyPtr in
+            _ = nonceData.withUnsafeBytes { noncePtr in
+                EVP_EncryptInit_ex(ctx, nil, nil, keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self))
+            }
+        }
+
+        // AAD
+        if let aad = associatedData, !aad.isEmpty {
+            _ = aad.withUnsafeBytes { aadPtr in
+                EVP_EncryptUpdate(ctx, nil, &outLen, aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(aad.count))
+            }
+        }
+
+        // Encrypt
+        var cipherLen: Int32 = 0
+        plaintext.withUnsafeBytes { plainPtr in
+            _ = ciphertext.withUnsafeMutableBytes { cipherPtr in
+                EVP_EncryptUpdate(ctx, cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), &cipherLen, plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(plaintext.count))
+            }
+        }
+
+        outLen = 0
+        _ = ciphertext.withUnsafeMutableBytes {
+            EVP_EncryptFinal_ex(ctx, $0.baseAddress?.assumingMemoryBound(to: UInt8.self).advanced(by: Int(cipherLen)), &outLen)
+        }
+
+        // Get Tag
+        _ = tag.withUnsafeMutableBytes {
+            EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, $0.baseAddress)
+        }
+
+        // Combine nonce + ciphertext + tag
+        var output = Data()
+        output.append(nonceData)
+        output.append(ciphertext.prefix(Int(cipherLen)))
+        output.append(tag)
+
+        return .success(output)
     }
+
 
     static func decrypt(ciphertextWithNonce: Data, key: Data, associatedData: Data?) -> Result<Data, OpaqueFailure> {
         guard key.count == OpaqueConstants.defaultKeyLength else {
             return .failure(.decryptFailed("Invalid key length"))
         }
 
-        let totalOverhead = OpaqueConstants.aesGcmNonceLengthBytes + (OpaqueConstants.aesGcmTagLengthBits / 8)
-        guard ciphertextWithNonce.count >= totalOverhead else {
+        let nonceLen = OpaqueConstants.aesGcmNonceLengthBytes
+        let tagLen = OpaqueConstants.aesGcmTagLengthBits / 8
+
+        guard ciphertextWithNonce.count >= nonceLen + tagLen else {
             return .failure(.decryptFailed("Ciphertext too short"))
         }
 
-        let symmetricKey = SymmetricKey(data: key)
-        let nonce = try! AES.GCM.Nonce(data: ciphertextWithNonce.prefix(OpaqueConstants.aesGcmNonceLengthBytes))
-        let tagStart = ciphertextWithNonce.count - (OpaqueConstants.aesGcmTagLengthBits / 8)
-        let ciphertext = ciphertextWithNonce[OpaqueConstants.aesGcmNonceLengthBytes..<tagStart]
-        let tag = ciphertextWithNonce.suffix(OpaqueConstants.aesGcmTagLengthBits / 8)
+        let nonce = ciphertextWithNonce.prefix(nonceLen)
+        let tag = ciphertextWithNonce.suffix(tagLen)
+        let ciphertext = ciphertextWithNonce.dropFirst(nonceLen).dropLast(tagLen)
 
-        do {
-            let sealedBox = try AES.GCM.SealedBox(nonce: nonce, ciphertext: ciphertext, tag: tag)
-            let decrypted = try AES.GCM.open(sealedBox, using: symmetricKey, authenticating: associatedData ?? Data())
-            return .success(decrypted)
-        } catch {
-            return .failure(.decryptFailed(error.localizedDescription))
+        let ctx = EVP_CIPHER_CTX_new()
+        defer { EVP_CIPHER_CTX_free(ctx) }
+
+        guard EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
+            return .failure(.decryptFailed("Init failed"))
         }
+
+        guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Int32(nonce.count), nil) == 1 else {
+            return .failure(.decryptFailed("Setting IV length failed"))
+        }
+
+        key.withUnsafeBytes { keyPtr in
+            _ = nonce.withUnsafeBytes { noncePtr in
+                EVP_DecryptInit_ex(ctx, nil, nil, keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self))
+            }
+        }
+
+        if let aad = associatedData, !aad.isEmpty {
+            aad.withUnsafeBytes { aadPtr in
+                var outLen: Int32 = 0
+                EVP_DecryptUpdate(ctx, nil, &outLen, aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(aad.count))
+            }
+        }
+
+        var plaintext = Data(count: ciphertext.count)
+        var outLen: Int32 = 0
+        ciphertext.withUnsafeBytes { cipherPtr in
+            _ = plaintext.withUnsafeMutableBytes { plainPtr in
+                EVP_DecryptUpdate(ctx, plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), &outLen, cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(ciphertext.count))
+            }
+        }
+
+        // Set tag
+        _ = tag.withUnsafeBytes {
+            EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, Int32(tag.count), UnsafeMutableRawPointer(mutating: $0.baseAddress))
+        }
+
+        if EVP_DecryptFinal_ex(ctx, nil, &outLen) != 1 {
+            return .failure(.decryptFailed("Invalid tag, authentication failed"))
+        }
+
+        return .success(plaintext.prefix(Int(outLen)))
     }
+
 }
 
 extension Data {

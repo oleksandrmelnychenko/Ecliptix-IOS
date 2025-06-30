@@ -323,7 +323,7 @@ final class PasswordSetupViewModel: ObservableObject {
             
             let pas = rentedPasswordBytes!
             
-            let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+            let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
             
             _ = try await networkController.executeServiceAction(
                 connectId: connectId,
@@ -385,16 +385,5 @@ final class PasswordSetupViewModel: ObservableObject {
                 self.errorMessage = "Submission failed: \(error)"
             }
         }
-    }
-    
-    private static func computeConnectId(pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType) -> UInt32 {
-        let appInstanceInfo = ServiceLocator.shared.resolve(AppInstanceInfo.self)
-        
-        let connectId = Utilities.computeUniqueConnectId(
-            appInstanceId: appInstanceInfo.appInstanceId,
-            appDeviceId: appInstanceInfo.deviceId,
-            contextType: pubKeyExchangeType)
-        
-        return connectId
     }
 }

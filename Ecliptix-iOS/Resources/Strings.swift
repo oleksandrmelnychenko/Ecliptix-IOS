@@ -86,4 +86,9 @@ enum Strings {
             static let invalidPassPhase = "Pass phase is invalid"
         }
     }
+    
+    enum SignIn {
+        static let title = "Sign in into account"
+        static let description = "Sign in to join conversation."
+    }
 }

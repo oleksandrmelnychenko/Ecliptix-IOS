@@ -21,4 +21,8 @@ extension AppInstanceInfo {
     func setSystemDeviceIdentifier(_ id: UUID) {
         self.systemDeviceIdentifier = id
     }
+    
+    func setServerPublicKey(_ key: Data) {
+        self.serverPublicKey = key
+    }
 }

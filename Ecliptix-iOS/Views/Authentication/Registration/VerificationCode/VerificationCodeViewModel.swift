@@ -82,7 +82,7 @@ final class VerificationCodeViewModel: ObservableObject {
     private func validatePhoneNumber(phoneNumber: String) async {
         let cancellationToken = CancellationToken()
 
-        guard let systemDeviceIdentifier = await Self.systemDeviceIdentifier() else {
+        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
             errorMessage = "Invalid device ID"
             return
         }
@@ -96,7 +96,7 @@ final class VerificationCodeViewModel: ObservableObject {
         request.phoneNumber = phoneNumber
         request.appDeviceIdentifier = Utilities.guidToByteArray(systemDeviceIdentifier)
 
-        let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
 
         do {
             _ = try await networkController.executeServiceAction(
@@ -142,7 +142,7 @@ final class VerificationCodeViewModel: ObservableObject {
     private func initiateVerification(phoneNumberIdentifier: Data, type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum) async {
         let cancellationToken = CancellationToken()
 
-        guard let systemDeviceIdentifier = await Self.systemDeviceIdentifier() else {
+        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
             errorMessage = "Invalid device ID"
             return
         }
@@ -153,7 +153,7 @@ final class VerificationCodeViewModel: ObservableObject {
         request.purpose = .registration
         request.type = type
 
-        let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
 
         do {
             let result = try await networkController.executeServiceAction(
@@ -218,7 +218,7 @@ final class VerificationCodeViewModel: ObservableObject {
     }
 
     private func sendVerificationCode() async {
-        guard let systemDeviceIdentifier = await Self.systemDeviceIdentifier() else {
+        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
             await MainActor.run {
                 self.errorMessage = "Invalid device ID"
             }
@@ -235,7 +235,7 @@ final class VerificationCodeViewModel: ObservableObject {
         verifyCodeRequest.purpose = .registration
         verifyCodeRequest.appDeviceIdentifier = Utilities.guidToByteArray(systemDeviceIdentifier)
         
-        let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
         
         do {
             _ = try await networkController.executeServiceAction(
@@ -299,22 +299,5 @@ final class VerificationCodeViewModel: ObservableObject {
         let minutes = seconds / 60
         let seconds = seconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
-    }
-    
-    // move to ViewModelBase
-    private static func systemDeviceIdentifier() async -> UUID? {
-        let appInstanceInfo = ServiceLocator.shared.resolve(AppInstanceInfo.self)
-        return await appInstanceInfo.systemDeviceIdentifier
-    }
-    
-    private static func computeConnectId(pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType) -> UInt32 {
-        let appInstanceInfo = ServiceLocator.shared.resolve(AppInstanceInfo.self)
-        
-        let connectId = Utilities.computeUniqueConnectId(
-            appInstanceId: appInstanceInfo.appInstanceId,
-            appDeviceId: appInstanceInfo.deviceId,
-            contextType: pubKeyExchangeType)
-        
-        return connectId
     }
 }

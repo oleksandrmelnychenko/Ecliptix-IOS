@@ -41,7 +41,7 @@ struct ViewFactory {
             PassPhaseRegisterView(navigation: navigation)
             
         case .signIn:
-            TestView()
+            SignInView(navigation: navigation)
             
         case .passPhaseLogin:
             TestView()

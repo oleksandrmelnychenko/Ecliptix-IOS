@@ -87,6 +87,7 @@ final class EstablishConnectionExecutor {
                         let appInstanceID = ServiceLocator.shared.resolve(AppInstanceInfo.self)
                         
                         await appInstanceID.setSystemDeviceIdentifier(appServerInstanceId)
+                        await appInstanceID.setServerPublicKey(reply.serverPublicKey)
                         
                         return .success(.value)
                     } catch {
