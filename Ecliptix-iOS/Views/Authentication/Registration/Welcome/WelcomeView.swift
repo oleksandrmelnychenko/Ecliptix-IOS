@@ -13,14 +13,15 @@ struct WelcomeView: View {
 
     init(navigation: NavigationService) {
         _viewModel = StateObject(wrappedValue: WelcomeViewModel(navigation: navigation))
+        
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 0, content:  {
-            Image(systemName: "globe")
+        AuthScreenContainer(spacing: 0, showLogo: false, showLicense: false, content:  {
+            Image("EcliptixLogo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 40, height: 40)
+                .frame(width: 80, height: 80)
                 .padding(.horizontal)
 
             WelcomeHeader()
@@ -63,6 +64,7 @@ struct WelcomeView: View {
         })
     }
 }
+
 
 #Preview {
     let navService = NavigationService()

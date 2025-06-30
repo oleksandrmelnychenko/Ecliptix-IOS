@@ -8,7 +8,6 @@
 import Foundation
 import CryptoKit
 import OpenSSL
-import BigInt
 
 
 class OpaqueProtocolService {
@@ -52,9 +51,7 @@ class OpaqueProtocolService {
     }
     
     static func createOprfRequest(password: Data) -> Result<(oprfRequest: Data, blind: UnsafeMutablePointer<BIGNUM>), OpaqueFailure> {
-        do {
-            let blind = OpaqueCryptoUtilities.generateRandomScalar(group: getDefaultGroup())
-            
+        do {            
             guard let blind = OpaqueCryptoUtilities.generateRandomScalar(group: getDefaultGroup()) else {
                 return .failure(.invalidInput("Failed to generate random scalar"))
             }
@@ -108,14 +105,6 @@ class OpaqueProtocolService {
             return .failure(.invalidInput("Error during create oprf request", inner: error))
         }
     }
-
-    static func bigUIntToBN(_ value: BigUInt) -> UnsafeMutablePointer<BIGNUM>? {
-        let data = value.serialize()
-        return data.withUnsafeBytes {
-            BN_bin2bn($0.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(data.count), nil)
-        }
-    }
-
     
     static func createRegistrationRecord(password: Data, oprfResponse: Data, blind: UnsafePointer<BIGNUM>) -> Result<Data, OpaqueFailure> {
         do {

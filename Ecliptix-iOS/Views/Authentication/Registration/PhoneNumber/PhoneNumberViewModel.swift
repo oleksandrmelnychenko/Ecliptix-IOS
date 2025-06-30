@@ -9,22 +9,16 @@ import Foundation
 
 @MainActor
 final class PhoneNumberViewModel: ObservableObject {
-    @Published var selectedCountry: Country?
     @Published var phoneNumber: String = ""
+    @Published var phoneCode: String = "+"
     @Published var isLoading = false
     @Published var errorMessage: String?
 
     private let navigation: NavigationService
-    private let countryService = CountryService()
     private let phoneValidator = PhoneValidator()
     
-    var countries: [Country] {
-        countryService.countries
-    }
-    
     var fullPhoneNumber: String {
-        guard let code = selectedCountry?.phoneCode else { return phoneNumber }
-        return code + phoneNumber
+        return phoneCode + phoneNumber
     }
     
     var validationErrors: [PhoneValidationError] {
@@ -33,14 +27,6 @@ final class PhoneNumberViewModel: ObservableObject {
     
     init(navigation: NavigationService) {
         self.navigation = navigation
-
-        if let first = countryService.countries.first {
-            self.selectedCountry = first
-        } else {
-            Task {
-                await waitForCountries()
-            }
-        }
     }
 
     func submitPhone() {
@@ -57,13 +43,4 @@ final class PhoneNumberViewModel: ObservableObject {
             }
         }
     }
-    
-    private func waitForCountries() async {
-        while countryService.countries.isEmpty {
-            try? await Task.sleep(nanoseconds: 200_000_000)
-        }
-        selectedCountry = countryService.countries.first
-    }
-    
-    
 }

@@ -21,7 +21,6 @@
 		11B82C622DF990FD002393C3 /* HeapModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C612DF990FD002393C3 /* HeapModule */; };
 		11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C632DF990FD002393C3 /* OrderedCollections */; };
 		11B82C662DF990FD002393C3 /* _RopeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C652DF990FD002393C3 /* _RopeModule */; };
-		11D660382E0D7B35000066BE /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = 11D660372E0D7B35000066BE /* BigInt */; };
 		11D769022E0E92B000EA5DD3 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 11D769012E0E92B000EA5DD3 /* OpenSSL */; };
 /* End PBXBuildFile section */
 
@@ -60,7 +59,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				11D660382E0D7B35000066BE /* BigInt in Frameworks */,
 				1183FAB82DF9863C00FF69F1 /* protoc-gen-grpc-swift in Frameworks */,
 				1104AB152DF6F19D00337328 /* Clibsodium in Frameworks */,
 				1183FAB42DF9863C00FF69F1 /* GRPC in Frameworks */,
@@ -151,7 +149,6 @@
 				11B82C612DF990FD002393C3 /* HeapModule */,
 				11B82C632DF990FD002393C3 /* OrderedCollections */,
 				11B82C652DF990FD002393C3 /* _RopeModule */,
-				11D660372E0D7B35000066BE /* BigInt */,
 				11D769012E0E92B000EA5DD3 /* OpenSSL */,
 			);
 			productName = "Ecliptix-iOS";
@@ -214,7 +211,6 @@
 				1104AB182DF6F1BC00337328 /* XCRemoteSwiftPackageReference "swift-atomics" */,
 				1183FAB02DF9863C00FF69F1 /* XCRemoteSwiftPackageReference "grpc-swift" */,
 				11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */,
-				11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */,
 				11D769002E0E92B000EA5DD3 /* XCRemoteSwiftPackageReference "OpenSSL" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -555,14 +551,6 @@
 				minimumVersion = 1.2.0;
 			};
 		};
-		11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/attaswift/BigInt.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.4.0;
-			};
-		};
 		11D769002E0E92B000EA5DD3 /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
@@ -643,11 +631,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 11B82C582DF990FD002393C3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = _RopeModule;
-		};
-		11D660372E0D7B35000066BE /* BigInt */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 11D660362E0D7B35000066BE /* XCRemoteSwiftPackageReference "BigInt" */;
-			productName = BigInt;
 		};
 		11D769012E0E92B000EA5DD3 /* OpenSSL */ = {
 			isa = XCSwiftPackageProductDependency;

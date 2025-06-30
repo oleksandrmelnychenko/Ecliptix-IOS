@@ -10,6 +10,7 @@ import Foundation
 @MainActor
 final class SignInViewModel: ObservableObject {
     @Published var phoneNumber: String = ""
+    @Published var phoneCode: String = ""
     @Published var password: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -22,8 +23,7 @@ final class SignInViewModel: ObservableObject {
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     
     var fullPhoneNumber: String {
-        let code = "+380"
-        return code + phoneNumber
+        return phoneCode + phoneNumber
     }
     
     var phoneValidationErrors: [PhoneValidationError] {

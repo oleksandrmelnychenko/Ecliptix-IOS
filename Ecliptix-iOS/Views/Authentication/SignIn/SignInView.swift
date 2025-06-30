@@ -25,14 +25,14 @@ struct SignInView: View {
             )
             
             Group {
-                FieldInput<PhoneValidationError, PhoneNumberInputField>(
+                FieldInput<PhoneValidationError, PhoneInputField>(
                     title: "Phone Number",
                     text: $viewModel.phoneNumber,
                     hintText: "Include country code",
                     validationErrors: viewModel.phoneValidationErrors,
                     content: {
-                        PhoneNumberInputField(
-                            phoneCode: "+380",
+                        PhoneInputField(
+                            phoneCode: $viewModel.phoneCode,
                             phoneNumber: $viewModel.phoneNumber)
                     }
                 )

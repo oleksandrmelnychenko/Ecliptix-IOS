@@ -8,7 +8,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "B9DDC59B-107B-43E2-9605-D4BD6DF8092B"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/Ecliptix_iOSTests.swift"
@@ -24,7 +24,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "58526416-EF57-4982-86C0-759A7E2C6107"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/Ecliptix_iOSTests.swift"
@@ -200,7 +200,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "0EA6EABA-A244-4650-8E3F-51291BD6CE6A"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/Ecliptix_iOSTests.swift"
@@ -280,7 +280,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "CFC35F8E-0348-4227-B379-F3C1A06A9A1B"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueCryptoUtilitiesTests/HkdfExtractTests.swift"
@@ -296,7 +296,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "134990DE-8991-47BE-8F3D-C79CFE10A171"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueCryptoUtilitiesTests/GenerateKeyPairTests.swift"
@@ -328,7 +328,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "A52371A8-1291-443C-BF45-BCA7B661DECC"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueCryptoUtilitiesTests/EncryptDecryptTests.swift"
@@ -344,7 +344,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "EB9DBCA3-708D-493A-87B7-99210084E30B"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueCryptoUtilitiesTests/HashToPointTests.swift"
@@ -358,14 +358,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "4671756D-2D59-410E-B364-724C6CE6DF47"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueCryptoUtilitiesTests/HashToPointTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "15"
-            endingLineNumber = "15"
+            startingLineNumber = "14"
+            endingLineNumber = "14"
             landmarkName = "testHashToPointSwift()"
             landmarkType = "7">
          </BreakpointContent>
@@ -396,8 +396,8 @@
             filePath = "Ecliptix-iOS/Core/OpaqueProtocol/OpaqueProtocolService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "467"
-            endingLineNumber = "467"
+            startingLineNumber = "456"
+            endingLineNumber = "456"
             landmarkName = "deriveFinalKeys(akeResult:transcriptHash:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -406,7 +406,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "C941CAB7-48DE-4FD2-B3E8-B6484C15C87C"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/VerifyServerMacAndGetSessionKeyTests.swift"
@@ -416,57 +416,13 @@
             endingLineNumber = "30"
             landmarkName = "testVerifyServerMacAndGetSessionKeyMatchesCSharp()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "C941CAB7-48DE-4FD2-B3E8-B6484C15C87C - 644de6e653e727ab"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Ecliptix_iOSTests.VerifyServerMacAndGetSessionKeyTests.testVerifyServerMacAndGetSessionKeyMatchesCSharp() throws -&gt; ()"
-                  moduleName = "Ecliptix-iOSTests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/VerifyServerMacAndGetSessionKeyTests.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "31"
-                  endingLineNumber = "31">
-               </Location>
-               <Location
-                  uuid = "C941CAB7-48DE-4FD2-B3E8-B6484C15C87C - 644de6e653e727ab"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Ecliptix_iOSTests.VerifyServerMacAndGetSessionKeyTests.testVerifyServerMacAndGetSessionKeyMatchesCSharp() throws -&gt; ()"
-                  moduleName = "Ecliptix-iOSTests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/VerifyServerMacAndGetSessionKeyTests.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "31"
-                  endingLineNumber = "31">
-               </Location>
-               <Location
-                  uuid = "C941CAB7-48DE-4FD2-B3E8-B6484C15C87C - 644de6e653e727ab"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Ecliptix_iOSTests.VerifyServerMacAndGetSessionKeyTests.testVerifyServerMacAndGetSessionKeyMatchesCSharp() throws -&gt; ()"
-                  moduleName = "Ecliptix-iOSTests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/VerifyServerMacAndGetSessionKeyTests.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "31"
-                  endingLineNumber = "31">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "024AEB87-9F99-4C92-B17F-0E5BFE80C832"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/VerifyServerMacAndGetSessionKeyTests.swift"
@@ -482,7 +438,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "630CA7C2-8456-431C-8309-ACF7435C74C8"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOSTests/OpaqueProtocolTests/OpaqueProtocolServiceTests/RecoverOprfKeyTests.swift"
@@ -498,7 +454,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "1B066233-1550-46C6-82CB-E284BAEF0269"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/PasswordSetup/PasswordSetupViewModel.swift"
@@ -514,7 +470,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D7814C2E-F624-42CC-A872-DEC71DD954DD"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/PasswordSetup/PasswordSetupViewModel.swift"
@@ -530,7 +486,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "332F975E-A086-4A04-90A6-EC9B7E2F50E6"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/PasswordSetup/PasswordSetupViewModel.swift"
@@ -546,7 +502,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "7448D3B7-ED6B-4C91-9A9F-DBD196EA18D7"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/PasswordSetup/PasswordSetupViewModel.swift"
@@ -562,7 +518,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D34FDAC2-3C9D-4B28-8DEE-5931C86B0963"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/PasswordSetup/PasswordSetupViewModel.swift"
@@ -610,7 +566,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "23933138-544D-4E89-B954-E74825FB5B7D"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
@@ -626,7 +582,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "52B9AFFA-5E66-4E41-AF76-9F2AFBE67724"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
@@ -642,7 +598,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "C4FA1003-CD03-4EEB-B7E6-70EEB0D627C6"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
@@ -651,6 +607,38 @@
             startingLineNumber = "174"
             endingLineNumber = "174"
             landmarkName = "submitRegistrationPassword()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F3203A17-97B7-4CFC-B34D-B0555B91FE5D"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Services/LocalizationService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "57"
+            endingLineNumber = "57"
+            landmarkName = "localized"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "63783139-A112-4566-BE51-A97CC37F1D8E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Services/LocalizationService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
+            landmarkName = "load(locale:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

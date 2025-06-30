@@ -76,5 +76,8 @@ enum GrpcModule {
 
         let networkController = NetworkController(networkServiceManager: serviceManager)
         ServiceLocator.shared.register(NetworkController.self, service: networkController)
+        
+        let localizationService = LocalizationService.shared
+        ServiceLocator.shared.register(LocalizationService.self, service: localizationService)
     }
 }

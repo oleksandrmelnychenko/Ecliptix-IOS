@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct WelcomeHeader: View {
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // App title

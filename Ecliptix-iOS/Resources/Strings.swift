@@ -7,8 +7,8 @@
 
 enum Strings {
     enum Welcome {
-        static let title = "World App"
-        static let description = "The wallet designed to make digital ID and global finance simple for all."
+        static var title: String { "Authentication.Registration.welcome.title".localized }
+        static var description: String { "Authentication.Registration.welcome.description".localized }
         
         enum NavigationCard_Main {
             static let title = "New account"
@@ -27,9 +27,6 @@ enum Strings {
         enum Buttons {
             static let sendCode = "Authentication.Registration.phoneVerification.button".localized
         }
-        
-        static let countryPickerTitle = "Select Country"
-        static let countryPickerCancelButtonTitle = "Cancel"
         
         static let phoneFieldPlaceholder = "Phone number"
         static let phoneFieldLabel = "Phone Number Field"
@@ -89,6 +86,6 @@ enum Strings {
     
     enum SignIn {
         static let title = "Sign in into account"
-        static let description = "Sign in to join conversation."
+        static let description = "Enter your email and password to sign in"
     }
 }

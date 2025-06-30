@@ -7,14 +7,8 @@
 
 import Foundation
 import CryptoKit
-import BigInt
 import Security
 import OpenSSL
-
-enum ECCurve {
-    // Параметр N для secp256r1 (P-256) — порядок базової точки
-    static let domainN = BigUInt("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", radix: 16)!
-}
 
 class OpaqueCryptoUtilities {
     
@@ -125,15 +119,18 @@ class OpaqueCryptoUtilities {
         return (privateKey: privateKey!, publicKey: publicKey)
     }
 
-    
     static func hashToPoint(_ input: Data) -> Result<Data, OpaqueFailure> {
-        let ctx = EVP_MD_CTX_new()!
+        let ctx = EVP_MD_CTX_new()
+        guard ctx != nil else {
+            return .failure(.hashingValidPointFailed("Failed to create EVP context"))
+        }
         defer { EVP_MD_CTX_free(ctx) }
 
         var counter: UInt8 = 0
         let maxAttempts: UInt8 = 255
 
         while counter < maxAttempts {
+            // 1. Hash input + counter
             var hash = Data(repeating: 0, count: Int(EVP_MD_get_size(EVP_sha256())))
             EVP_DigestInit_ex(ctx, EVP_sha256(), nil)
             _ = input.withUnsafeBytes { EVP_DigestUpdate(ctx, $0.baseAddress, input.count) }
@@ -143,17 +140,28 @@ class OpaqueCryptoUtilities {
                 EVP_DigestFinal_ex(ctx, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), nil)
             }
 
-            let x = BigUInt(hash)
-            let max = BigUInt(Data(repeating: 0xFF, count: 32))
+            // 2. Convert hash to BIGNUM x
+            guard let x = BN_bin2bn([UInt8](hash), Int32(hash.count), nil),
+                  let max = BN_new() else {
+                counter += 1
+                continue
+            }
+            defer {
+                BN_free(x)
+                BN_free(max)
+            }
 
-            if x > 0 && x < max {
+            let maxBytes = [UInt8](repeating: 0xFF, count: 32)
+            _ = BN_bin2bn(maxBytes, 32, max)
+
+            if BN_is_zero(x) == 0 && BN_cmp(x, max) < 0 {
+                // 3. Try to interpret hash as compressed EC point
                 let pub = Data([0x02]) + hash.prefix(32)
                 let ecGroup = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1)!
+                defer { EC_GROUP_free(ecGroup) }
+
                 let bnCtx = BN_CTX_new()!
-                defer {
-                    EC_GROUP_free(ecGroup)
-                    BN_CTX_free(bnCtx)
-                }
+                defer { BN_CTX_free(bnCtx) }
 
                 guard let point = EC_POINT_new(ecGroup) else {
                     counter += 1
@@ -168,28 +176,25 @@ class OpaqueCryptoUtilities {
                     continue
                 }
 
+                // 4. Return compressed point
                 var compressed = Data(repeating: 0, count: 33)
-                let length = compressed.count
-
-                var buffer = compressed
-                let written = buffer.withUnsafeMutableBytes {
+                let written = compressed.withUnsafeMutableBytes {
                     EC_POINT_point2oct(ecGroup, point, POINT_CONVERSION_COMPRESSED,
                                        $0.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                                       length, bnCtx)
+                                       33, bnCtx)
                 }
 
-                if written > 0 {
-                    compressed = buffer
+                if written == 33 {
                     return .success(compressed)
                 }
-
             }
 
             counter += 1
         }
 
-        return .failure(.hashingValidPointFailed())
+        return .failure(.hashingValidPointFailed("Failed to find valid EC point in \(maxAttempts) attempts"))
     }
+
 
     
     static func encrypt(plaintext: Data, key: Data, associatedData: Data?) -> Result<Data, OpaqueFailure> {

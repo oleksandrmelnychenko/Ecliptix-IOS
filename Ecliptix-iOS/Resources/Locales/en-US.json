@@ -1,6 +1,10 @@
 {
   "Authentication": {
     "Registration": {
+      "welcome": {
+        "title": "World App",
+        "description": "The wallet designed to make digital ID and global finance simple for all."
+      },
       "nicknameInput": {
         "title": "Enter your nickname",
         "description": "This nickname will be visible to other users",
