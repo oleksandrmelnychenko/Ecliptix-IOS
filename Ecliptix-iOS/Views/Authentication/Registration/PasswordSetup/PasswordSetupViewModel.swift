@@ -1,0 +1,400 @@
+//
+//  PasswordSetupViewModel.swift
+//  Ecliptix-iOS
+//
+//  Created by Oleksandr Melnechenko on 13.06.2025.
+//
+
+import Foundation
+import SwiftUI
+
+@MainActor
+final class PasswordSetupViewModel: ObservableObject {
+    @Published var password: String = ""
+    @Published var confirmPassword: String = ""
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+
+    private let navigation: NavigationService
+    private let passwordValidator = PasswordValidator()
+    private let passwordManager: PasswordManager
+    private let networkController: NetworkController
+
+    private var securePasswordHandle: SodiumSecureMemoryHandle?
+    private var secureConfirmPasswordHandle: SodiumSecureMemoryHandle?
+    
+    private let verificationSessionId: Data
+    
+    init(navigation: NavigationService, verficationSessionId: Data) {
+        self.navigation = navigation
+        self.verificationSessionId = verficationSessionId
+        
+        let passwordManagerResult = PasswordManager.create()
+        guard passwordManagerResult.isOk else {
+            fatalError("Impossible to create password manager.")
+        }
+        
+        passwordManager = try! passwordManagerResult.unwrap()
+        networkController = ServiceLocator.shared.resolve(NetworkController.self)
+    }
+
+    var passwordValidationErrors: [PasswordValidationError] {
+        passwordValidator.validate(password)
+    }
+    
+    var confirmPasswordValidationErrors: [PasswordValidationError] = []
+
+    var isFormValid: Bool {
+        passwordValidationErrors.isEmpty &&
+        confirmPasswordValidationErrors.isEmpty &&
+        !password.isEmpty &&
+        !confirmPassword.isEmpty &&
+        securePasswordHandle != nil && !securePasswordHandle!.isInvalid &&
+        secureConfirmPasswordHandle != nil && !secureConfirmPasswordHandle!.isInvalid
+    }
+
+    func submitPassword() async {
+        guard isFormValid else { return }
+
+        await self.submitRegistrationPassword()
+    }
+
+    func updatePassword(passwordText: String?) {
+        securePasswordHandle?.dispose()
+        securePasswordHandle = nil
+
+        do {
+            if passwordText != nil && !passwordText!.isEmpty {
+                let result = Self.convertStringToSodiumHandle(text: passwordText!)
+                if result.isOk {
+                    securePasswordHandle = try result.unwrap()
+                } else {
+                    securePasswordHandle = nil
+                    errorMessage = "Error processing password: \(try result.unwrapErr())"
+                }
+            }
+
+            validatePasswords()
+        } catch {
+            
+        }
+    }
+
+    func updateConfirmPassword(passwordText: String?) {
+        secureConfirmPasswordHandle?.dispose()
+        secureConfirmPasswordHandle = nil
+
+        do {
+            if passwordText != nil && !passwordText!.isEmpty {
+                let result = Self.convertStringToSodiumHandle(text: passwordText!)
+                if result.isOk {
+                    secureConfirmPasswordHandle = try result.unwrap()
+                } else {
+                    secureConfirmPasswordHandle = nil
+                    errorMessage = "Error processing confirmation password: \(try result.unwrapErr())"
+                }
+            }
+
+            validatePasswords()
+        } catch {
+            
+        }
+    }
+
+    private func validatePasswords() {
+        self.errorMessage = nil
+        
+        let isPasswordEntered = self.securePasswordHandle != nil && !self.securePasswordHandle!.isInvalid && self.securePasswordHandle!.length > 0
+        let isConfirmPasswordEntered = self.secureConfirmPasswordHandle != nil && !self.secureConfirmPasswordHandle!.isInvalid && self.secureConfirmPasswordHandle!.length > 0
+        
+        if !isPasswordEntered {
+            if isConfirmPasswordEntered {
+                errorMessage = "Please enter your password in the first field."
+            }
+            
+            return
+        }
+        
+        var rentedPasswordData: Data?
+        
+        defer {
+            if rentedPasswordData != nil {
+                rentedPasswordData!.resetBytes(in: 0..<rentedPasswordData!.count)
+                rentedPasswordData!.removeAll()
+            }
+        }
+        
+        do {
+            rentedPasswordData = Data(count: self.securePasswordHandle!.length)
+            
+            let readResult = rentedPasswordData!.withUnsafeMutableBytes { destPtr in
+                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
+            }
+            guard readResult.isOk else {
+                self.errorMessage = "Error processing password: \(try readResult.unwrapErr().message)"
+                return
+            }
+            
+            guard String(data: rentedPasswordData!, encoding: .utf8) != nil else {
+                errorMessage = "Password contains invalid characters for string conversion."
+                return
+            }
+                        
+            rentedPasswordData!.removeAll()
+            rentedPasswordData = nil
+            
+            if !passwordValidationErrors.isEmpty {
+                return
+            }
+            
+            if confirmPassword.isEmpty {
+                return
+            }
+            
+            let comparisonResult = Self.compareSodiumHandle(self.securePasswordHandle, self.secureConfirmPasswordHandle)
+            
+            guard comparisonResult.isOk else {
+                errorMessage = "Error comparing passwords: \(try comparisonResult.unwrapErr().message)"
+                return
+            }
+            
+            if try !comparisonResult.unwrap() {
+                confirmPasswordValidationErrors = [.mismatchPasswords]
+                return
+            }
+            
+            confirmPasswordValidationErrors = []
+            errorMessage = nil
+            
+        } catch {
+            errorMessage = "An unexpected error occurred during validation: \(error)"
+        }
+    }
+
+    private static func convertStringToSodiumHandle(text: String) -> Result<SodiumSecureMemoryHandle, EcliptixProtocolFailure> {
+        guard !text.isEmpty else {
+            return SodiumSecureMemoryHandle.allocate(length: 0).mapSodiumFailure()
+        }
+
+        guard let utf8Data = text.data(using: .utf8) else {
+            return .failure(.decode("Failed to encode password string to UTF-8 bytes."))
+        }
+
+        var rentedBuffer: Data? = utf8Data
+        defer {
+            rentedBuffer?.resetBytes(in: 0..<utf8Data.count)
+            rentedBuffer?.removeAll()
+        }
+
+        do {
+            let handle = try SodiumSecureMemoryHandle.allocate(length: utf8Data.count).unwrap()
+            let writeResult = rentedBuffer!.withUnsafeBytes { ptr in
+                handle.write(data: ptr).mapSodiumFailure()
+            }
+
+            guard writeResult.isOk else {
+                handle.dispose()
+                return .failure(try writeResult.unwrapErr())
+            }
+
+            return .success(handle)
+        } catch {
+            return .failure(.generic("Failed to convert string to secure handle.", inner: error))
+        }
+    }
+
+    private static func compareSodiumHandle(_ handle1: SodiumSecureMemoryHandle?, _ handle2: SodiumSecureMemoryHandle?) -> Result<Bool, EcliptixProtocolFailure> {
+        guard let handle1 = handle1 else {
+            return .failure(.generic("Handle1 is nil."))
+        }
+        guard let handle2 = handle2 else {
+            return .failure(.generic("Handle2 is nil."))
+        }
+        
+        if handle1.isInvalid || handle2.isInvalid {
+            return .failure(.objectDisposed("Password handles are invalid for comparison."))
+        }
+
+        guard handle1.length == handle2.length else {
+            return .success(false)
+        }
+
+        do {
+            let rentedBytes1 = Data(count: handle1.length)
+            var span1 = rentedBytes1
+            let read1Result = span1.withUnsafeMutableBytes { destPtr in
+                handle1.read(into: destPtr).mapSodiumFailure()
+            }
+            if read1Result.isErr {
+                return .failure(try read1Result.unwrapErr())
+            }
+
+            let rentedBytes2 = Data(count: handle2.length)
+            var span2 = rentedBytes2
+            let read2Result = span2.withUnsafeMutableBytes { destPtr in
+                handle2.read(into: destPtr).mapSodiumFailure()
+            }
+            if read2Result.isErr {
+                return .failure(try read2Result.unwrapErr())
+            }
+
+            return .success(compareFixedTime(span1, span2))
+        } catch {
+            return .failure(.generic("Failed to compare secure memory.", inner: error))
+        }
+    }
+
+    private static func compareFixedTime(_ lhs: Data, _ rhs: Data) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+
+        var diff: UInt8 = 0
+        for i in 0..<lhs.count {
+            diff |= lhs[i] ^ rhs[i]
+        }
+
+        return diff == 0
+    }
+    
+    private func submitRegistrationPassword() async {
+        if !isFormValid && securePasswordHandle!.length == 0 {
+            errorMessage = "Submission requirements not met."
+            return
+        }
+        
+        await MainActor.run {
+            self.errorMessage = nil
+            self.isLoading = true
+        }
+        
+        var rentedPasswordBytes: Data?
+        var localSaltForEncryption: Data?
+        var localDataEncryptionKey: Data?
+        
+        defer {
+            if rentedPasswordBytes != nil {
+                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
+                rentedPasswordBytes!.removeAll()
+            }
+            
+            if localSaltForEncryption != nil {
+                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
+                localSaltForEncryption!.removeAll()
+            }
+            
+            if localDataEncryptionKey != nil {
+                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
+                localDataEncryptionKey!.removeAll()
+            }
+            
+            self.isLoading = false
+        }
+        
+        do {
+            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
+            let readResult = rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
+                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
+            }
+            if readResult.isErr {
+                throw try readResult.unwrapErr()
+            }
+            
+            guard let passwordString = String(data: rentedPasswordBytes!, encoding: .utf8) else {
+                errorMessage = "Password contains invalid characters for string conversion."
+                return
+            }
+            
+            let verifierResult = self.passwordManager.hashPassword(passwordString)
+            if verifierResult.isErr {
+                throw try verifierResult.unwrapErr()
+            }
+            
+            let opfrResult = OpaqueProtocolService.createOprfRequest(password: rentedPasswordBytes!)
+            guard opfrResult.isOk else {
+                debugPrint("Failed to create OPRF request: \(try opfrResult.unwrapErr().message)")
+                return
+            }
+            
+            let oprfRequest = try opfrResult.unwrap().oprfRequest
+            let blind = try opfrResult.unwrap().blind
+            
+            var request = Ecliptix_Proto_Membership_OprfRegistrationInitRequest()
+            request.membershipIdentifier = self.verificationSessionId
+            request.peerOprf = oprfRequest
+            
+            let pas = rentedPasswordBytes!
+            
+            let connectId = Self.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+            
+            _ = try await networkController.executeServiceAction(
+                connectId: connectId,
+                serviceAction: .opaqueRegistrationInit,
+                plainBuffer: try request.serializedData(),
+                flowType: .single,
+                onSuccessCallback: { payload in
+                    
+                    do {
+                        let createMembershipResponse = try Utilities.parseFromBytes(
+                            Ecliptix_Proto_Membership_OprfRegistrationInitResponse.self,
+                            data: payload)
+                        
+                        if createMembershipResponse.result == .succeeded {
+                            let envelope = OpaqueProtocolService.createRegistrationRecord(password: pas, oprfResponse: createMembershipResponse.peerOprf, blind: blind)
+                            
+                            var r = Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest()
+                            r.membershipIdentifier = createMembershipResponse.membership.uniqueIdentifier
+                            r.peerRegistrationRecord = try envelope.unwrap()
+                            
+                            _ = try await self.networkController.executeServiceAction(
+                                connectId: connectId,
+                                serviceAction: .opaqueRegistrationComplete,
+                                plainBuffer: try r.serializedData(),
+                                flowType: .single,
+                                onSuccessCallback: { payloadInner in
+                                    
+                                    do {
+                                        let createMembershipResponseInner = try Utilities.parseFromBytes(
+                                            Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse.self,
+                                            data: payloadInner)
+                                        
+                                        if createMembershipResponse.result == .succeeded {
+                                            self.navigation.navigate(to: .passPhaseRegistration)
+                                        }
+                                            
+                                        return .success(.value)
+                                    } catch {
+                                        await MainActor.run {
+                                            self.isLoading = false
+                                            self.errorMessage = "Failed to parse server response"
+                                        }
+                                        return .failure(.generic("Deserialization failed", inner: error))
+                                    }
+                                })
+                        }
+                        
+                        return .success(.value)
+                    } catch {
+                        await MainActor.run {
+                            self.isLoading = false
+                            self.errorMessage = "Failed to parse server response"
+                        }
+                        return .failure(.generic("Deserialization failed", inner: error))
+                    }
+                })
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Submission failed: \(error)"
+            }
+        }
+    }
+    
+    private static func computeConnectId(pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType) -> UInt32 {
+        let appInstanceInfo = ServiceLocator.shared.resolve(AppInstanceInfo.self)
+        
+        let connectId = Utilities.computeUniqueConnectId(
+            appInstanceId: appInstanceInfo.appInstanceId,
+            appDeviceId: appInstanceInfo.deviceId,
+            contextType: pubKeyExchangeType)
+        
+        return connectId
+    }
+}
