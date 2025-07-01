@@ -155,8 +155,8 @@ final class SignInViewModel: ObservableObject {
 
                         let finalizationResult = clientOpaqueService.createSignInFinalizationRequest(
                             phoneNumber: self.fullPhoneNumber,
-                            passwordData: passwordBytes,
-                            signInResponse: initResponse,
+                            password: passwordBytes,
+                            response: initResponse,
                             blind: blind
                         )
 
