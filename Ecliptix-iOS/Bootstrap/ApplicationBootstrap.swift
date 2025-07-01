@@ -5,7 +5,7 @@
 //  Created by Oleksandr Melnechenko on 11.06.2025.
 //
 
-enum GrpcBootstrap {
+enum ApplicationBootstrap {
     static func configure() {
         AppServiceConfigurator.registerCoreServices()
         

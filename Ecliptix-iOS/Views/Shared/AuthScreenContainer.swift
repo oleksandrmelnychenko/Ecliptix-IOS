@@ -38,7 +38,6 @@ struct AuthScreenContainer<Content: View>: View {
                         Spacer()
                     }
                     .padding(.top, 25)
-//                    .padding(.horizontal, 35)
                 }
                 
                 VStack(alignment: .leading, spacing: spacing) {
@@ -77,5 +76,7 @@ struct AuthScreenContainer<Content: View>: View {
             .padding(.top, 0)
             .padding(.trailing, 20)
         }
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
 }

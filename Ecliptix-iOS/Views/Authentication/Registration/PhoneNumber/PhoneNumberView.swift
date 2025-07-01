@@ -45,8 +45,6 @@ struct PhoneNumberView: View {
             
             Spacer()
         })
-        .navigationBarHidden(true)
-        .navigationBarBackButtonHidden(true)
     }
 }
 
