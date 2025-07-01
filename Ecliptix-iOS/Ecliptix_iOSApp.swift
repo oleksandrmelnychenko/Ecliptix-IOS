@@ -12,6 +12,7 @@ struct Ecliptix_iOSApp: App {
     @State private var didInitialize = false
     
     @StateObject private var navigationService = NavigationService()
+    @StateObject private var localizationService: LocalizationService
     
     private let establishConnectionExecutor: EstablishConnectionExecutor
     
@@ -19,6 +20,9 @@ struct Ecliptix_iOSApp: App {
         GrpcModule.configureServices()
         GrpcModule.configureGrpcClients()
                 
+        let locService = ServiceLocator.shared.resolve(LocalizationService.self)
+        _localizationService = StateObject(wrappedValue: locService)
+        
         establishConnectionExecutor = EstablishConnectionExecutor()
     }
     
@@ -30,6 +34,7 @@ struct Ecliptix_iOSApp: App {
                     .navigationDestination(for: AppRoute.self) { route in
                         ViewFactory.view(for: route, with: navigationService)
                     }
+                    .environmentObject(localizationService)
             }
             .task {
                 guard !didInitialize else { return }

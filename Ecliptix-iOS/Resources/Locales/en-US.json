@@ -1,55 +1,62 @@
 {
-  "Authentication": {
-    "Registration": {
-      "welcome": {
-        "title": "World App",
-        "description": "The wallet designed to make digital ID and global finance simple for all."
-      },
-      "nicknameInput": {
-        "title": "Enter your nickname",
-        "description": "This nickname will be visible to other users",
-        "hint": "Enter your nickname",
-        "watermark" : "Nickname",
-        "button": "Confirm Nickname"
-      },
-      "passwordConfirmation": {
-        "title": "Enter your password",
-        "description": "Make sure you have verified it",
-        "passwordHint": "Enter your password",
-        "verifyPasswordHint": "Re-enter your password",
-        "error": {
-          "passwordMismatch": "Passwords do not match"
-        },
-        "button": "Confirm Password"
-      },
-      "phoneVerification": {
-        "title": "Mobile number verification",
-        "description": "We will send an SMS to your mobile",
-        "hint": "Include country code",
-        "button": "Send verification code",
-        "error": {
-          "invalidFormat": "Invalid format. Use +countrycode followed by number (e.g., +12025550123)."
+    "Authentication": {
+        "Registration": {
+            "Welcome": {
+                "title": "Ecliptix",
+                "description": "The wallet designed to make digital ID and global finance simple for all.",
+
+                "MainCard" : {
+                    "title": "New account",
+                    "subtitle": "Create new Worldcoin account"
+                },
+
+                "AlternativeCard": {
+                    "title": "Existing account",
+                    "subtitle": "Restore account from a backup"
+                }
+            },
+            "PhoneVerification": {
+                "title": "Mobile number verification",
+                "description": "We will send an SMS to your mobile",
+                "hint": "Include country code",
+                "button": "Send verification code",
+
+                "Errors": {
+                    "invalidFormat": "Invalid format. Use +countrycode followed by number (e.g., +12025550123)."
+                }
+            },
+            "VerificationCodeEntry": {
+                "title": "Enter the 6-digit verification code",
+                "hint": "Enter verification code",
+                "expiration": "Code expires in: {time}",
+
+                "verifyButton": "Verify",
+                "resendButton": "Resend code",
+
+                "Errors": {
+                    "invalidCode": "Invalid code"
+                }
+            },
+            "PasswordConfirmation": {
+                "title": "Enter your password",
+                "description": "Make sure you have verified it",
+                "passwordHint": "Enter your password",
+                "verifyPasswordHint": "Re-enter your password",
+
+                "button": "Confirm Password",
+                
+                "Errors": {
+                    "passwordMismatch": "Passwords do not match"
+                }
+            },
+            "PassPhase": {
+                "title": "Enter your passphrase",
+                "description": "Please provide a secure pin code for authentication.",
+                "hint": "Enter your pin code",
+                "watermark": "####",
+
+                "button": "Accept pin code"
+            }
         }
-      },
-      "verificationCodeEntry": {
-        "title": "Enter the 6-digit verification code",
-        "hint": "Enter verification code",
-        "expiration": "Code expires in: {time}",
-        "error": {
-          "invalidCode": "Invalid code"
-        },
-        "button": {
-          "verify": "Verify",
-          "resend": "Resend code"
-        }
-      },
-      "passPhase": {
-        "title": "Enter your passphrase",
-        "description": "Please provide a secure pin code for authentication.",
-        "hint": "Enter your pin code",
-        "watermark": "####",
-        "button": "Accept pin code"
-      }
     }
-  }
 }

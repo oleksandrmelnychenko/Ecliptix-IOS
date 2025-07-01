@@ -21,12 +21,11 @@ final class LocalizationService: ObservableObject {
     
     func load(locale: String) {
         guard let lang = SupportedLanguage(rawValue: locale) else { return }
-        guard let url = Bundle.main.url(forResource: locale, withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            if locale != "en-US" {
-                load(locale: "en-US")
-            }
+        guard
+            let url = Bundle.main.url(forResource: locale, withExtension: "json"),
+            let data = try? Data(contentsOf: url),
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
             print("Failed to load localization for locale: \(locale)")
             return
         }

@@ -31,19 +31,21 @@ struct AuthScreenContainer<Content: View>: View {
                         Image("EcliptixLogo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 90, height: 90)
-                        
+                            .frame(width: 60, height: 60)
+                        Text("Ecliptix")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
                         Spacer()
                     }
                     .padding(.top, 25)
+//                    .padding(.horizontal, 35)
                 }
                 
                 VStack(alignment: .leading, spacing: spacing) {
                     content
                 }
                 .padding(.horizontal)
-                .padding(.top, showLogo ? 10 : 100)
-                .id(localization.languageChanged)
+                .padding(.top, showLogo ? 20 : 100)
                 
                 if showLicense == true {
                     HStack {

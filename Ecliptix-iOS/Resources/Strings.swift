@@ -7,16 +7,17 @@
 
 enum Strings {
     enum Welcome {
-        static var title: String { "Authentication.Registration.welcome.title".localized }
-        static var description: String { "Authentication.Registration.welcome.description".localized }
+        static var title: String { "Authentication.Registration.Welcome.title".localized }
+        static var description: String { "Authentication.Registration.Welcome.description".localized }
         
         enum NavigationCard_Main {
-            static let title = "New account"
-            static let subtitle = "Create new Worldcoin account"
+            static var title: String { "Authentication.Registration.Welcome.MainCard.title".localized }
+            static var subtitle: String { "Authentication.Registration.Welcome.MainCard.subtitle".localized }
         }
+
         enum NavigationCard_Alternative {
-            static let title = "Existing account"
-            static let subtitle = "Restore account from a backup"
+            static var title: String { "Authentication.Registration.Welcome.AlternativeCard.title".localized }
+            static var subtitle: String { "Authentication.Registration.Welcome.AlternativeCard.subtitle".localized }
         }
     }
     

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WelcomeView: View {
     @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
     @StateObject private var viewModel: WelcomeViewModel
 
     init(navigation: NavigationService) {
@@ -27,6 +28,7 @@ struct WelcomeView: View {
             WelcomeHeader()
                 .padding(.horizontal)
                 .padding(.top, 10)
+                .id(localization.languageChanged)
 
             Spacer()
 
@@ -46,6 +48,8 @@ struct WelcomeView: View {
                     viewModel.continueToPhoneNumber()
                 }
             }
+            .id(localization.languageChanged)
+            
 
             // Sign in
             NavigationCardButton(
