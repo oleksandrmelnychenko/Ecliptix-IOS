@@ -99,8 +99,8 @@ struct VerificationCodeView: View {
                 if viewModel.secondsRemaining <= 0 {
                     Button(Strings.VerificationCode.Buttons.resendCode) {
                         Task {
-                            await viewModel.reSendVerificationCode()
                             focusedField = 0
+                            await viewModel.reSendVerificationCode()
                         }
                     }
                     .disabled(viewModel.isLoading)
