@@ -21,7 +21,7 @@ internal class NetworkServiceManager {
     public func beginDataCenterPublicKeyExchange(action: PubKeyExchangeActionInvokable) async {
         
         do {
-            let beginPubKeyExchangeResult = await keyExchangeExecutor.beginDataCenterPublicKeyExchange(request: action.pubKeyExchange)
+            let beginPubKeyExchangeResult = try await keyExchangeExecutor.beginDataCenterPublicKeyExchange(request: action.pubKeyExchange)
             
             if beginPubKeyExchangeResult.isOk {
                 if action.onComplete != nil {
@@ -29,7 +29,7 @@ internal class NetworkServiceManager {
                 }
             }
         } catch {
-            
+            debugPrint("Error during public key exchange: \(error)")
         }
     }
     

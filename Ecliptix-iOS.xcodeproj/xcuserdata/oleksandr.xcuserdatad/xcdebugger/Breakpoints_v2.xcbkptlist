@@ -104,7 +104,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "04AB08AD-DDBA-493C-B18A-FBC368CD4066"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/Registration/Welcome/WelcomeView.swift"
@@ -120,7 +120,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "9E83E711-693E-468F-9317-69DC1A2A5857"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/Registration/Welcome/WelcomeView.swift"
@@ -130,6 +130,98 @@
             endingLineNumber = "56"
             landmarkName = "body"
             landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DFBE6394-996A-4887-A6EC-1CCC0A1D7171"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "32"
+            endingLineNumber = "32"
+            landmarkName = "beginDataCenterPublicKeyExchange(action:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "DFBE6394-996A-4887-A6EC-1CCC0A1D7171 - 24ec0a3a0e835941"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "32"
+                  endingLineNumber = "32">
+               </Location>
+               <Location
+                  uuid = "DFBE6394-996A-4887-A6EC-1CCC0A1D7171 - 1cc31ebcc687c340"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "32"
+                  endingLineNumber = "32">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9EB24AD9-3614-45B5-A261-E6B2A8B02C65"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "24"
+            endingLineNumber = "24"
+            landmarkName = "beginDataCenterPublicKeyExchange(action:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "9EB24AD9-3614-45B5-A261-E6B2A8B02C65 - b4823d2f9ebc164b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "24"
+                  endingLineNumber = "24">
+               </Location>
+               <Location
+                  uuid = "9EB24AD9-3614-45B5-A261-E6B2A8B02C65 - 1cc31ebcc687c048"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "24"
+                  endingLineNumber = "24">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

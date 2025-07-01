@@ -16,8 +16,8 @@ internal final class KeyExchangeExecutor {
         self.appDeviceServiceActionsClient = appDeviceServiceActionsClient
     }
     
-    public func beginDataCenterPublicKeyExchange(request: Ecliptix_Proto_PubKeyExchange) async -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
-        return try! await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
+    public func beginDataCenterPublicKeyExchange(request: Ecliptix_Proto_PubKeyExchange) async throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
+        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
             {
                 try await self.appDeviceServiceActionsClient.establishAppDeviceEphemeralConnect(request)
             }
