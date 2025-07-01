@@ -16,6 +16,8 @@ enum OpaqueFailureType: Error {
     case pointCompressionFailed
     case pointDecodingFailed
     case pointMultiplicationFailed
+    
+    case hashFailed
 }
 
 struct OpaqueFailure: Error {
@@ -96,6 +98,14 @@ struct OpaqueFailure: Error {
     static func pointMultiplicationFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
             type: .pointMultiplicationFailed,
+            message: details,
+            innerError: inner
+        )
+    }
+    
+    static func hashFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .hashFailed,
             message: details,
             innerError: inner
         )

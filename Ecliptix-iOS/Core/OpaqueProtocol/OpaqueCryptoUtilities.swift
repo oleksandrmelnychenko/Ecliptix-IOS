@@ -39,6 +39,25 @@ class OpaqueCryptoUtilities {
         return okm.withUnsafeBytes { Data($0) }
     }
     
+    static func decodeCompressedPoint(_ data: Data, group: OpaquePointer, ctx: OpaquePointer) -> Result<OpaquePointer, OpaqueFailure> {
+        guard let point = EC_POINT_new(group) else {
+            return .failure(.pointDecodingFailed("Failed to create EC_POINT"))
+        }
+        
+        let success = data.withUnsafeBytes {
+            EC_POINT_oct2point(group, point,
+                               $0.baseAddress!.assumingMemoryBound(to: UInt8.self),
+                               data.count, ctx) == 1
+        }
+
+        guard success else {
+            EC_POINT_free(point)
+            return .failure(.pointDecodingFailed("Failed to decode EC point from data"))
+        }
+
+        return .success(point)
+    }
+    
     static func deriveKey(ikm: Data, salt: Data?, info: Data, outputLength: Int) -> Data {
         let pseudoRandomKey = SymmetricKey(data: ikm)
         
@@ -117,6 +136,63 @@ class OpaqueCryptoUtilities {
         }
 
         return (privateKey: privateKey!, publicKey: publicKey)
+    }
+    
+    static func recoverOprfKey(oprfResponse: Data, blind: UnsafePointer<BIGNUM>, group: OpaquePointer) -> Result<Data, OpaqueFailure> {
+        let ctx = BN_CTX_new()!
+        defer { BN_CTX_free(ctx) }
+
+        // Отримуємо EC_POINT з байтів
+        guard let point = EC_POINT_new(group) else {
+            return .failure(.pointDecodingFailed("Failed to create EC_POINT"))
+        }
+        defer { EC_POINT_free(point) }
+
+        guard EC_POINT_oct2point(group, point, [UInt8](oprfResponse), oprfResponse.count, ctx) == 1 else {
+            return .failure(.pointDecodingFailed("Failed to decode EC_POINT"))
+        }
+
+        // Інверсія сліпого значення
+        guard let order = BN_new() else {
+            return .failure(.invalidInput("Failed to allocate BIGNUM for order"))
+        }
+        defer { BN_free(order) }
+
+        guard EC_GROUP_get_order(group, order, ctx) == 1 else {
+            return .failure(.invalidInput("Failed to get group order"))
+        }
+
+        guard let blindInv = BN_new() else {
+            return .failure(.invalidInput("Failed to allocate BIGNUM for inverse"))
+        }
+        defer { BN_free(blindInv) }
+
+        guard BN_mod_inverse(blindInv, blind, order, ctx) != nil else {
+            return .failure(.invalidInput("Failed to compute modular inverse"))
+        }
+
+        // Обчислення фінальної точки
+        let finalPoint = EC_POINT_new(group)!
+        defer { EC_POINT_free(finalPoint) }
+
+        guard EC_POINT_mul(group, finalPoint, nil, point, blindInv, ctx) == 1 else {
+            return .failure(.pointMultiplicationFailed("Failed to multiply point with inverse"))
+        }
+        
+        var compressed = Data(repeating: 0, count: 33)
+        let tempWritten = UnsafeMutablePointer<UInt8>.allocate(capacity: 33)
+        defer { tempWritten.deallocate() }
+
+        let written = EC_POINT_point2oct(group, finalPoint, POINT_CONVERSION_COMPRESSED,
+                                         tempWritten, 33, ctx)
+        compressed.replaceSubrange(0..<33, with: UnsafeBufferPointer(start: tempWritten, count: 33))
+
+
+        guard written == 33 else {
+            return .failure(.pointCompressionFailed("Incorrect compressed point size"))
+        }
+
+        return .success(compressed)
     }
 
     static func hashToPoint(_ input: Data) -> Result<Data, OpaqueFailure> {
@@ -322,6 +398,12 @@ class OpaqueCryptoUtilities {
         }
 
         return .success(plaintext.prefix(Int(outLen)))
+    }
+    
+    static func createMac(key: Data, data: Data) -> Data {
+        let symmetricKey = SymmetricKey(data: key)
+        let hmac = HMAC<SHA256>.authenticationCode(for: data, using: symmetricKey)
+        return hmac.withUnsafeBytes { Data($0) }
     }
 
 }
