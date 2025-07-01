@@ -17,8 +17,7 @@ struct Ecliptix_iOSApp: App {
     private let establishConnectionExecutor: EstablishConnectionExecutor
     
     init() {
-        GrpcModule.configureServices()
-        GrpcModule.configureGrpcClients()
+        AppServiceConfigurator.registerCoreServices()
                 
         let locService = ServiceLocator.shared.resolve(LocalizationService.self)
         _localizationService = StateObject(wrappedValue: locService)
