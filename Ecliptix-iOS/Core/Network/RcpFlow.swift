@@ -8,32 +8,19 @@
 import Foundation
 
 public class RpcFlow {
-    
-//    class SingleCall: RpcFlow {
-//        public let result: Task<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Never>
-//
-//        init(result: Task<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Never>) {
-//            self.result = result
-//        }
-//
-//        convenience init(immediate: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
-//            self.init(result: Task { immediate })
-//        }
-//    }
-    
-    class SingleCall: RpcFlow {
-        public let result: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
+    final class SingleCall: RpcFlow {
+        public let result: () async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
 
-        init(result: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
+        public init(result: @escaping () async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
             self.result = result
         }
 
-        convenience init(immediate: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
-            self.init(result: immediate)
+        public convenience init(immediate: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
+            self.init { immediate }
         }
     }
     
-    class InboundStream: RpcFlow {
+    final class InboundStream: RpcFlow {
         let stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>
 
         init(stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>) {
@@ -41,7 +28,7 @@ public class RpcFlow {
         }
     }
     
-    class OutboundSink: RpcFlow {
+    final class OutboundSink: RpcFlow {
         let sink: IOutboundSink
 
         init(sink: IOutboundSink) {
@@ -49,7 +36,7 @@ public class RpcFlow {
         }
     }
     
-    class BidirectionalStream: RpcFlow {
+    final class BidirectionalStream: RpcFlow {
         let inbound: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>
         let outbound: IOutboundSink
 

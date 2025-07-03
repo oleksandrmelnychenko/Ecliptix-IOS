@@ -14,10 +14,14 @@ public struct OneTimePreKeyLocal {
     public let privateKeyHandle: SodiumSecureMemoryHandle
     public let publicKey: Data
 
-    private init(preKeyId: UInt32, privateKeyHandle: SodiumSecureMemoryHandle, publicKey: inout Data) {
+    private init(preKeyId: UInt32, privateKeyHandle: SodiumSecureMemoryHandle, publicKey: Data) {
         self.preKeyId = preKeyId
         self.privateKeyHandle = privateKeyHandle
         self.publicKey = publicKey
+    }
+    
+    public static func createFromParts(preKeyId: UInt32, privateKeyHandle: SodiumSecureMemoryHandle, publicKey: Data) -> OneTimePreKeyLocal {
+        return OneTimePreKeyLocal(preKeyId: preKeyId, privateKeyHandle: privateKeyHandle, publicKey: publicKey)
     }
 
     public static func generate(preKeyId: UInt32) -> Result<OneTimePreKeyLocal, EcliptixProtocolFailure> {
@@ -83,7 +87,7 @@ public struct OneTimePreKeyLocal {
                 return .failure(.deriveKey("Derived public key for OPK ID \(preKeyId) has incorrect size (\(publicKeyBytes.count))."))
             }
             
-            let opk = OneTimePreKeyLocal(preKeyId: preKeyId, privateKeyHandle: securePrivateKey!, publicKey: &publicKeyBytes)
+            let opk = OneTimePreKeyLocal(preKeyId: preKeyId, privateKeyHandle: securePrivateKey!, publicKey: publicKeyBytes)
             return .success(opk)
         } catch {
             securePrivateKey?.dispose()

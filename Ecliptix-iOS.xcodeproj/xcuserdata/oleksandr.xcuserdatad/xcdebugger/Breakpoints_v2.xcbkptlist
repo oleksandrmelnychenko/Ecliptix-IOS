@@ -146,36 +146,6 @@
             endingLineNumber = "32"
             landmarkName = "beginDataCenterPublicKeyExchange(action:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "DFBE6394-996A-4887-A6EC-1CCC0A1D7171 - 24ec0a3a0e835941"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "32"
-                  endingLineNumber = "32">
-               </Location>
-               <Location
-                  uuid = "DFBE6394-996A-4887-A6EC-1CCC0A1D7171 - 1cc31ebcc687c340"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "32"
-                  endingLineNumber = "32">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -192,36 +162,362 @@
             endingLineNumber = "24"
             landmarkName = "beginDataCenterPublicKeyExchange(action:)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0A4CDCCB-7B00-4694-9C1B-F57F17C0D080"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
+            landmarkName = "initializeAsync()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2FF1B43A-0EA3-4331-B3DA-A568D5994C7A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "301"
+            endingLineNumber = "301"
+            landmarkName = "establishSecrecyChannel(connectId:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "929629D1-6967-4E25-949C-5B891E1B593A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Interceptors/Factories/AppDeviceInterceptorFactory.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "23"
+            endingLineNumber = "23"
+            landmarkName = "makeEstablishAppDeviceSecrecyChannelInterceptors()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6F0856F6-008A-4C10-B6DF-FBFCF3DC5975"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Interceptors/RequestMetadataInterceptor.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "26"
+            endingLineNumber = "26"
+            landmarkName = "send(_:promise:context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5A8A9258-E1FA-42C1-9642-D123E4226F59"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Interceptors/RequestMetadataInterceptor.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "41"
+            endingLineNumber = "41"
+            landmarkName = "send(_:promise:context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4F33BB2A-C880-48E3-84B8-C9ADDFD53BE0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "302"
+            endingLineNumber = "302"
+            landmarkName = "establishSecrecyChannel(connectId:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A5E07226-7A45-4A23-A7C4-BF4A160EF758"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RpcServices/RpcServiceManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "28"
+            endingLineNumber = "28"
+            landmarkName = "establishAppDeviceSecrecyChannel(serviceRequest:)"
+            landmarkType = "7">
             <Locations>
                <Location
-                  uuid = "9EB24AD9-3614-45B5-A261-E6B2A8B02C65 - b4823d2f9ebc164b"
+                  uuid = "A5E07226-7A45-4A23-A7C4-BF4A160EF758 - 3b11ce0029d15b30"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.RpcServiceManager.establishAppDeviceSecrecyChannel(serviceRequest: Ecliptix_iOS.SecrecyKeyExchangeServiceRequest&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange&gt;) async -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
                   moduleName = "Ecliptix-iOS.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/RpcServiceManager.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "24"
-                  endingLineNumber = "24">
+                  startingLineNumber = "28"
+                  endingLineNumber = "28">
                </Location>
                <Location
-                  uuid = "9EB24AD9-3614-45B5-A261-E6B2A8B02C65 - 1cc31ebcc687c048"
+                  uuid = "A5E07226-7A45-4A23-A7C4-BF4A160EF758 - 935dc6b902123c73"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.NetworkServiceManager.beginDataCenterPublicKeyExchange(action: Ecliptix_iOS.PubKeyExchangeActionInvokable) async -&gt; ()"
+                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.RpcServiceManager.establishAppDeviceSecrecyChannel(serviceRequest: Ecliptix_iOS.SecrecyKeyExchangeServiceRequest&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange&gt;) async -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
                   moduleName = "Ecliptix-iOS.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/NetworkServiceManager.swift"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/RpcServiceManager.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "24"
-                  endingLineNumber = "24">
+                  startingLineNumber = "28"
+                  endingLineNumber = "28">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C1B6128C-873C-4762-9A03-3FD70DBA7355"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RpcServices/RpcServiceManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "31"
+            endingLineNumber = "31"
+            landmarkName = "establishAppDeviceSecrecyChannel(serviceRequest:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0E1176C5-4E7D-47B9-BE87-672D08C0DEC2"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "20"
+            endingLineNumber = "20"
+            landmarkName = "establishAppDeviceSecrecyChannel(request:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "0E1176C5-4E7D-47B9-BE87-672D08C0DEC2 - d695ed87137c83b7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "20"
+                  endingLineNumber = "20">
+               </Location>
+               <Location
+                  uuid = "0E1176C5-4E7D-47B9-BE87-672D08C0DEC2 - ff4c00c56d2e47b1"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "20"
+                  endingLineNumber = "20">
+               </Location>
+               <Location
+                  uuid = "0E1176C5-4E7D-47B9-BE87-672D08C0DEC2 - 8bd7556580c6a5b2"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "20"
+                  endingLineNumber = "20">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4738232C-FF66-4E8F-B435-D1C641D3DB53"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
+            landmarkName = "establishAppDeviceSecrecyChannel(request:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "4738232C-FF66-4E8F-B435-D1C641D3DB53 - 65f230b1ae669c5a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #1 () async throws -&gt; Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange in Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "22"
+                  endingLineNumber = "22">
+               </Location>
+               <Location
+                  uuid = "4738232C-FF66-4E8F-B435-D1C641D3DB53 - 64ac8d9588004058"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #1 () async throws -&gt; Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange in Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "22"
+                  endingLineNumber = "22">
+               </Location>
+               <Location
+                  uuid = "4738232C-FF66-4E8F-B435-D1C641D3DB53 - e43633e6671ca659"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for closure #1 () async throws -&gt; Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange in Ecliptix_iOS.SecrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange) async throws -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_PubKeyExchange, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/RpcServices/SecrecyChannelRpcService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "22"
+                  endingLineNumber = "22">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9DD98F71-D533-47D7-91BE-D45799219F9D"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/RetryLogic/RetryExecutor.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "20"
+            endingLineNumber = "20"
+            landmarkName = "execute(maxRetryCount:backoff:retryConditions:_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4C3754D2-255E-4FB1-A950-BA74996AA5EF"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/RetryLogic/RetryExecutor.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "28"
+            endingLineNumber = "28"
+            landmarkName = "execute(maxRetryCount:backoff:retryConditions:_:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "4C3754D2-255E-4FB1-A950-BA74996AA5EF - 7489176949594c45"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for static Ecliptix_iOS.RetryExecutor.execute&lt;&#x3c4;_0_0&gt;(maxRetryCount: Swift.Int, backoff: Ecliptix_iOS.RetryBackoff, retryConditions: Swift.Array&lt;(Swift.Error) -&gt; Swift.Bool&gt;, _: () async throws -&gt; &#x3c4;_0_0) async throws -&gt; Swift.Result&lt;&#x3c4;_0_0, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/RetryLogic/RetryExecutor.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "28"
+                  endingLineNumber = "28">
+               </Location>
+               <Location
+                  uuid = "4C3754D2-255E-4FB1-A950-BA74996AA5EF - 1b94df96bc332cd3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 ((Swift.Error) -&gt; Swift.Bool) -&gt; Swift.Bool in static Ecliptix_iOS.RetryExecutor.execute&lt;&#x3c4;_0_0&gt;(maxRetryCount: Swift.Int, backoff: Ecliptix_iOS.RetryBackoff, retryConditions: Swift.Array&lt;(Swift.Error) -&gt; Swift.Bool&gt;, _: () async throws -&gt; &#x3c4;_0_0) async throws -&gt; Swift.Result&lt;&#x3c4;_0_0, Ecliptix_iOS.EcliptixProtocolFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/RetryLogic/RetryExecutor.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "28"
+                  endingLineNumber = "28">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "EF8F8844-882D-461B-ABE5-0A4DF86F874F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "325"
+            endingLineNumber = "325"
+            landmarkName = "establishSecrecyChannel(connectId:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

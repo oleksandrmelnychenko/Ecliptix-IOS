@@ -12,53 +12,25 @@ import NIOCore
 import NIOHPACK
 
 final class MembershipInterceptorFactory: Ecliptix_Proto_Membership_MembershipServicesClientInterceptorFactoryProtocol {
-    private let appInstanceId: UUID
-    private let deviceId: UUID
+    private let rpcMetaDataProvider: RpcMetaDataProviderProtocol
 
-    init(appInstanceId: UUID, deviceId: UUID) {
-        self.appInstanceId = appInstanceId
-        self.deviceId = deviceId
+    init(rpcMetaDataProvider: RpcMetaDataProviderProtocol) {
+        self.rpcMetaDataProvider = rpcMetaDataProvider
     }
-
-//    func makeUpdateMembershipWithSecureKeyInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-//        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-//            appInstanceId: appInstanceId,
-//            deviceId: deviceId
-//        )]
-//    }
-//
-//    func makeSignInMembershipInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-//        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-//            appInstanceId: appInstanceId,
-//            deviceId: deviceId
-//        )]
-//    }
     
     func makeOpaqueRegistrationInitRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
     
     func makeOpaqueRegistrationCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
     
     func makeOpaqueSignInInitRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
     
     func makeOpaqueSignInCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
 }

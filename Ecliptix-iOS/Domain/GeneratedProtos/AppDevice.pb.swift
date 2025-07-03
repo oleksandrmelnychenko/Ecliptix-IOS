@@ -129,18 +129,20 @@ public struct Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply: @unchecked
   public init() {}
 }
 
-public struct Ecliptix_Proto_AppDevice_AppDeviceSettings: @unchecked Sendable {
+public struct Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var appID: Data = Data()
+  public var appInstanceID: Data = Data()
 
   public var deviceID: Data = Data()
 
-  public var language: String = String()
+  public var serverPublicKey: Data = Data()
 
-  public var serverUniqueID: Data = Data()
+  public var systemDeviceIdentifier: String = String()
+
+  public var deviceType: Ecliptix_Proto_AppDevice_AppDevice.DeviceType = .mobile
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -255,13 +257,14 @@ extension Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply.Status: SwiftPr
   ]
 }
 
-extension Ecliptix_Proto_AppDevice_AppDeviceSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AppDeviceSettings"
+extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ApplicationInstanceSettings"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "app_id"),
+    1: .standard(proto: "app_instance_id"),
     2: .standard(proto: "device_id"),
-    3: .same(proto: "language"),
-    4: .standard(proto: "server_unique_id"),
+    3: .standard(proto: "server_public_key"),
+    4: .standard(proto: "system_device_identifier"),
+    5: .standard(proto: "device_type"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -270,36 +273,41 @@ extension Ecliptix_Proto_AppDevice_AppDeviceSettings: SwiftProtobuf.Message, Swi
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.appID) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.appInstanceID) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.deviceID) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.language) }()
-      case 4: try { try decoder.decodeSingularBytesField(value: &self.serverUniqueID) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.serverPublicKey) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.systemDeviceIdentifier) }()
+      case 5: try { try decoder.decodeSingularEnumField(value: &self.deviceType) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.appID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.appID, fieldNumber: 1)
+    if !self.appInstanceID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.appInstanceID, fieldNumber: 1)
     }
     if !self.deviceID.isEmpty {
       try visitor.visitSingularBytesField(value: self.deviceID, fieldNumber: 2)
     }
-    if !self.language.isEmpty {
-      try visitor.visitSingularStringField(value: self.language, fieldNumber: 3)
+    if !self.serverPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverPublicKey, fieldNumber: 3)
     }
-    if !self.serverUniqueID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.serverUniqueID, fieldNumber: 4)
+    if !self.systemDeviceIdentifier.isEmpty {
+      try visitor.visitSingularStringField(value: self.systemDeviceIdentifier, fieldNumber: 4)
+    }
+    if self.deviceType != .mobile {
+      try visitor.visitSingularEnumField(value: self.deviceType, fieldNumber: 5)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_AppDevice_AppDeviceSettings, rhs: Ecliptix_Proto_AppDevice_AppDeviceSettings) -> Bool {
-    if lhs.appID != rhs.appID {return false}
+  public static func ==(lhs: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, rhs: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) -> Bool {
+    if lhs.appInstanceID != rhs.appInstanceID {return false}
     if lhs.deviceID != rhs.deviceID {return false}
-    if lhs.language != rhs.language {return false}
-    if lhs.serverUniqueID != rhs.serverUniqueID {return false}
+    if lhs.serverPublicKey != rhs.serverPublicKey {return false}
+    if lhs.systemDeviceIdentifier != rhs.systemDeviceIdentifier {return false}
+    if lhs.deviceType != rhs.deviceType {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

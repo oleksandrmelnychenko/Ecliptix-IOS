@@ -12,32 +12,27 @@ import NIOCore
 import NIOHPACK
 
 final class AuthInterceptorFactory: Ecliptix_Proto_Membership_AuthVerificationServicesClientInterceptorFactoryProtocol {
-    private let appInstanceId: UUID
-    private let deviceId: UUID
+    private let rpcMetaDataProvider: RpcMetaDataProviderProtocol
     
-    init(appInstanceId: UUID, deviceId: UUID) {
-        self.appInstanceId = appInstanceId
-        self.deviceId = deviceId
+    init(rpcMetaDataProvider: RpcMetaDataProviderProtocol) {
+        self.rpcMetaDataProvider = rpcMetaDataProvider
     }
     
     func makeInitiateVerificationInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
+            rpcMetaDataProvider: rpcMetaDataProvider
         )]
     }
     
     func makeVerifyOtpInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
+            rpcMetaDataProvider: rpcMetaDataProvider
         )]
     }
     
     func makeValidatePhoneNumberInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
+            rpcMetaDataProvider: rpcMetaDataProvider
         )]
     }
 }

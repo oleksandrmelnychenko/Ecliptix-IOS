@@ -13,15 +13,6 @@ internal class Utilities {
     private let invalidPayloadDataLengthMessage = "Invalid payload data length."
     private static let fullUInt32Range = UInt32.min...UInt32.max
     
-    public static func guidToByteArray(_ uuid: UUID) -> Data {
-        let byteArray = withUnsafeBytes(of: uuid.uuid) { Data($0) }
-        var bytes = byteArray
-        bytes.replaceSubrange(0..<4, with: bytes[0..<4].reversed())
-        bytes.replaceSubrange(4..<6, with: bytes[4..<6].reversed())
-        bytes.replaceSubrange(6..<8, with: bytes[6..<8].reversed())
-        return bytes
-    }
-    
     public static func readMemoryToRetrieveBytes(_ data: Data) throws -> Data {
         guard !data.isEmpty else {
             throw HelpersError.invalidPayloadDataLength
@@ -29,23 +20,33 @@ internal class Utilities {
         return data
     }
     
-    public static func fromByteStringToGuid(_ byteString: Data) throws -> UUID {
-        var bytes = Data(byteString)
+    public static func guidToData(_ uuid: UUID) -> Data {
+        var data = withUnsafeBytes(of: uuid.uuid) { Data($0) }
 
-        guard bytes.count == 16 else {
+        swapBytes(in: &data, at: 0, and: 3)
+        swapBytes(in: &data, at: 1, and: 2)
+        swapBytes(in: &data, at: 4, and: 5)
+        swapBytes(in: &data, at: 6, and: 7)
+
+        return data
+    }
+    
+    public static func fromDataToGuid(_ data: Data) throws -> UUID {
+        guard data.count == 16 else {
             throw HelpersError.invalidPayloadDataLength
         }
+        
+        var mutableData = data
 
-        bytes[0..<4].reverse()
-        bytes[4..<6].reverse()
-        bytes[6..<8].reverse()
+        mutableData.swapBytes(at: 0, and: 3)
+        mutableData.swapBytes(at: 1, and: 2)
+        mutableData.swapBytes(at: 4, and: 5)
+        mutableData.swapBytes(at: 6, and: 7)
 
-        let uuid = bytes.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) -> UUID in
-            let rawPtr = ptr.baseAddress!
-            return UUID(uuid: rawPtr.load(as: uuid_t.self))
+        return mutableData.withUnsafeBytes { buffer -> UUID in
+            let uuid = buffer.bindMemory(to: uuid_t.self)
+            return UUID(uuid: uuid[0])
         }
-
-        return uuid
     }
     
     public static func generateRandomUInt32(in range: ClosedRange<UInt32>) -> UInt32 {
@@ -53,7 +54,7 @@ internal class Utilities {
     }
     
     public static func generateRandomUInt32() -> UInt32 {
-        return UInt32.random(in: fullUInt32Range)
+        return Self.generateRandomUInt32(in: fullUInt32Range)
     }
     
     public static func extractCipherPayload(from requestedEncryptedPayload: Data, connectionId: String, decryptPayloadFun: @escaping (_ data: Data, _ connectionId: String, _ flag: Int) async throws -> Data) async throws -> Data {
@@ -70,23 +71,32 @@ internal class Utilities {
         }
     }
     
-    public static func computeUniqueConnectId(appInstanceId: UUID, appDeviceId: UUID, contextType: Ecliptix_Proto_PubKeyExchangeType, operationContextId: UUID? = nil) -> UInt32 {
-        var combined = Data()
-        withUnsafeBytes(of: appInstanceId.uuid) { combined.append(contentsOf: $0) }
-        withUnsafeBytes(of: appDeviceId.uuid) { combined.append(contentsOf: $0) }
-        
-        // Add contextType as big-endian UInt32
-        var contextTypeValue = UInt32(contextType.rawValue).bigEndian
-        withUnsafeBytes(of: &contextTypeValue) { combined.append(contentsOf: $0) }
+    public static func computeUniqueConnectId(
+        appInstanceId: Data,
+        appDeviceId: Data,
+        contextType: Ecliptix_Proto_PubKeyExchangeType,
+        operationContextId: UUID? = nil
+    ) -> UInt32 {
+        var buffer = Data()
+        buffer.append(appInstanceId)
+        buffer.append(appDeviceId)
 
-        // Add operationContextId if present
-        if let opContextId = operationContextId {
-            withUnsafeBytes(of: opContextId.uuid) { combined.append(contentsOf: $0) }
+        var contextTypeBE = UInt32(contextType.rawValue).bigEndian
+        withUnsafeBytes(of: &contextTypeBE) { buffer.append(contentsOf: $0) }
+
+        if let opId = operationContextId {
+            buffer.append(Self.guidToData(opId))
         }
 
-        let hash = SHA256.hash(data: combined)
+        let hash = SHA256.hash(data: buffer)
 
-        let first4Bytes = Array(hash.prefix(4))
-        return first4Bytes.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        let prefix = Data(hash.prefix(4))
+        return prefix.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+    }
+    
+    private static func swapBytes(in data: inout Data, at i: Int, and j: Int) {
+        guard i != j, i >= 0, j >= 0, i < data.count, j < data.count else { return }
+
+        data.swapBytes(at: i, and: j)
     }
 }

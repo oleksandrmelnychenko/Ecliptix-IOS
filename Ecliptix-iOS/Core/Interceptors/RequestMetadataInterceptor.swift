@@ -6,30 +6,45 @@
 //
 
 import Foundation
-import GRPC
+@preconcurrency import GRPC
 import NIOCore
 import NIOHPACK
 
 final class RequestMetadataInterceptor<Request, Response>: ClientInterceptor<Request, Response>, @unchecked Sendable {
-    private let appInstanceId: UUID
-    private let deviceId: UUID
+    private let rpcMetaDataProvider: RpcMetaDataProviderProtocol
 
-    init(appInstanceId: UUID, deviceId: UUID) {
-        self.appInstanceId = appInstanceId
-        self.deviceId = deviceId
+    init(rpcMetaDataProvider: RpcMetaDataProviderProtocol) {
+        self.rpcMetaDataProvider = rpcMetaDataProvider
     }
 
     override func send(
         _ part: GRPCClientRequestPart<Request>,
         promise: EventLoopPromise<Void>?,
-        context: ClientInterceptorContext<Request, Response>
-    ) {
+        context: ClientInterceptorContext<Request, Response>) {
         if case .metadata(var headers) = part {
-            let extra = GrpcMetadataHandler.generateMetadata(appInstanceId: appInstanceId, appDeviceId: deviceId)
-            for (name, value, _) in extra {
-                headers.add(name: name, value: value)
-            }
+//            Task {
+                let appInstanceId = self.rpcMetaDataProvider.getAppInstanceId().uuidString
+                let deviceId = self.rpcMetaDataProvider.getDeviceId().uuidString
+//                let appInstanceId = "00000000-0000-0000-0000-000000000000"
+//                let deviceId = "00000000-0000-0000-0000-000000000000"
+                
+                let extra = GrpcMetadataHandler.generateMetadata(
+                    appInstanceId: appInstanceId,
+                    appDeviceId: deviceId
+                )
+                
+                for (name, value, _) in extra {
+                    headers.add(name: name, value: value)
+                }
+                
+                // 🔐 Повернення на EventLoop — через копію значень
+//                eventLoop.execute {
+//                    // Тепер можна безпечно використовувати context
+//                    context.send(.metadata(headers), promise: promise)
+//                }
+            
             context.send(.metadata(headers), promise: promise)
+//            }
         } else {
             context.send(part, promise: promise)
         }

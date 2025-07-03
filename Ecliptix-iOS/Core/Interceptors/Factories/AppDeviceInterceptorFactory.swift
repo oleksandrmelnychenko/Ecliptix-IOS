@@ -12,25 +12,27 @@ import NIOCore
 import NIOHPACK
 
 final class AppDeviceInterceptorFactory: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol {
-    private let appInstanceId: UUID
-    private let deviceId: UUID
+    private let rpcMetaDataProvider: RpcMetaDataProviderProtocol
     
-    init(appInstanceId: UUID, deviceId: UUID) {
-        self.appInstanceId = appInstanceId
-        self.deviceId = deviceId
+    init(rpcMetaDataProvider: RpcMetaDataProviderProtocol) {
+        self.rpcMetaDataProvider = rpcMetaDataProvider
     }
     
-    func makeEstablishAppDeviceEphemeralConnectInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>] {
+    func makeEstablishAppDeviceSecrecyChannelInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
+            rpcMetaDataProvider: rpcMetaDataProvider
+        )]
+    }
+    
+    func makeRestoreAppDeviceSecrecyChannelInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>] {
+        return [RequestMetadataInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>(
+            rpcMetaDataProvider: rpcMetaDataProvider
         )]
     }
     
     func makeRegisterDeviceAppIfNotExistInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            appInstanceId: appInstanceId,
-            deviceId: deviceId
+            rpcMetaDataProvider: rpcMetaDataProvider
         )]
     }
 }

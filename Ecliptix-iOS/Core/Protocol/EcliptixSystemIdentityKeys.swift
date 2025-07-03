@@ -58,6 +58,111 @@ final class EcliptixSystemIdentityKeys {
         dispose(disposing: true)
     }
     
+    public func toProtoState() -> Result<Ecliptix_Proto_IdentityKeysState, EcliptixProtocolFailure> {
+        guard !self.disposed else {
+            return .failure(.objectDisposed(String(describing: EcliptixSystemIdentityKeys.self)))
+        }
+        
+        do {
+            let edSk = try self.ed25519SecretKeyHandle.readBytes(length: Constants.ed25519SecretKeySize).unwrap()
+            let idSk = try self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
+            let spSk = try self.signedPreKeySecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
+            
+            var opkProtos: [Ecliptix_Proto_OneTimePreKeySecret] = self.oneTimePreKeysInternal.compactMap { opk in
+                guard let opkSkBytes = try? opk.privateKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap() else {
+                    return nil
+                }
+
+                var proto = Ecliptix_Proto_OneTimePreKeySecret()
+                proto.preKeyID = opk.preKeyId
+                proto.privateKey = opkSkBytes
+                proto.publicKey = opk.publicKey
+                return proto
+            }
+
+            var proto = Ecliptix_Proto_IdentityKeysState()
+            proto.ed25519SecretKey = edSk
+            proto.identityX25519SecretKey = idSk
+            proto.signedPreKeySecret = spSk
+            proto.ed25519PublicKey = self.ed25519PublicKey
+            proto.identityX25519PublicKey = self.identityX25519PublicKey
+            proto.signedPreKeyID = self.signedPreKeyId
+            proto.signedPreKeyPublic = self.signedPreKeyPublic
+            proto.signedPreKeySignature = self.signedPreKeySignature
+            proto.oneTimePreKeys = opkProtos
+            return .success(proto)
+            
+        } catch {
+            return .failure(.generic("Failed to export identity keys to proto state.", inner: error))
+        }
+    }
+    
+    public static func fromProtoState(proto: Ecliptix_Proto_IdentityKeysState) -> Result<EcliptixSystemIdentityKeys, EcliptixProtocolFailure> {
+        var edSkHandle: SodiumSecureMemoryHandle? = nil
+        var idXSkHandle: SodiumSecureMemoryHandle? = nil
+        var spkSkHandle: SodiumSecureMemoryHandle? = nil
+        var opks: [OneTimePreKeyLocal] = []
+        
+        defer {
+            edSkHandle?.dispose()
+            idXSkHandle?.dispose()
+            spkSkHandle?.dispose()
+            for opk in opks {
+                opk.dispose()
+            }
+            opks.removeAll()
+            
+            edSkHandle = nil
+            idXSkHandle = nil
+            spkSkHandle = nil
+        }
+        
+        do {
+            let edSkData = proto.ed25519SecretKey
+            edSkHandle = try SodiumSecureMemoryHandle.allocate(length: edSkData.count).unwrap()
+            _ = try edSkData.withUnsafeBytes { bufferPointer in
+                edSkHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }.unwrap()
+            
+            let idSkData = proto.identityX25519SecretKey
+            idXSkHandle = try SodiumSecureMemoryHandle.allocate(length: idSkData.count).unwrap()
+            _ = try idSkData.withUnsafeBytes { bufferPointer in
+                idXSkHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }.unwrap()
+            
+            let spSkData = proto.signedPreKeySecret
+            spkSkHandle = try SodiumSecureMemoryHandle.allocate(length: spSkData.count).unwrap()
+            _ = try spSkData.withUnsafeBytes { bufferPointer in
+                spkSkHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }.unwrap()
+            
+            var edPk = proto.ed25519PublicKey
+            var idXPk = proto.identityX25519PublicKey
+            var spkPk = proto.signedPreKeyPublic
+            var spkSig = proto.signedPreKeySignature
+            
+            for opkProto in proto.oneTimePreKeys {
+                let skHandle = try SodiumSecureMemoryHandle.allocate(length: opkProto.privateKey.count).unwrap()
+                _ = try opkProto.privateKey.withUnsafeBytes { bufferPointer in
+                    skHandle.write(data: bufferPointer).mapSodiumFailure()
+                }.unwrap()
+                
+                let opk = OneTimePreKeyLocal.createFromParts(preKeyId: opkProto.preKeyID, privateKeyHandle: skHandle, publicKey: opkProto.publicKey)
+                opks.append(opk)
+            }
+            
+            let keys = EcliptixSystemIdentityKeys(
+                edSk: edSkHandle!, edPk: &edPk,
+                idSk: idXSkHandle!, idPk: &idXPk,
+                spkId: proto.signedPreKeyID, spkSk: spkSkHandle!, spkPk: &spkPk, spkSig: &spkSig,
+                opks: &opks)
+            
+            return .success(keys)
+        } catch {
+            return .failure(.generic("Failed to rehydrate EcliptixSystemIdentityKeys from proto", inner: error))
+        }
+    }
+    
     public static func create(oneTimeKeyCount: UInt32) -> Result<EcliptixSystemIdentityKeys, EcliptixProtocolFailure> {
         if oneTimeKeyCount > UInt32(UInt32.max) {
             return .failure(.invalidInput("Requested one-time key count exceeds practical limits."))
@@ -425,7 +530,7 @@ final class EcliptixSystemIdentityKeys {
         return Result<(skHandle: SodiumSecureMemoryHandle, pk: Data), EcliptixProtocolFailure>.Try {
             let edKeyPair = try PublicKeyAuth.generateKeyPair()
             skBytes = edKeyPair.privateKey
-            var pkBytes = edKeyPair.publicKey
+            let pkBytes = edKeyPair.publicKey
             
             skHandle = try SodiumSecureMemoryHandle.allocate(length: Constants.ed25519SecretKeySize).unwrap()
             _ = try skBytes!.withUnsafeBytes { bufferPointer in

@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import SwiftProtobuf
 
-final class SingleCallExecutor {
+final class UnaryRpcService {
     private let membershipClient: Ecliptix_Proto_Membership_MembershipServicesAsyncClient
     private let appDeviceClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
     private let authClient: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
@@ -79,7 +79,7 @@ final class SingleCallExecutor {
         let task = try await block()
 
         if task.isOk {
-            return .success(RpcFlow.SingleCall(result: task))
+            return .success(RpcFlow.SingleCall(result: { task }))
         } else {
             return .failure(try task.unwrapErr())
         }

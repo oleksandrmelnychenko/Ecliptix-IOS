@@ -20,21 +20,21 @@ struct GrpcClientFactory {
         auth: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient,
         appDevice: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
     ) {
-        let info = ServiceLocator.shared.resolve(AppInstanceInfo.self)
-
+        let rpcMetaDataProvider = ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
+        
         let membershipClient = Ecliptix_Proto_Membership_MembershipServicesAsyncClient(
             channel: channel,
-            interceptors: MembershipInterceptorFactory(appInstanceId: info.appInstanceId, deviceId: info.deviceId)
+            interceptors: MembershipInterceptorFactory(rpcMetaDataProvider: rpcMetaDataProvider)
         )
 
         let authClient = Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient(
             channel: channel,
-            interceptors: AuthInterceptorFactory(appInstanceId: info.appInstanceId, deviceId: info.deviceId)
+            interceptors: AuthInterceptorFactory(rpcMetaDataProvider: rpcMetaDataProvider)
         )
 
         let appDeviceClient = Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient(
             channel: channel,
-            interceptors: AppDeviceInterceptorFactory(appInstanceId: info.appInstanceId, deviceId: info.deviceId)
+            interceptors: AppDeviceInterceptorFactory(rpcMetaDataProvider: rpcMetaDataProvider)
         )
 
         return (membershipClient, authClient, appDeviceClient)

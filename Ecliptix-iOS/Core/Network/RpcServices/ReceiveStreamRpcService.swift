@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import SwiftProtobuf
 
-final class ReceiveStreamExecutor {
+final class ReceiveStreamRpcService {
     private let client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
 
     init(client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient) {

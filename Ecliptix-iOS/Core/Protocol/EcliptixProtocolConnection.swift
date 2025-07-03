@@ -10,6 +10,7 @@ import CryptoKit
 import OrderedCollections
 import Sodium
 import Atomics
+import SwiftProtobuf
 
 enum EcliptixProtocolConnectionExceptions: Error {
     case ArgumentNil(message: String)
@@ -33,7 +34,7 @@ final class EcliptixProtocolConnection {
     private let sendingStep: EcliptixProtocolChainStep
     private var currentSendingDhPrivateKeyHandle: SodiumSecureMemoryHandle?
     private var initialSendingDhPrivateKeyHandle: SodiumSecureMemoryHandle?
-    private let nonceCounter = ManagedAtomic<UInt32>(0)
+    private let nonceCounter: ManagedAtomic<UInt32>
     private var peerBundle: PublicKeyBundle?
     private var peerDhPublicKey: Data?
     private var persistentDhPrivateKeyHandle: SodiumSecureMemoryHandle?
@@ -45,21 +46,22 @@ final class EcliptixProtocolConnection {
     
     public var disposed = false
     
-    init(
+    private init(
         id: UInt32,
         isInitiator: Bool,
-        initialSendingDhPrivateHandle: SodiumSecureMemoryHandle,
+        initialSendingDh: SodiumSecureMemoryHandle,
         sendingStep: EcliptixProtocolChainStep,
-        persistentDhPrivateKeyHandle: SodiumSecureMemoryHandle,
-        persistentDhPublicKey: Data) {
+        persistentDh: SodiumSecureMemoryHandle,
+        persistentDhPublic: Data) {
         
         self.id = id
         self.isInitiator = isInitiator
-        self.initialSendingDhPrivateKeyHandle = initialSendingDhPrivateHandle
-        self.currentSendingDhPrivateKeyHandle = initialSendingDhPrivateHandle
+        self.initialSendingDhPrivateKeyHandle = initialSendingDh
+        self.currentSendingDhPrivateKeyHandle = initialSendingDh
         self.sendingStep = sendingStep
-        self.persistentDhPrivateKeyHandle = persistentDhPrivateKeyHandle
-        self.persistentDhPublicKey = persistentDhPublicKey
+        self.persistentDhPrivateKeyHandle = persistentDh
+        self.persistentDhPublicKey = persistentDhPublic
+        self.nonceCounter = ManagedAtomic<UInt32>(0)
         
         self.peerBundle = nil
         self.receivingStep = nil
@@ -69,8 +71,31 @@ final class EcliptixProtocolConnection {
         self.peerDhPublicKey = nil
         self.receivedNewDhKey = false
         self.isFirstReceivingRatchet = true
-        
-        debugPrint("[ShieldSession] Created session \(id), Initiator: \(isInitiator)")
+    }
+    
+    private init(
+        id: UInt32,
+        proto: Ecliptix_Proto_RatchetState,
+        sendingStep: EcliptixProtocolChainStep,
+        receivingStep: EcliptixProtocolChainStep?,
+        rootKeyHandle: SodiumSecureMemoryHandle) {
+            
+        self.id = id
+        self.isInitiator = proto.isInitiator
+        self.createdAt = proto.createdAt.toDate()
+        self.nonceCounter = ManagedAtomic(UInt32(clamping: proto.nonceCounter))
+        self.peerDhPublicKey = proto.peerDhPublicKey.isEmpty ? nil : Data(proto.peerDhPublicKey)
+        self.isFirstReceivingRatchet = proto.isFirstReceivingRatchet
+        self.rootKeyHandle = rootKeyHandle
+        self.sendingStep = sendingStep
+        self.receivingStep = receivingStep
+        self.currentSendingDhPrivateKeyHandle = sendingStep.getDhPrivateKeyHandle()
+        self.initialSendingDhPrivateKeyHandle = nil
+        self.persistentDhPrivateKeyHandle = nil
+        self.persistentDhPublicKey = nil
+        self.messageKeys = [:]
+        self.receivedNewDhKey = false
+        self.disposed = false
     }
     
     deinit {
@@ -126,10 +151,10 @@ final class EcliptixProtocolConnection {
                     let connection = EcliptixProtocolConnection(
                         id: connectId,
                         isInitiator: isInitiator,
-                        initialSendingDhPrivateHandle: initialSendingDhPrivateKeyHandle!,
+                        initialSendingDh: initialSendingDhPrivateKeyHandle!,
                         sendingStep: sendingStep!,
-                        persistentDhPrivateKeyHandle: persistentDhPrivateKeyHandle!,
-                        persistentDhPublicKey: persistentDhPublicKey!
+                        persistentDh: persistentDhPrivateKeyHandle!,
+                        persistentDhPublic: persistentDhPublicKey!
                     )
 
                     initialSendingDhPrivateKeyHandle = nil
@@ -156,6 +181,112 @@ final class EcliptixProtocolConnection {
             _ = wipeIfNotNil(&initialSendingDhPrivateKeyBytes)
             return .failure(EcliptixProtocolFailure.generic("Unexpected error creating session \(connectId).", inner: error))
         }
+    }
+    
+    public func toProtoState() -> Result<Ecliptix_Proto_RatchetState, EcliptixProtocolFailure> {
+        lock.lock()
+        
+        defer {
+            lock.unlock()
+        }
+        
+        guard !self.disposed else {
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolConnection.self)))
+        }
+        
+        do {
+            let sendingStepResult = self.sendingStep.toProtoState()
+            guard sendingStepResult.isOk else {
+                return .failure(try sendingStepResult.unwrapErr())
+            }
+            
+            let rootKeyResult = self.rootKeyHandle!.readBytes(length: Constants.x25519KeySize).mapSodiumFailure()
+            guard rootKeyResult.isOk else {
+                return .failure(try rootKeyResult.unwrapErr())
+            }
+            
+            var proto = Ecliptix_Proto_RatchetState()
+            proto.isInitiator = self.isInitiator
+            proto.createdAt = .fromDate(date: self.createdAt)
+            proto.nonceCounter = UInt64(self.nonceCounter.load(ordering: .relaxed))
+            proto.peerBundle = self.peerBundle!.toProtobufExchange()
+            proto.peerDhPublicKey = self.peerDhPublicKey ?? Data()
+            proto.isFirstReceivingRatchet = self.isFirstReceivingRatchet
+            proto.rootKey = try rootKeyResult.unwrap()
+            proto.sendingStep = try sendingStepResult.unwrap()
+            
+            if self.receivingStep != nil {
+                let receivingStepResult = self.receivingStep!.toProtoState()
+                guard receivingStepResult.isOk else {
+                    return .failure(try receivingStepResult.unwrapErr())
+                }
+                proto.receivingStep = try receivingStepResult.unwrap()
+            }
+            
+            return .success(proto)
+        } catch {
+            return .failure(.generic("Failed to export connection to proto state.", inner: error))
+        }
+    }
+    
+    public static func fromProtoState(connectId: UInt32, proto: Ecliptix_Proto_RatchetState) -> Result<EcliptixProtocolConnection, EcliptixProtocolFailure> {
+        var sendingStep: EcliptixProtocolChainStep? = nil
+        var receivingStep: EcliptixProtocolChainStep? = nil
+        var rootKeyHandle: SodiumSecureMemoryHandle? = nil
+        
+        defer {
+            sendingStep = nil
+            receivingStep = nil
+            rootKeyHandle = nil
+            
+            sendingStep?.dispose()
+            receivingStep?.dispose()
+            rootKeyHandle?.dispose()
+        }
+        
+        do {
+            let sendingStepResult = EcliptixProtocolChainStep.fromProtoState(stepType: .sender, proto: proto.sendingStep)
+            guard sendingStepResult.isOk else {
+                return .failure(try sendingStepResult.unwrapErr())
+            }
+            sendingStep = try sendingStepResult.unwrap()
+            
+            let receivingStepResult = EcliptixProtocolChainStep.fromProtoState(stepType: .receiver, proto: proto.receivingStep)
+            guard receivingStepResult.isOk else {
+                return .failure(try receivingStepResult.unwrapErr())
+            }
+            receivingStep = try receivingStepResult.unwrap()
+            
+            let rootKeyResult = SodiumSecureMemoryHandle.allocate(length: proto.rootKey.count).mapSodiumFailure()
+            guard rootKeyResult.isOk else {
+                return .failure(try rootKeyResult.unwrapErr())
+            }
+            rootKeyHandle = try rootKeyResult.unwrap()
+            
+            _ = try proto.rootKey.withUnsafeBytes { bufferPointer in
+                rootKeyHandle!.write(data: bufferPointer).mapSodiumFailure()
+            }.unwrap()
+            
+            let connection = EcliptixProtocolConnection(id: connectId, proto: proto, sendingStep: sendingStep!, receivingStep: receivingStep, rootKeyHandle: rootKeyHandle!)
+            
+            return .success(connection)
+        } catch {
+            return .failure(.generic("Failed to rehydrate connection from proto state.", inner: error))
+        }
+    }
+    
+    public func syncWithRemoteState(remoteSendingChainLength: UInt32, remoteReceivingChainLength: UInt32) -> Result<Unit, EcliptixProtocolFailure> {
+        lock.lock()
+        
+        defer {
+            lock.unlock()
+        }
+        
+        return checkDisposed()
+            .flatMap { _ in self.ensureReceivingStepInitialized() }
+            .flatMap { receivingStep in receivingStep.skipKeysUntil(targetIndex: remoteSendingChainLength, messageKeyCache: &self.messageKeys) }
+            .flatMap { _ in self.ensureSendingStepInitialized() }
+            .flatMap { sendingStep in sendingStep.skipKeysUntil(targetIndex: remoteReceivingChainLength, messageKeyCache: &self.messageKeys) }
     }
     
     public func getPeerBundle() -> Result<PublicKeyBundle, EcliptixProtocolFailure> {

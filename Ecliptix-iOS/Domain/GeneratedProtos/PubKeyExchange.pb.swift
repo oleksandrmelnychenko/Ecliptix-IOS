@@ -149,6 +149,70 @@ public struct Ecliptix_Proto_PublicKeyBundle: @unchecked Sendable {
   public init() {}
 }
 
+public struct Ecliptix_Proto_RestoreSecrecyChannelRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Ecliptix_Proto_RestoreSecrecyChannelResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var status: Ecliptix_Proto_RestoreSecrecyChannelResponse.RestoreStatus = .sessionUnknown
+
+  public var sendingChainLength: UInt32 = 0
+
+  public var receivingChainLength: UInt32 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum RestoreStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+    case sessionUnknown // = 0
+    case sessionResumed // = 1
+    case sessionNotFound // = 2
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .sessionUnknown
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .sessionUnknown
+      case 1: self = .sessionResumed
+      case 2: self = .sessionNotFound
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .sessionUnknown: return 0
+      case .sessionResumed: return 1
+      case .sessionNotFound: return 2
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [Ecliptix_Proto_RestoreSecrecyChannelResponse.RestoreStatus] = [
+      .sessionUnknown,
+      .sessionResumed,
+      .sessionNotFound,
+    ]
+
+  }
+
+  public init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "ecliptix.proto"
@@ -322,4 +386,75 @@ extension Ecliptix_Proto_PublicKeyBundle.OneTimePreKey: SwiftProtobuf.Message, S
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+extension Ecliptix_Proto_RestoreSecrecyChannelRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".RestoreSecrecyChannelRequest"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
+    while try decoder.nextFieldNumber() != nil {}
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_RestoreSecrecyChannelRequest, rhs: Ecliptix_Proto_RestoreSecrecyChannelRequest) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_RestoreSecrecyChannelResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".RestoreSecrecyChannelResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "status"),
+    2: .standard(proto: "sending_chain_length"),
+    3: .standard(proto: "receiving_chain_length"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.sendingChainLength) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.receivingChainLength) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.status != .sessionUnknown {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 1)
+    }
+    if self.sendingChainLength != 0 {
+      try visitor.visitSingularUInt32Field(value: self.sendingChainLength, fieldNumber: 2)
+    }
+    if self.receivingChainLength != 0 {
+      try visitor.visitSingularUInt32Field(value: self.receivingChainLength, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_RestoreSecrecyChannelResponse, rhs: Ecliptix_Proto_RestoreSecrecyChannelResponse) -> Bool {
+    if lhs.status != rhs.status {return false}
+    if lhs.sendingChainLength != rhs.sendingChainLength {return false}
+    if lhs.receivingChainLength != rhs.receivingChainLength {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_RestoreSecrecyChannelResponse.RestoreStatus: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SESSION_UNKNOWN"),
+    1: .same(proto: "SESSION_RESUMED"),
+    2: .same(proto: "SESSION_NOT_FOUND"),
+  ]
 }

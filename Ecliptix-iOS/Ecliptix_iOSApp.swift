@@ -14,7 +14,7 @@ struct Ecliptix_iOSApp: App {
     @StateObject private var navigationService = NavigationService()
     @StateObject private var localizationService: LocalizationService
     
-    private let establishConnectionExecutor: EstablishConnectionExecutor
+    private let establishConnectionExecutor: ApplicationInitializer
     
     init() {
         ApplicationBootstrap.configure()
@@ -22,7 +22,7 @@ struct Ecliptix_iOSApp: App {
         let locService = ServiceLocator.shared.resolve(LocalizationService.self)
         _localizationService = StateObject(wrappedValue: locService)
         
-        establishConnectionExecutor = EstablishConnectionExecutor()
+        establishConnectionExecutor = ApplicationInitializer()
     }
     
     var body: some Scene {
@@ -39,7 +39,7 @@ struct Ecliptix_iOSApp: App {
                 guard !didInitialize else { return }
                 didInitialize = true
                 
-                await establishConnectionExecutor.initializeApplicationAsync()
+                _ = await establishConnectionExecutor.initializeAsync()
             }
         }
     }

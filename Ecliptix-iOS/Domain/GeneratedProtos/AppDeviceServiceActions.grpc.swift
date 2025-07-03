@@ -16,38 +16,25 @@ internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientProtocol
   var serviceName: String { get }
   var interceptors: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol? { get }
 
-  func establishAppDeviceEphemeralConnect(
-    _ request: Ecliptix_Proto_PubKeyExchange,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>
-
   func registerDeviceAppIfNotExist(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func establishAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_PubKeyExchange,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>
+
+  func restoreAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>
 }
 
 extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientProtocol {
   internal var serviceName: String {
     return "ecliptix.proto.app_device.AppDeviceServiceActions"
-  }
-
-  /// Unary call to EstablishAppDeviceEphemeralConnect
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to EstablishAppDeviceEphemeralConnect.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func establishAppDeviceEphemeralConnect(
-    _ request: Ecliptix_Proto_PubKeyExchange,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange> {
-    return self.makeUnaryCall(
-      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceEphemeralConnect.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEstablishAppDeviceEphemeralConnectInterceptors() ?? []
-    )
   }
 
   /// Unary call to RegisterDeviceAppIfNotExist
@@ -65,6 +52,42 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeRegisterDeviceAppIfNotExistInterceptors() ?? []
+    )
+  }
+
+  /// Unary call to EstablishAppDeviceSecrecyChannel
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to EstablishAppDeviceSecrecyChannel.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func establishAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_PubKeyExchange,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange> {
+    return self.makeUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeEstablishAppDeviceSecrecyChannelInterceptors() ?? []
+    )
+  }
+
+  /// Unary call to RestoreAppDeviceSecrecyChannel
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to RestoreAppDeviceSecrecyChannel.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func restoreAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse> {
+    return self.makeUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.restoreAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRestoreAppDeviceSecrecyChannelInterceptors() ?? []
     )
   }
 }
@@ -131,15 +154,20 @@ internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClientPro
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol? { get }
 
-  func makeEstablishAppDeviceEphemeralConnectCall(
-    _ request: Ecliptix_Proto_PubKeyExchange,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>
-
   func makeRegisterDeviceAppIfNotExistCall(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func makeEstablishAppDeviceSecrecyChannelCall(
+    _ request: Ecliptix_Proto_PubKeyExchange,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>
+
+  func makeRestoreAppDeviceSecrecyChannelCall(
+    _ request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -150,18 +178,6 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClientProtocol {
 
   internal var interceptors: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol? {
     return nil
-  }
-
-  internal func makeEstablishAppDeviceEphemeralConnectCall(
-    _ request: Ecliptix_Proto_PubKeyExchange,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange> {
-    return self.makeAsyncUnaryCall(
-      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceEphemeralConnect.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEstablishAppDeviceEphemeralConnectInterceptors() ?? []
-    )
   }
 
   internal func makeRegisterDeviceAppIfNotExistCall(
@@ -175,22 +191,34 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClientProtocol {
       interceptors: self.interceptors?.makeRegisterDeviceAppIfNotExistInterceptors() ?? []
     )
   }
+
+  internal func makeEstablishAppDeviceSecrecyChannelCall(
+    _ request: Ecliptix_Proto_PubKeyExchange,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange> {
+    return self.makeAsyncUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeEstablishAppDeviceSecrecyChannelInterceptors() ?? []
+    )
+  }
+
+  internal func makeRestoreAppDeviceSecrecyChannelCall(
+    _ request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse> {
+    return self.makeAsyncUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.restoreAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRestoreAppDeviceSecrecyChannelInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClientProtocol {
-  internal func establishAppDeviceEphemeralConnect(
-    _ request: Ecliptix_Proto_PubKeyExchange,
-    callOptions: CallOptions? = nil
-  ) async throws -> Ecliptix_Proto_PubKeyExchange {
-    return try await self.performAsyncUnaryCall(
-      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceEphemeralConnect.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEstablishAppDeviceEphemeralConnectInterceptors() ?? []
-    )
-  }
-
   internal func registerDeviceAppIfNotExist(
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions? = nil
@@ -200,6 +228,30 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeRegisterDeviceAppIfNotExistInterceptors() ?? []
+    )
+  }
+
+  internal func establishAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_PubKeyExchange,
+    callOptions: CallOptions? = nil
+  ) async throws -> Ecliptix_Proto_PubKeyExchange {
+    return try await self.performAsyncUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeEstablishAppDeviceSecrecyChannelInterceptors() ?? []
+    )
+  }
+
+  internal func restoreAppDeviceSecrecyChannel(
+    _ request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    callOptions: CallOptions? = nil
+  ) async throws -> Ecliptix_Proto_RestoreSecrecyChannelResponse {
+    return try await self.performAsyncUnaryCall(
+      path: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.restoreAppDeviceSecrecyChannel.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRestoreAppDeviceSecrecyChannelInterceptors() ?? []
     )
   }
 }
@@ -223,11 +275,14 @@ internal struct Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient: Ecl
 
 internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientInterceptorFactoryProtocol: Sendable {
 
-  /// - Returns: Interceptors to use when invoking 'establishAppDeviceEphemeralConnect'.
-  func makeEstablishAppDeviceEphemeralConnectInterceptors() -> [ClientInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>]
-
   /// - Returns: Interceptors to use when invoking 'registerDeviceAppIfNotExist'.
   func makeRegisterDeviceAppIfNotExistInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when invoking 'establishAppDeviceSecrecyChannel'.
+  func makeEstablishAppDeviceSecrecyChannelInterceptors() -> [ClientInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>]
+
+  /// - Returns: Interceptors to use when invoking 'restoreAppDeviceSecrecyChannel'.
+  func makeRestoreAppDeviceSecrecyChannelInterceptors() -> [ClientInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>]
 }
 
 internal enum Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata {
@@ -235,21 +290,28 @@ internal enum Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata {
     name: "AppDeviceServiceActions",
     fullName: "ecliptix.proto.app_device.AppDeviceServiceActions",
     methods: [
-      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceEphemeralConnect,
       Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.registerDeviceAppIfNotExist,
+      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.establishAppDeviceSecrecyChannel,
+      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata.Methods.restoreAppDeviceSecrecyChannel,
     ]
   )
 
   internal enum Methods {
-    internal static let establishAppDeviceEphemeralConnect = GRPCMethodDescriptor(
-      name: "EstablishAppDeviceEphemeralConnect",
-      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/EstablishAppDeviceEphemeralConnect",
-      type: GRPCCallType.unary
-    )
-
     internal static let registerDeviceAppIfNotExist = GRPCMethodDescriptor(
       name: "RegisterDeviceAppIfNotExist",
       path: "/ecliptix.proto.app_device.AppDeviceServiceActions/RegisterDeviceAppIfNotExist",
+      type: GRPCCallType.unary
+    )
+
+    internal static let establishAppDeviceSecrecyChannel = GRPCMethodDescriptor(
+      name: "EstablishAppDeviceSecrecyChannel",
+      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/EstablishAppDeviceSecrecyChannel",
+      type: GRPCCallType.unary
+    )
+
+    internal static let restoreAppDeviceSecrecyChannel = GRPCMethodDescriptor(
+      name: "RestoreAppDeviceSecrecyChannel",
+      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/RestoreAppDeviceSecrecyChannel",
       type: GRPCCallType.unary
     )
   }
@@ -259,9 +321,11 @@ internal enum Ecliptix_Proto_AppDevice_AppDeviceServiceActionsClientMetadata {
 internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsProvider: CallHandlerProvider {
   var interceptors: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerInterceptorFactoryProtocol? { get }
 
-  func establishAppDeviceEphemeralConnect(request: Ecliptix_Proto_PubKeyExchange, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_PubKeyExchange>
-
   func registerDeviceAppIfNotExist(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+
+  func establishAppDeviceSecrecyChannel(request: Ecliptix_Proto_PubKeyExchange, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_PubKeyExchange>
+
+  func restoreAppDeviceSecrecyChannel(request: Ecliptix_Proto_RestoreSecrecyChannelRequest, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_RestoreSecrecyChannelResponse>
 }
 
 extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsProvider {
@@ -276,15 +340,6 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "EstablishAppDeviceEphemeralConnect":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_PubKeyExchange>(),
-        responseSerializer: ProtobufSerializer<Ecliptix_Proto_PubKeyExchange>(),
-        interceptors: self.interceptors?.makeEstablishAppDeviceEphemeralConnectInterceptors() ?? [],
-        userFunction: self.establishAppDeviceEphemeralConnect(request:context:)
-      )
-
     case "RegisterDeviceAppIfNotExist":
       return UnaryServerHandler(
         context: context,
@@ -292,6 +347,24 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsProvider {
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
         interceptors: self.interceptors?.makeRegisterDeviceAppIfNotExistInterceptors() ?? [],
         userFunction: self.registerDeviceAppIfNotExist(request:context:)
+      )
+
+    case "EstablishAppDeviceSecrecyChannel":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_PubKeyExchange>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_PubKeyExchange>(),
+        interceptors: self.interceptors?.makeEstablishAppDeviceSecrecyChannelInterceptors() ?? [],
+        userFunction: self.establishAppDeviceSecrecyChannel(request:context:)
+      )
+
+    case "RestoreAppDeviceSecrecyChannel":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_RestoreSecrecyChannelRequest>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_RestoreSecrecyChannelResponse>(),
+        interceptors: self.interceptors?.makeRestoreAppDeviceSecrecyChannelInterceptors() ?? [],
+        userFunction: self.restoreAppDeviceSecrecyChannel(request:context:)
       )
 
     default:
@@ -306,15 +379,20 @@ internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncProvider:
   static var serviceDescriptor: GRPCServiceDescriptor { get }
   var interceptors: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerInterceptorFactoryProtocol? { get }
 
-  func establishAppDeviceEphemeralConnect(
-    request: Ecliptix_Proto_PubKeyExchange,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> Ecliptix_Proto_PubKeyExchange
-
   func registerDeviceAppIfNotExist(
     request: Ecliptix_Proto_CipherPayload,
     context: GRPCAsyncServerCallContext
   ) async throws -> Ecliptix_Proto_CipherPayload
+
+  func establishAppDeviceSecrecyChannel(
+    request: Ecliptix_Proto_PubKeyExchange,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Ecliptix_Proto_PubKeyExchange
+
+  func restoreAppDeviceSecrecyChannel(
+    request: Ecliptix_Proto_RestoreSecrecyChannelRequest,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Ecliptix_Proto_RestoreSecrecyChannelResponse
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -336,15 +414,6 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "EstablishAppDeviceEphemeralConnect":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_PubKeyExchange>(),
-        responseSerializer: ProtobufSerializer<Ecliptix_Proto_PubKeyExchange>(),
-        interceptors: self.interceptors?.makeEstablishAppDeviceEphemeralConnectInterceptors() ?? [],
-        wrapping: { try await self.establishAppDeviceEphemeralConnect(request: $0, context: $1) }
-      )
-
     case "RegisterDeviceAppIfNotExist":
       return GRPCAsyncServerHandler(
         context: context,
@@ -352,6 +421,24 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncProvider {
         responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
         interceptors: self.interceptors?.makeRegisterDeviceAppIfNotExistInterceptors() ?? [],
         wrapping: { try await self.registerDeviceAppIfNotExist(request: $0, context: $1) }
+      )
+
+    case "EstablishAppDeviceSecrecyChannel":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_PubKeyExchange>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_PubKeyExchange>(),
+        interceptors: self.interceptors?.makeEstablishAppDeviceSecrecyChannelInterceptors() ?? [],
+        wrapping: { try await self.establishAppDeviceSecrecyChannel(request: $0, context: $1) }
+      )
+
+    case "RestoreAppDeviceSecrecyChannel":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_RestoreSecrecyChannelRequest>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_RestoreSecrecyChannelResponse>(),
+        interceptors: self.interceptors?.makeRestoreAppDeviceSecrecyChannelInterceptors() ?? [],
+        wrapping: { try await self.restoreAppDeviceSecrecyChannel(request: $0, context: $1) }
       )
 
     default:
@@ -362,13 +449,17 @@ extension Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncProvider {
 
 internal protocol Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerInterceptorFactoryProtocol: Sendable {
 
-  /// - Returns: Interceptors to use when handling 'establishAppDeviceEphemeralConnect'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeEstablishAppDeviceEphemeralConnectInterceptors() -> [ServerInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>]
-
   /// - Returns: Interceptors to use when handling 'registerDeviceAppIfNotExist'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makeRegisterDeviceAppIfNotExistInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when handling 'establishAppDeviceSecrecyChannel'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeEstablishAppDeviceSecrecyChannelInterceptors() -> [ServerInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>]
+
+  /// - Returns: Interceptors to use when handling 'restoreAppDeviceSecrecyChannel'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeRestoreAppDeviceSecrecyChannelInterceptors() -> [ServerInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>]
 }
 
 internal enum Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata {
@@ -376,21 +467,28 @@ internal enum Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata {
     name: "AppDeviceServiceActions",
     fullName: "ecliptix.proto.app_device.AppDeviceServiceActions",
     methods: [
-      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata.Methods.establishAppDeviceEphemeralConnect,
       Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata.Methods.registerDeviceAppIfNotExist,
+      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata.Methods.establishAppDeviceSecrecyChannel,
+      Ecliptix_Proto_AppDevice_AppDeviceServiceActionsServerMetadata.Methods.restoreAppDeviceSecrecyChannel,
     ]
   )
 
   internal enum Methods {
-    internal static let establishAppDeviceEphemeralConnect = GRPCMethodDescriptor(
-      name: "EstablishAppDeviceEphemeralConnect",
-      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/EstablishAppDeviceEphemeralConnect",
-      type: GRPCCallType.unary
-    )
-
     internal static let registerDeviceAppIfNotExist = GRPCMethodDescriptor(
       name: "RegisterDeviceAppIfNotExist",
       path: "/ecliptix.proto.app_device.AppDeviceServiceActions/RegisterDeviceAppIfNotExist",
+      type: GRPCCallType.unary
+    )
+
+    internal static let establishAppDeviceSecrecyChannel = GRPCMethodDescriptor(
+      name: "EstablishAppDeviceSecrecyChannel",
+      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/EstablishAppDeviceSecrecyChannel",
+      type: GRPCCallType.unary
+    )
+
+    internal static let restoreAppDeviceSecrecyChannel = GRPCMethodDescriptor(
+      name: "RestoreAppDeviceSecrecyChannel",
+      path: "/ecliptix.proto.app_device.AppDeviceServiceActions/RestoreAppDeviceSecrecyChannel",
       type: GRPCCallType.unary
     )
   }

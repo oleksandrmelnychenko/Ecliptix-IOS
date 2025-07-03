@@ -192,6 +192,78 @@ final class EcliptixProtocolChainStep {
             return .failure(.generic("Error during get or derive key.", inner: error))
         }
     }
+    
+    public func skipKeysUntil(targetIndex: UInt32, messageKeyCache: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<Unit, EcliptixProtocolFailure> {
+        
+        if self.currentIndex >= targetIndex {
+            return .success(.value)
+        }
+        
+        do {
+            for i in (self.currentIndex + 1)...targetIndex {
+                let keyResult = self.getOrDeriveKeyFor(targetIndex: i, messageKeys: &messageKeyCache)
+                guard keyResult.isOk else {
+                    return .failure(try keyResult.unwrapErr())
+                }
+            }
+        } catch {
+            return .failure(.unexpectedError("Unhandled error during key derivation: \(error)"))
+        }
+        
+        return self.setCurrentIndex(targetIndex)
+    }
+    
+    internal func getDhPrivateKeyHandle() -> SodiumSecureMemoryHandle? {
+        return self.dhPrivateKeyHandle
+    }
+    
+    public func toProtoState() -> Result<Ecliptix_Proto_ChainStepState, EcliptixProtocolFailure> {
+        guard !self.disposed else {
+            return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
+        }
+        
+        do {
+            let chainKey = try self.chainKeyHandle.readBytes(length: Constants.x25519KeySize).unwrap()
+            let dhPrivKey = try self.dhPrivateKeyHandle?.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
+            
+            var proto = Ecliptix_Proto_ChainStepState()
+            proto.currentIndex = self.currentIndex
+            proto.chainKey = chainKey
+            
+            if dhPrivKey != nil {
+                proto.dhPrivateKey = dhPrivKey!
+            }
+            if self.dhPublicKey != nil {
+                proto.dhPublicKey = self.dhPublicKey!
+            }
+            
+            return .success(proto)
+        } catch {
+            return .failure(.generic("Failed to export chain step to proto state.", inner: error))
+        }
+    }
+    
+    public static func fromProtoState(stepType: ChainStepType, proto: Ecliptix_Proto_ChainStepState) -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
+        
+        var chainKeyData = proto.chainKey
+        var dhPrivKeyData: Data? = proto.dhPrivateKey
+        var dhPublicKey: Data? = proto.dhPublicKey
+        
+        let createResult = Self.create(stepType: stepType, initialChainKey: &chainKeyData, initialDhPrivateKey: &dhPrivKeyData, initialDhPublicKey: &dhPublicKey)
+        
+        guard createResult.isErr else {
+            return createResult
+        }
+        
+        do {
+            let chainStep = try createResult.unwrap()
+            _ = try chainStep.setCurrentIndex(proto.currentIndex).unwrap()
+            
+            return .success(chainStep)
+        } catch {
+            return .failure(.unexpectedError("Unhandled error during desiralization of EcliptixProtocolChainStep: \(error)"))
+        }
+    }
 
     internal func updateKeysAfterDhRatchet(newChainKey: inout Data, newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
         

@@ -9,11 +9,15 @@ import Foundation
 import SwiftProtobuf
 
 public class EcliptixProtocolSystem {
-    private var connectSession: EcliptixProtocolConnection?
+    private var protocolConnection: EcliptixProtocolConnection?
     private let ecliptixSystemIdentityKeys: EcliptixSystemIdentityKeys
 
     init(ecliptixSystemIdentityKeys: EcliptixSystemIdentityKeys) {
         self.ecliptixSystemIdentityKeys = ecliptixSystemIdentityKeys
+    }
+    
+    func getIdentityKeys() -> EcliptixSystemIdentityKeys {
+        self.ecliptixSystemIdentityKeys
     }
     
     func beginDataCenterPubKeyExchange(
@@ -25,7 +29,7 @@ public class EcliptixProtocolSystem {
         return ecliptixSystemIdentityKeys.createPublicBundle()
             .flatMap { bundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: true)
                 .flatMap { session in
-                    self.connectSession = session
+                    self.protocolConnection = session
                     return session.getCurrentSenderDhPublicKey()
                         .map { dhPublicKey in
                             var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
@@ -70,7 +74,7 @@ public class EcliptixProtocolSystem {
                         }
                         .flatMap { localBundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: false)
                                 .flatMap { session in
-                                    self.connectSession = session
+                                    self.protocolConnection = session
                                     return self.ecliptixSystemIdentityKeys.calculateSharedSecretAsRecipient(
                                         remoteIdentityPublicKeyX: peerBundle.identityX25519,
                                         remoteEphemeralPublicKeyX: peerBundle.ephemeralX25519!,
@@ -104,7 +108,7 @@ public class EcliptixProtocolSystem {
         }
     }
 
-    func completeDataCenterPubKeyExchange(exchangeType: Ecliptix_Proto_PubKeyExchangeType, peerMessage: inout Ecliptix_Proto_PubKeyExchange) throws -> Result<Unit, EcliptixProtocolFailure> {
+    func completeDataCenterPubKeyExchange(peerMessage: inout Ecliptix_Proto_PubKeyExchange) throws {
         var rootKeyHandle: SodiumSecureMemoryHandle? = nil
         
         defer {
@@ -112,7 +116,7 @@ public class EcliptixProtocolSystem {
         }
         
         do {
-            return Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
+            Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
                 try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerMessage.payload)
             }.mapError { error in
                 .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
@@ -127,10 +131,10 @@ public class EcliptixProtocolSystem {
                     }
                     .flatMap { rootKeyBytes in
                         var rootKeyBytesCopy = rootKeyBytes
-                        return self.connectSession!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerMessage.initialDhPublicKey)
+                        return self.protocolConnection!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerMessage.initialDhPublicKey)
                     }
-                    .flatMap { _ in self.connectSession!.setPeerBundle(peerBundle) }
-                    .flatMap { _ in self.connectSession!.setConnectionState(.complete) }
+                    .flatMap { _ in self.protocolConnection!.setPeerBundle(peerBundle) }
+                    .flatMap { _ in self.protocolConnection!.setConnectionState(.complete) }
             }
         } catch {
             debugPrint("Unexpected error in completeDataCenterPubKeyExchange: \(error)")
@@ -147,13 +151,13 @@ public class EcliptixProtocolSystem {
         }
         
         do {
-            return self.connectSession!.prepareNextSendMessage()
-                .flatMap { prep in self.connectSession!.generateNextNonce()
+            return self.protocolConnection!.prepareNextSendMessage()
+                .flatMap { prep in self.protocolConnection!.generateNextNonce()
                         .flatMap { nonce in getOptionalSenderDhKey(include: prep.includeDhKey)
                                 .flatMap { newSenderDhPublicKey in Self.cloneMessageKey(key: prep.messageKey)
                                         .flatMap { clonedKey in
                                             messageKeyClone = clonedKey
-                                            return self.connectSession!.getPeerBundle()
+                                            return self.protocolConnection!.getPeerBundle()
                                         }
                                         .flatMap { peerBundle in
                                             let ad = Self.createAssociatedData(self.ecliptixSystemIdentityKeys.identityX25519PublicKey, peerBundle.identityX25519)
@@ -192,12 +196,12 @@ public class EcliptixProtocolSystem {
             var receivedDhKey = cipherPayloadProto.dhPublicKey.count > 0 ? cipherPayloadProto.dhPublicKey : nil
             
             return performRatchetIfNeeded(receivedDhKey: receivedDhKey)
-                .flatMap { _ in self.connectSession!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
+                .flatMap { _ in self.protocolConnection!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
                 }
                 .flatMap { key in Self.cloneMessageKey(key: key) }
                 .flatMap { clonedKey in
                     messageKeyClone = clonedKey
-                    return self.connectSession!.getPeerBundle()
+                    return self.protocolConnection!.getPeerBundle()
                 }
                 .flatMap { peerBundle in
                     let ad = Self.createAssociatedData(peerBundle.identityX25519, self.ecliptixSystemIdentityKeys.identityX25519PublicKey)
@@ -207,10 +211,25 @@ public class EcliptixProtocolSystem {
             throw error
         }
     }
+    
+    static func createFrom(keys: EcliptixSystemIdentityKeys, connection: EcliptixProtocolConnection) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
+        var system = EcliptixProtocolSystem(ecliptixSystemIdentityKeys: keys)
+        system.protocolConnection = connection
+        
+        return .success(system)
+    }
+    
+    func getConnection() throws -> EcliptixProtocolConnection {
+        if self.protocolConnection == nil {
+            throw EcliptixProtocolFailure.unexpectedError("Connection has not been established yet.")
+        }
+        
+        return self.protocolConnection!
+    }
 
     private func getOptionalSenderDhKey(include: Bool) -> Result<Data, EcliptixProtocolFailure> {
         return include
-            ? self.connectSession!.getCurrentSenderDhPublicKey().map { k in k! }
+            ? self.protocolConnection!.getCurrentSenderDhPublicKey().map { k in k! }
             : .success(Data())
     }
     
@@ -219,10 +238,10 @@ public class EcliptixProtocolSystem {
             return .success(.value)
         }
         
-        return self.connectSession!.getCurrentPeerDhPublicKey()
+        return self.protocolConnection!.getCurrentPeerDhPublicKey()
             .flatMap { currentPeerDhKey in
                 if currentPeerDhKey != nil && receivedDhKey != currentPeerDhKey {
-                    return self.connectSession!.performReceivingRatchet(receivedDhKey: receivedDhKey!)
+                    return self.protocolConnection!.performReceivingRatchet(receivedDhKey: receivedDhKey!)
                 }
                 
                 return .success(.value)
