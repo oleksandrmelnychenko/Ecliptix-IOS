@@ -275,6 +275,7 @@ final class NetworkProvider {
             if response.status == .sessionResumed {
                 _ = syncSecrecyChannel(currentState: ecliptixSecrecyChannelState, serverResponse: response)
                 return .success(true)
+            } else if (response.status == .sessionNotFound) {
             }
             
             _ = syncSecrecyChannel(currentState: ecliptixSecrecyChannelState, serverResponse: response)

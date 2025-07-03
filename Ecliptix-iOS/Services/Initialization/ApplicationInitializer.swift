@@ -113,7 +113,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                         ecliptixSecrecyChannelState: state,
                         applicationInstanceSettings: settings)
                     
-                    if restoreResult.isOk, let _ = try? restoreResult.unwrap() {
+                    if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
                         print("Successfully restored and synchronized secrecy channel \(connectId)")
                         return .success(connectId)
                     }

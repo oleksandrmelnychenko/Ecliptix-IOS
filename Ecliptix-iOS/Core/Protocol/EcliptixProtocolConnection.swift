@@ -84,6 +84,12 @@ final class EcliptixProtocolConnection {
         self.isInitiator = proto.isInitiator
         self.createdAt = proto.createdAt.toDate()
         self.nonceCounter = ManagedAtomic(UInt32(clamping: proto.nonceCounter))
+            
+        guard let peerBundle = try? PublicKeyBundle.fromProtobufExchange(proto.peerBundle).unwrap() else {
+            fatalError("Failed to parse PublicKeyBundle")
+        }
+        self.peerBundle = peerBundle
+
         self.peerDhPublicKey = proto.peerDhPublicKey.isEmpty ? nil : Data(proto.peerDhPublicKey)
         self.isFirstReceivingRatchet = proto.isFirstReceivingRatchet
         self.rootKeyHandle = rootKeyHandle
