@@ -174,8 +174,8 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "22"
-            endingLineNumber = "22"
+            startingLineNumber = "24"
+            endingLineNumber = "24"
             landmarkName = "initializeAsync()"
             landmarkType = "7">
          </BreakpointContent>
@@ -414,8 +414,8 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "126"
-            endingLineNumber = "126"
+            startingLineNumber = "128"
+            endingLineNumber = "128"
             landmarkName = "ensureSecrecyChannelAsync(settings:isNewInstance:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -430,8 +430,8 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "128"
-            endingLineNumber = "128"
+            startingLineNumber = "130"
+            endingLineNumber = "130"
             landmarkName = "ensureSecrecyChannelAsync(settings:isNewInstance:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -446,13 +446,13 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "116"
-            endingLineNumber = "116"
+            startingLineNumber = "118"
+            endingLineNumber = "118"
             landmarkName = "ensureSecrecyChannelAsync(settings:isNewInstance:)"
             landmarkType = "7">
             <Locations>
                <Location
-                  uuid = "6BF5F492-A38F-4BB8-A932-78612D8EC54E - 678bee0474c27a50"
+                  uuid = "6BF5F492-A38F-4BB8-A932-78612D8EC54E - 678bee0474c27992"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -462,11 +462,11 @@
                   urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "116"
-                  endingLineNumber = "116">
+                  startingLineNumber = "118"
+                  endingLineNumber = "118">
                </Location>
                <Location
-                  uuid = "6BF5F492-A38F-4BB8-A932-78612D8EC54E - 678bee0474c27a50"
+                  uuid = "6BF5F492-A38F-4BB8-A932-78612D8EC54E - 678bee0474c27992"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -476,8 +476,8 @@
                   urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "116"
-                  endingLineNumber = "116">
+                  startingLineNumber = "118"
+                  endingLineNumber = "118">
                </Location>
             </Locations>
          </BreakpointContent>
@@ -492,13 +492,13 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "125"
-            endingLineNumber = "125"
+            startingLineNumber = "127"
+            endingLineNumber = "127"
             landmarkName = "ensureSecrecyChannelAsync(settings:isNewInstance:)"
             landmarkType = "7">
             <Locations>
                <Location
-                  uuid = "524C55E5-9FCB-487B-AE76-D4B8AD10D1AF - a1819f87d024c57f"
+                  uuid = "524C55E5-9FCB-487B-AE76-D4B8AD10D1AF - a1819f87d024c4bd"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -508,11 +508,11 @@
                   urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "125"
-                  endingLineNumber = "125">
+                  startingLineNumber = "127"
+                  endingLineNumber = "127">
                </Location>
                <Location
-                  uuid = "524C55E5-9FCB-487B-AE76-D4B8AD10D1AF - 678bee0474c27979"
+                  uuid = "524C55E5-9FCB-487B-AE76-D4B8AD10D1AF - 678bee0474c278bb"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -522,8 +522,8 @@
                   urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "125"
-                  endingLineNumber = "125">
+                  startingLineNumber = "127"
+                  endingLineNumber = "127">
                </Location>
             </Locations>
          </BreakpointContent>
@@ -705,6 +705,22 @@
             startingLineNumber = "191"
             endingLineNumber = "191"
             landmarkName = "sendRequest(connectId:protocolSystem:onSuccessCallback:_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "066F3D33-A7CC-4444-8246-99213D4DA738"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "48"
+            endingLineNumber = "48"
+            landmarkName = "initializeAsync()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
