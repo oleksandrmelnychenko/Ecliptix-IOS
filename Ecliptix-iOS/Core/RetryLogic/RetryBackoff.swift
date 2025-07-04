@@ -7,7 +7,7 @@
 
 import math_h
 
-struct RetryBackoff {
+internal struct RetryBackoff {
     var baseDelay:  UInt64 = 500_000_000        // 0.5 s
     var maxDelay:   UInt64 = 10_000_000_000     // 10 s
     var multiplier: Double = 2.0               // e.g. 0.5 s → 1 s → 2 s …

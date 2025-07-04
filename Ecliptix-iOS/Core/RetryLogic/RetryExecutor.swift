@@ -10,11 +10,14 @@ import GRPC
 
 final class RetryExecutor {
     
+    private static let defaultMaxRetryCount: Int = 3
+    
     static func execute<Output>(
-        maxRetryCount:     Int  = 10,
+        maxRetryCount:     Int = defaultMaxRetryCount,
         backoff:           RetryBackoff = .init(),
-        retryConditions:   [(Error) -> Bool],
-        _ block:           @escaping () async throws -> Output
+        retryConditions:   [(Error) -> Bool] = [RetryCondition.grpcUnavailableOnly],
+        onRetry: ((Int, Error) -> Void)? = nil,
+        _ block: @escaping () async throws -> Output
     ) async throws -> Result<Output, EcliptixProtocolFailure> {
         
         var attempts = 0
@@ -25,35 +28,41 @@ final class RetryExecutor {
                 let value = try await block()
                 return .success(value)
             } catch {
-                let shouldRetry = retryConditions.contains { $0(error) }
-                
-                guard shouldRetry else {
+                if !shouldRetry(error, conditions: retryConditions) {
                     throw error
                 }
-                
+
                 guard attempts < maxRetryCount else {
                     return .failure(.generic("Retry attempts exhausted", inner: error))
                 }
+                
+                onRetry?(attempts, error)
                 
                 let delay = backoff.delay(for: attempts)
                 try? await Task.sleep(nanoseconds: delay)
             }
         }
         
-        return .failure(.generic("Retry logic failed unexpectedly."))
+        return .failure(.unexpectedError("Retry logic failed unexpectedly."))
     }
     
     static func execute<Output>(
         maxRetryCount:   Int  = 3,
         backoff:         RetryBackoff = .init(),
-        retryCondition:  @escaping (Error) -> Bool,
+        retryCondition:  @escaping (Error) -> Bool = RetryCondition.grpcUnavailableOnly,
+        onRetry:         ((Int, Error) -> Void)? = nil,
         _ block:         @escaping () async throws -> Output
     ) async throws -> Result<Output, EcliptixProtocolFailure> {
         try await execute(
                 maxRetryCount:   maxRetryCount,
                 backoff:         backoff,
                 retryConditions: [retryCondition],
+                onRetry: onRetry,
                 block
         )
+    }
+    
+    private static func shouldRetry(_ error: Error, conditions: [(Error) -> Bool]) -> Bool {
+        return conditions.contains { $0(error) }
     }
 }

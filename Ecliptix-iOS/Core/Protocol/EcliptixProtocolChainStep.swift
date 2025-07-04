@@ -14,6 +14,7 @@ final class EcliptixProtocolChainStep {
 
     private var chainKeyHandle: SodiumSecureMemoryHandle
     private var dhPrivateKeyHandle: SodiumSecureMemoryHandle?
+    private var messageKeys: OrderedDictionary<UInt32, EcliptixMessageKey>
     private var dhPublicKey: Data?
     private var currentIndex: UInt32 = 0
     private var isNewChain = false
@@ -37,6 +38,7 @@ final class EcliptixProtocolChainStep {
         self.cacheWindow = cacheWindowSize
         self.currentIndex = 0
         self.isNewChain = false
+        self.messageKeys = [:]
         self.disposed = false
     }
 
@@ -98,13 +100,13 @@ final class EcliptixProtocolChainStep {
             }
     }
     
-    internal func getOrDeriveKeyFor(targetIndex: UInt32, messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
+    internal func getOrDeriveKeyFor(targetIndex: UInt32) -> Result<EcliptixMessageKey, EcliptixProtocolFailure> {
         if self.disposed {
             return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         }
         
         do {
-            let cachedKey = messageKeys[targetIndex]
+            let cachedKey = self.messageKeys[targetIndex]
             
             if cachedKey != nil {
                 return .success(cachedKey!)
@@ -156,18 +158,18 @@ final class EcliptixProtocolChainStep {
                 
                 let messageKey = try keyResult.unwrap()
                                 
-                if messageKeys[idx] != nil {
+                if self.messageKeys[idx] != nil {
                     messageKey.dispose()
                     return .failure(.generic("Key for index \(idx) unexpectedly appeared during derivation."))
                 }
-                messageKeys[idx] = messageKey
+                self.messageKeys[idx] = messageKey
         
                 let writeResult = nextChainKey.withUnsafeBytes { bufferPointer in
                     self.chainKeyHandle.write(data: bufferPointer).mapSodiumFailure()
                 }
 
                 if writeResult.isErr {
-                    messageKeys.removeValue(forKey: idx)?.dispose()
+                    self.messageKeys.removeValue(forKey: idx)?.dispose()
                     return .failure(try writeResult.unwrapErr())
                 }
                 
@@ -179,9 +181,9 @@ final class EcliptixProtocolChainStep {
                 return .failure(try setIndexResult.unwrapErr())
             }
             
-            pruneOldKeys(messageKeys: &messageKeys)
+            pruneOldKeys()
             
-            if let finalKey = messageKeys[targetIndex] {
+            if let finalKey = self.messageKeys[targetIndex] {
                 return .success(finalKey)
             } else {
                 return .failure(.generic("Derived key for index \(targetIndex) missing after derivation loop."))
@@ -193,7 +195,7 @@ final class EcliptixProtocolChainStep {
         }
     }
     
-    public func skipKeysUntil(targetIndex: UInt32, messageKeyCache: inout OrderedDictionary<UInt32, EcliptixMessageKey>) -> Result<Unit, EcliptixProtocolFailure> {
+    public func skipKeysUntil(targetIndex: UInt32) -> Result<Unit, EcliptixProtocolFailure> {
         
         if self.currentIndex >= targetIndex {
             return .success(.value)
@@ -201,7 +203,7 @@ final class EcliptixProtocolChainStep {
         
         do {
             for i in (self.currentIndex + 1)...targetIndex {
-                let keyResult = self.getOrDeriveKeyFor(targetIndex: i, messageKeys: &messageKeyCache)
+                let keyResult = self.getOrDeriveKeyFor(targetIndex: i)
                 guard keyResult.isOk else {
                     return .failure(try keyResult.unwrapErr())
                 }
@@ -289,8 +291,8 @@ final class EcliptixProtocolChainStep {
         }
     }
     
-    internal func pruneOldKeys(messageKeys: inout OrderedDictionary<UInt32, EcliptixMessageKey>) {
-        if disposed || cacheWindow == 0 || messageKeys.isEmpty { return }
+    internal func pruneOldKeys() {
+        if disposed || cacheWindow == 0 || self.messageKeys.isEmpty { return }
         
         do {
             let currentIndexResult = getCurrentIndex()
@@ -301,10 +303,10 @@ final class EcliptixProtocolChainStep {
             
             let minIndexToKeep = indexToPruneAgainst >= self.cacheWindow ? indexToPruneAgainst - self.cacheWindow + 1 : 0
                         
-            let keysToRemove: [UInt32] = messageKeys.keys.filter { $0 < minIndexToKeep }
+            let keysToRemove: [UInt32] = self.messageKeys.keys.filter { $0 < minIndexToKeep }
             
             for keyIndex in keysToRemove {
-                if let messageKeyToDispose = messageKeys.removeValue(forKey: keyIndex) {
+                if let messageKeyToDispose = self.messageKeys.removeValue(forKey: keyIndex) {
                     messageKeyToDispose.dispose()
                  }
             }

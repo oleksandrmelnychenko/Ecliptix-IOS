@@ -124,7 +124,7 @@ final class NetworkProvider {
     
     func executeServiceAction(
         connectId: UInt32,
-        serviceType: RcpServiceType,
+        serviceType: RpcServiceType,
         plainBuffer: Data,
         flowType: ServiceFlowType,
         onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,

@@ -9,6 +9,9 @@ class RpcServiceManager {
     private let unaryRpcService: UnaryRpcService
     private let receiveStreamExecutor: ReceiveStreamRpcService
     private let secrecyChannelRpcService: SecrecyChannelRpcService
+    
+    private var serviceInvokers: [ServiceFlowType: GrpcMethodDelegate] = [:]
+    typealias GrpcMethodDelegate = (_ request: ServiceRequest, _ token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure>
         
     init(
         unaryRpcService: UnaryRpcService,
@@ -18,17 +21,21 @@ class RpcServiceManager {
         self.unaryRpcService = unaryRpcService
         self.receiveStreamExecutor = receiveStreamExecutor
         self.secrecyChannelRpcService = secrecyChannelRpcService
+        
+        self.serviceInvokers = [
+            .single: self.unaryRpcService.invokeRequestAsync,
+            .receiveStream: self.receiveStreamExecutor.processRequestAsync
+        ]
     }
     
     public func establishAppDeviceSecrecyChannel(
         serviceRequest: SecrecyKeyExchangeServiceRequest<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>
     ) async -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
         
-        do {
-            let response = try await secrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: serviceRequest.pubKeyExchange)
-            return response
-        } catch {
-            return .failure(.unexpectedError("Error during establish app device secrecy channel", inner: error))
+        return await Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure>.TryAsync {
+            try await self.secrecyChannelRpcService.establishAppDeviceSecrecyChannel(request: serviceRequest.pubKeyExchange).unwrap()
+        }.mapError { error in
+            EcliptixProtocolFailure.unexpectedError("Error during establish app device secrecy channel", inner: error)
         }
     }
     
@@ -36,29 +43,32 @@ class RpcServiceManager {
         serviceRequest: SecrecyKeyExchangeServiceRequest<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>
     ) async -> Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, EcliptixProtocolFailure> {
         
-        do {
-            let restoreSecrecyChannelResult = try await secrecyChannelRpcService.restoreAppDeviceSecrecyChannelAsync(request: serviceRequest.pubKeyExchange)
-            return restoreSecrecyChannelResult
-        } catch {
-            return .failure(.unexpectedError("Error during restore app device secrecy channel.", inner: error))
+        return await Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, EcliptixProtocolFailure>.TryAsync {
+            try await self.secrecyChannelRpcService.restoreAppDeviceSecrecyChannelAsync(request: serviceRequest.pubKeyExchange).unwrap()
+        }.mapError { error in
+            EcliptixProtocolFailure.unexpectedError("Error during establish app device secrecy channel", inner: error)
         }
     }
     
     public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
         
-        let action = request.rcpServiceMethod
-                
-        if request.actionType == .single {
-            let result = try await unaryRpcService.invokeRequestAsync(request: request, cancellation: token)
-            return result
+        guard let invoker = self.serviceInvokers[request.actionType] else {
+            return .failure(.invalidInput("Unsupported invoker"))
+        }
+        
+        do {
+            let task = try await invoker(request, token)
             
-        } else if request.actionType == .receiveStream {
-            let result: Result<RpcFlow, EcliptixProtocolFailure> = receiveStreamExecutor.processRequestAsync(request: request)
-            return result
+            switch task {
+            case .success:
+                print("Action \(request.rcpServiceMethod) executed successfully for req_id: \(request.reqId)")
+            case .failure:
+                print("Action \(request.rcpServiceMethod) failed for req_id: \(request.reqId). Error: \(try task.unwrapErr())")
+            }
             
-        } else {
-            let result: Result<RpcFlow, EcliptixProtocolFailure> = .failure(.generic("Unhandled action type"))
-            return result
+            return task
+        } catch {
+            return .failure(.unexpectedError("Invocation failed", inner: error))
         }
     }
 }

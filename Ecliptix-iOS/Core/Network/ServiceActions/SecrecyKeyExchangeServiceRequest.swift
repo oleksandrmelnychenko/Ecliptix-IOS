@@ -11,13 +11,13 @@ final class SecrecyKeyExchangeServiceRequest<TRequest: SwiftProtobuf.Message, TR
     
     public let reqId: UInt32
     public let jobType: ServiceFlowType
-    public let method: RcpServiceType
+    public let method: RpcServiceType
     public let pubKeyExchange: TRequest
     
     private init(
         reqId: UInt32,
         jobType: ServiceFlowType,
-        method: RcpServiceType,
+        method: RpcServiceType,
         pubKeyExchange: TRequest,
     ) {
         self.reqId = reqId
@@ -28,7 +28,7 @@ final class SecrecyKeyExchangeServiceRequest<TRequest: SwiftProtobuf.Message, TR
     
     public static func new(
         jobType: ServiceFlowType,
-        method: RcpServiceType,
+        method: RpcServiceType,
         pubKeyExchange: TRequest,
     ) -> SecrecyKeyExchangeServiceRequest<TRequest, TResponse> {
         let reqId = Utilities.generateRandomUInt32()

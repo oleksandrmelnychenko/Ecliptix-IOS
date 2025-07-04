@@ -11,24 +11,36 @@ import SwiftProtobuf
 
 final class ReceiveStreamRpcService {
     private let client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
+    
+    private var serviceHandlers: [RpcServiceType: GrpcMethodDelegate] = [:]
+    typealias GrpcMethodDelegate = (_ payload: Ecliptix_Proto_CipherPayload, _ token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure>
 
     init(client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient) {
         self.client = client
+        
+        self.serviceHandlers = [
+            .initiateVerification: self.initiateVerificationAsync
+        ]
     }
 
     func processRequestAsync(	
-        request: ServiceRequest
-    ) -> Result<RpcFlow, EcliptixProtocolFailure> {
-        switch request.rcpServiceMethod {
-        case .initiateVerification:
-            return initiateVerificationAsync(payload: request.payload)
-        default:
-            return .failure(.generic("Unsupported service method"))
+        request: ServiceRequest,
+        token: CancellationToken
+    ) async -> Result<RpcFlow, EcliptixProtocolFailure> {
+        guard let hadler = self.serviceHandlers[request.rcpServiceMethod] else {
+            return .failure(.invalidInput("Unsupported handler"))
+        }
+        
+        do {
+            return try await hadler(request.payload, token)
+        } catch {
+            return .failure(.unexpectedError("Invocation failed", inner: error))
         }
     }
 
     private func initiateVerificationAsync(
-        payload: Ecliptix_Proto_CipherPayload
+        payload: Ecliptix_Proto_CipherPayload,
+        token: CancellationToken
     ) -> Result<RpcFlow, EcliptixProtocolFailure> {
         let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error> { continuation in
             Task {

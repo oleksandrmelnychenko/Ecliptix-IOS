@@ -8,14 +8,14 @@
 class ServiceRequest {
     public let reqId: UInt32
     public let actionType: ServiceFlowType
-    public let rcpServiceMethod: RcpServiceType
+    public let rcpServiceMethod: RpcServiceType
     public let payload: Ecliptix_Proto_CipherPayload
     public let encryptedChunls: [Ecliptix_Proto_CipherPayload]
     
     private init(
         reqId: UInt32,
         actionType: ServiceFlowType,
-        rcpServiceMethod: RcpServiceType,
+        rcpServiceMethod: RpcServiceType,
         payload: Ecliptix_Proto_CipherPayload,
         encryptedChunls: [Ecliptix_Proto_CipherPayload])
     {
@@ -30,7 +30,7 @@ class ServiceRequest {
     
     public static func new(
         actionType: ServiceFlowType,
-        rcpServiceMethod: RcpServiceType,
+        rcpServiceMethod: RpcServiceType,
         payload: Ecliptix_Proto_CipherPayload,
         encryptedChunls: [Ecliptix_Proto_CipherPayload]
     ) -> ServiceRequest {

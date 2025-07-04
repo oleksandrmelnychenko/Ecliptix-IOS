@@ -14,6 +14,6 @@ public enum RpcServiceType {
     case initiateVerification
     case opaqueRegistrationInit
     case opaqueRegistrationComplete
-    case opaqueSignInInit
-    case opaqueSignInComplete
+    case opaqueSignInInitRequest
+    case opaqueSignInCompleteRequest
 }

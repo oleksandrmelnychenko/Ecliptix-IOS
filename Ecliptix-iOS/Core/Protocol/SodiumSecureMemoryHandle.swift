@@ -11,7 +11,7 @@ enum SodiumSecureMemoryHandleException: Error {
     case objectDisposed(message: String)
 }
 
-final public class SodiumSecureMemoryHandle {
+final public class SodiumSecureMemoryHandle: Equatable {
     private(set) var pointer: UnsafeMutableRawPointer?
     let length: Int
     private var refCount: Int = 1
@@ -244,6 +244,10 @@ final public class SodiumSecureMemoryHandle {
             isClosed = true
             isAllocated = false
         }
+    }
+    
+    public static func == (lhs: SodiumSecureMemoryHandle, rhs: SodiumSecureMemoryHandle) -> Bool {
+        return lhs.pointer == rhs.pointer && lhs.length == rhs.length
     }
     
     private func dangerousAddRef(_ success: inout Bool) throws {

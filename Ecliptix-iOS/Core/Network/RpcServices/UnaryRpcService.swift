@@ -14,6 +14,9 @@ final class UnaryRpcService {
     private let appDeviceClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
     private let authClient: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
     
+    private var serviceMethods: [RpcServiceType: GrpcMethodDelegate] = [:]
+    typealias GrpcMethodDelegate = (_ payload: Ecliptix_Proto_CipherPayload, _ token: CancellationToken) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
+
     init(
         membershipClient: Ecliptix_Proto_Membership_MembershipServicesAsyncClient,
         appDeviceClient: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient,
@@ -22,66 +25,37 @@ final class UnaryRpcService {
         self.membershipClient = membershipClient
         self.appDeviceClient = appDeviceClient
         self.authClient = authClient
+        
+        self.serviceMethods = [
+            .registerAppDevice: registerDeviceAsync,
+            .validatePhoneNumber: validatePhoneNumberAsync,
+            .opaqueRegistrationInit: opaqueRegistrationRecordRequestAsync,
+            .verifyOtp: verifyCodeAsync,
+            .opaqueRegistrationComplete: opaqueRegistrationCompleteRequestAsync,
+            .opaqueSignInInitRequest: opaqueSignInInitRequestAsync,
+            .opaqueSignInCompleteRequest: opaqueSignInCompleteRequestAsync
+        ]
     }
 
     func invokeRequestAsync(
         request: ServiceRequest,
-        cancellation: CancellationToken
-    ) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
+        token: CancellationToken
+    ) async -> Result<RpcFlow, EcliptixProtocolFailure> {
+        guard let handler = self.serviceMethods[request.rcpServiceMethod] else {
+            return .failure(.invalidInput("Unsupported method"))
+        }
+        
         do {
-            switch request.rcpServiceMethod {
-            case .registerAppDevice:
-                return try await wrapCall {
-                    try await self.registerDeviceAsync(payload: request.payload, cancellation: cancellation)
-                }
+            let task = try await handler(request.payload, token)
             
-            case .validatePhoneNumber:
-                return try await wrapCall {
-                    try await self.validatePhoneNumberAsync(payload: request.payload, cancellation: cancellation)
-                }
-
-            case .opaqueRegistrationInit:
-                return try await wrapCall {
-                    try await self.opaqueRegistrationRecordRequestAsync(payload: request.payload, cancellation: cancellation)
-                }
-                
-            case .opaqueRegistrationComplete:
-                return try await wrapCall {
-                    try await self.opaqueRegistrationCompleteRequestAsync(payload: request.payload, cancellation: cancellation)
-                }
-                
-            case .opaqueSignInInit:
-                return try await wrapCall {
-                    try await self.opaqueSignInInitRequestAsync(payload: request.payload, cancellation: cancellation)
-                }
-                
-            case .opaqueSignInComplete:
-                return try await wrapCall {
-                    try await self.opaqueSignInCompleteRequestAsync(payload: request.payload, cancellation: cancellation)
-                }
-                
-            case .verifyOtp:
-                return try await wrapCall {
-                    try await self.verifyCodeAsync(payload: request.payload, cancellation: cancellation)
-                }
-
-            default:
-                return .failure(.generic("Unsupported service method"))
+            switch task {
+            case .success:
+                return .success(RpcFlow.SingleCall(immediate: task))
+            case .failure:
+                return .failure(try task.unwrapErr())
             }
         } catch {
-            throw error
-        }
-    }
-
-    private func wrapCall(
-        _ block: @escaping () async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
-    ) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
-        let task = try await block()
-
-        if task.isOk {
-            return .success(RpcFlow.SingleCall(result: { task }))
-        } else {
-            return .failure(try task.unwrapErr())
+            return .failure(.unexpectedError("Invocation failed", inner: error))
         }
     }
     
@@ -89,22 +63,19 @@ final class UnaryRpcService {
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.appDeviceClient.registerDeviceAppIfNotExist(payload)
-            }
-        )
+        
+        return await Self.executeGrpcCallAsync {
+            try await self.appDeviceClient.registerDeviceAppIfNotExist(payload)
+        }
     }
 
     private func validatePhoneNumberAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.authClient.validatePhoneNumber(payload)
-            }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.authClient.validatePhoneNumber(payload)
+        }
     }
 
     private func verifyCodeAsync(
@@ -112,55 +83,64 @@ final class UnaryRpcService {
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
         
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.authClient.verifyOtp(payload)
-            }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.authClient.verifyOtp(payload)
+        }
     }
     
     private func opaqueRegistrationRecordRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-           {
-                try await self.membershipClient.opaqueRegistrationInitRequest(payload)
-           }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.membershipClient.opaqueRegistrationInitRequest(payload)
+        }
     }
     
     private func opaqueRegistrationCompleteRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-           {
-                try await self.membershipClient.opaqueRegistrationCompleteRequest(payload)
-           }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.membershipClient.opaqueRegistrationCompleteRequest(payload)
+        }
     }
     
     private func opaqueSignInInitRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-           {
-                try await self.membershipClient.opaqueSignInInitRequest(payload)
-           }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.membershipClient.opaqueSignInInitRequest(payload)
+        }
     }
 
     private func opaqueSignInCompleteRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return try await RetryExecutor.execute(retryCondition: RetryCondition.grpcUnavailableOnly,
-            {
-                try await self.membershipClient.opaqueSignInCompleteRequest(payload)
-            }
-        )
+        return await Self.executeGrpcCallAsync {
+            try await self.membershipClient.opaqueSignInCompleteRequest(payload)
+        }
+    }
+    
+    private static func executeGrpcCallAsync(
+        _ grpcCallFactory: @escaping () async throws -> Ecliptix_Proto_CipherPayload
+    ) async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+        
+        let conditions: [(Error) -> Bool] = [
+            RetryCondition.grpcUnavailableOnly,
+            RetryCondition.grpcDeadlineExceededOnly,
+            RetryCondition.grpcResourceExhaustedOnly
+        ]
+        
+        return await Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>.TryAsync {
+            try await RetryExecutor.execute(retryConditions: conditions) {
+                try await grpcCallFactory()
+            }.unwrap()
+        }.mapError { error in
+            EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
+        }
     }
 }
 
