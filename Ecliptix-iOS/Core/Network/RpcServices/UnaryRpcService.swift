@@ -63,9 +63,10 @@ final class UnaryRpcService {
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
         
         return await Self.executeGrpcCallAsync {
-            try await self.appDeviceClient.registerDeviceAppIfNotExist(payload)
+            return try await self.appDeviceClient.registerDeviceAppIfNotExist(payload, callOptions: options)
         }
     }
 
@@ -73,6 +74,8 @@ final class UnaryRpcService {
         payload: Ecliptix_Proto_CipherPayload,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+        
+        
         return await Self.executeGrpcCallAsync {
             try await self.authClient.validatePhoneNumber(payload)
         }
@@ -128,17 +131,21 @@ final class UnaryRpcService {
         _ grpcCallFactory: @escaping () async throws -> Ecliptix_Proto_CipherPayload
     ) async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
         
-        let conditions: [(Error) -> Bool] = [
-            RetryCondition.grpcUnavailableOnly,
-            RetryCondition.grpcDeadlineExceededOnly,
-            RetryCondition.grpcResourceExhaustedOnly
-        ]
+//        return await Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>.TryAsync {
+//            try await RetryExecutor.execute(maxRetryCount: nil, retryConditions: conditions) {
+//                try await grpcCallFactory()
+//            }.unwrap()
+//        }.mapError { error in
+//            EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
+//        }
+        
         
         return await Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>.TryAsync {
-            try await RetryExecutor.execute(retryConditions: conditions) {
+            try await GrpcResiliencePolicies.getAuthenticatedPolicy(networkProvider: ServiceLocator.shared.resolve(NetworkProviderProtocol.self)) {
                 try await grpcCallFactory()
-            }.unwrap()
-        }.mapError { error in
+            }
+        }
+        .mapError { error in
             EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
         }
     }

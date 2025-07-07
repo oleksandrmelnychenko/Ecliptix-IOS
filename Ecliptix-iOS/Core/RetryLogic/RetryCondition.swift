@@ -6,6 +6,7 @@
 //
 
 import GRPC
+import Foundation
 
 enum RetryCondition {
     static func grpcUnavailableOnly(_ error: Error) -> Bool {
@@ -19,6 +20,11 @@ enum RetryCondition {
         if let grpcError = error as? GRPCStatus {
             return grpcError.code == .deadlineExceeded
         }
+        
+        if String(describing: error).contains("RPC timed out before completing") {
+            return true
+        }
+
         return false
     }
     
@@ -29,7 +35,10 @@ enum RetryCondition {
         return false
     }
     
-    static func retryAlways(_: Error) -> Bool {
-        return true
+    static func isUnauthorizedError(_ error: Error) -> Bool {
+        if let grpcError = error as? GRPCStatus {
+            return grpcError.code == .unauthenticated
+        }
+        return false
     }
 }

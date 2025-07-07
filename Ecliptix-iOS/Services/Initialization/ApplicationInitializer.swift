@@ -54,18 +54,6 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         }
     }
     
-//    public func reEstablishConnectionAsync() async {
-//        let connectId = computeConnectId()
-//        let appDevice = computeAppDeviceId()
-//        let result = await networkController.establishSecrecyChannel(connectId: connectId)
-//        
-//        if result.isErr {
-//            
-//        } else {
-//            await registerDeviceAsync(connectId: connectId, appDevice: appDevice, token: CancellationToken())
-//        }
-//    }
-
     private func getOrCreateInstanceSettingsAsync() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
         let settingsKey = "ApplicationInstanceSettings"
         
@@ -99,7 +87,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         }
     }
     
-    private func ensureSecrecyChannelAsync(
+    public func ensureSecrecyChannelAsync(
         settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, isNewInstance: Bool
     ) async -> Result<UInt32, EcliptixProtocolFailure> {
         do {

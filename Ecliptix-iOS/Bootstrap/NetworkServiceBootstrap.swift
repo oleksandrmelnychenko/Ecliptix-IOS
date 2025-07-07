@@ -34,6 +34,7 @@ enum NetworkServiceBootstrap {
             secureStorageProvider: secureStoreProvider,
             rpcMetaDataProvider: rpcMetaDataProvider,
             rpcServiceManager: manager)
+        ServiceLocator.shared.register(NetworkProviderProtocol.self, service: controller)
         ServiceLocator.shared.register(NetworkProvider.self, service: controller)
     }
 }

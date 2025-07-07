@@ -50,7 +50,7 @@ class RpcServiceManager {
         }
     }
     
-    public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure> {
+    public func invokeServiceRequestAsync(request: ServiceRequest, token: CancellationToken) async -> Result<RpcFlow, EcliptixProtocolFailure> {
         
         guard let invoker = self.serviceInvokers[request.actionType] else {
             return .failure(.invalidInput("Unsupported invoker"))

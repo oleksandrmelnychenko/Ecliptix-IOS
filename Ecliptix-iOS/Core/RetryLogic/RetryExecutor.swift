@@ -13,7 +13,7 @@ final class RetryExecutor {
     private static let defaultMaxRetryCount: Int = 3
     
     static func execute<Output>(
-        maxRetryCount:     Int = defaultMaxRetryCount,
+        maxRetryCount:     Int? = defaultMaxRetryCount,  // nil = infinite
         backoff:           RetryBackoff = .init(),
         retryConditions:   [(Error) -> Bool] = [RetryCondition.grpcUnavailableOnly],
         onRetry: ((Int, Error) -> Void)? = nil,
@@ -21,8 +21,8 @@ final class RetryExecutor {
     ) async throws -> Result<Output, EcliptixProtocolFailure> {
         
         var attempts = 0
-        
-        while attempts < maxRetryCount {
+
+        while true {
             attempts += 1
             do {
                 let value = try await block()
@@ -32,18 +32,20 @@ final class RetryExecutor {
                     throw error
                 }
 
-                guard attempts < maxRetryCount else {
+                if let maxRetry = maxRetryCount, attempts >= maxRetry {
                     return .failure(.generic("Retry attempts exhausted", inner: error))
                 }
-                
+
                 onRetry?(attempts, error)
-                
-                let delay = backoff.delay(for: attempts)
-                try? await Task.sleep(nanoseconds: delay)
+
+                if attempts % 10 == 0 {
+                    try? await Task.sleep(nanoseconds: 60 * 1_000_000_000)
+                } else {
+                    let delay = backoff.delay(for: attempts)
+                    try? await Task.sleep(nanoseconds: delay)
+                }
             }
         }
-        
-        return .failure(.unexpectedError("Retry logic failed unexpectedly."))
     }
     
     static func execute<Output>(

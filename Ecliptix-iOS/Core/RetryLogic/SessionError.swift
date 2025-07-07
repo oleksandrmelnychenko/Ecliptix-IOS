@@ -7,7 +7,7 @@
 
 import GRPC
 
-enum SessionError: Error {
+enum SessionError: Error, Equatable {
     case sessionExpired
     case other(Error)
     
@@ -17,5 +17,9 @@ enum SessionError: Error {
             return .sessionExpired
         }
         return .other(error)
+    }
+    
+    static func == (lhs: SessionError, rhs: SessionError) -> Bool {
+        return lhs.localizedDescription == rhs.localizedDescription
     }
 }

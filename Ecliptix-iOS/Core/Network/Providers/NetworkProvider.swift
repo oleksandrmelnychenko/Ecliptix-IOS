@@ -8,7 +8,7 @@
 import Foundation
 import SwiftProtobuf
 
-final class NetworkProvider {
+final class NetworkProvider: NetworkProviderProtocol {
     private static let defaultOneTimeKeyCount: UInt32 = 5
     
     private let secureStorageProvider: SecureStorageProviderProtocol
@@ -20,6 +20,8 @@ final class NetworkProvider {
     private var isSessionConsiderdHealthy: Bool = false
     
     private var applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings? = nil
+    
+    private lazy var sessionLock = SessionLock(networkProvider: self)
     
     init(secureStorageProvider: SecureStorageProviderProtocol, rpcMetaDataProvider: RpcMetaDataProviderProtocol, rpcServiceManager: RpcServiceManager) {
         self.secureStorageProvider = secureStorageProvider
@@ -45,26 +47,32 @@ final class NetworkProvider {
         }
     }
     
-    func markSessionAsUnhealthy() {
+    func setSecrecyChannelAsUnhealthy() {
         self.isSessionConsiderdHealthy = false
         print("Sesion marked unhealthy")
     }
     
+    func restoreSecrecyChannelAsync() async -> Result<Unit, EcliptixProtocolFailure> {
+        await sessionLock.restoreSecrecyChannelAsync()
+    }
+    
     actor SessionLock {
-        private var isSessionHealthy: Bool = false
-
-        func reEstablishSession(
-            performRecovery: @escaping () async -> Result<Unit, EcliptixProtocolFailure>
-        ) async -> Result<Unit, EcliptixProtocolFailure> {
-            if isSessionHealthy {
+        unowned let networkProvider: NetworkProvider
+        
+        init(networkProvider: NetworkProvider) {
+            self.networkProvider = networkProvider
+        }
+        
+        func restoreSecrecyChannelAsync() async -> Result<Unit, EcliptixProtocolFailure> {
+            if self.networkProvider.isSessionConsiderdHealthy {
                 print("Session was already recovered by another thread. Skipping redundant recovery")
                 return .success(.value)
             }
 
             print("Starting session recovery process...")
-            let result = await performRecovery()
-            isSessionHealthy = result.isOk
-
+            let result = await self.networkProvider.perfromFullRecoveryLogic()
+            
+            self.networkProvider.isSessionConsiderdHealthy = result.isOk
             if result.isErr {
                 print("\(try! result.unwrapErr()) session recovery failed")
             }
@@ -87,7 +95,7 @@ final class NetworkProvider {
                 let restoreResult = await restoreSecrecyChannel(
                     ecliptixSecrecyChannelState: state,
                     applicationInstanceSettings: self.applicationInstanceSettings!)
-                if restoreResult.isOk, let _ = try? restoreResult.unwrap() {
+                if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
                     print("Session successfully restored from storage")
                     return .success(.value)
                 }
@@ -134,33 +142,24 @@ final class NetworkProvider {
             return .failure(.generic("Connection not found"))
         }
         
-        func buildRequest() throws -> ServiceRequest {
-            let outboundPayload = try protocolSystem.produceOutboundMessage(
-                plainPayload: plainBuffer
-            )
-            
-            return ServiceRequest.new(
-                actionType: flowType,
-                rcpServiceMethod: serviceType,
-                payload: try outboundPayload.unwrap(),
-                encryptedChunls: []
-            )
-        }
-        
         do {
             return try await sendRequest(
                 connectId: connectId,
                 protocolSystem: protocolSystem,
                 onSuccessCallback: onSuccessCallback,
-                buildRequest()
+                buildRequest(protocolSystem: protocolSystem, plainBuffer: plainBuffer, flowType: flowType, serviceType: serviceType)
             )
         } catch {
             switch SessionError.parse(from: error) {
             case .sessionExpired:
                 if serviceType == .registerAppDevice {
-                    _ = await establishSecrecyChannel(connectId: connectId)
+                    _ = await self.restoreSecrecyChannelAsync()
                 } else {
-//                    _ = await EstablishConnectionExecutor().reEstablishConnectionAsync()
+                    _ = await ApplicationInitializer().initializeAsync()
+                }
+                
+                guard let protocolSystem = connections[connectId] else {
+                    return .failure(.generic("Connection not found"))
                 }
 
                 do {
@@ -168,7 +167,7 @@ final class NetworkProvider {
                         connectId: connectId,
                         protocolSystem: protocolSystem,
                         onSuccessCallback: onSuccessCallback,
-                        buildRequest()
+                        buildRequest(protocolSystem: protocolSystem, plainBuffer: plainBuffer, flowType: flowType, serviceType: serviceType)
                     )
                 } catch {
                     return .failure(.generic("Reattempt after session expired failed", inner: error))
@@ -180,16 +179,34 @@ final class NetworkProvider {
         }
     }
     
+    func buildRequest(
+        protocolSystem: EcliptixProtocolSystem,
+        plainBuffer: Data,
+        flowType: ServiceFlowType,
+        serviceType: RpcServiceType
+    ) throws -> ServiceRequest {
+        let outboundPayload = try protocolSystem.produceOutboundMessage(
+            plainPayload: plainBuffer
+        )
+        
+        return ServiceRequest.new(
+            actionType: flowType,
+            rcpServiceMethod: serviceType,
+            payload: try outboundPayload.unwrap(),
+            encryptedChunls: []
+        )
+    }
+    
     private func sendRequest(
         connectId: UInt32,
         protocolSystem: EcliptixProtocolSystem,
         onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,
         _ request: ServiceRequest
     ) async throws -> Result<Unit, EcliptixProtocolFailure> {
-        let invokeResult = try await rpcServiceManager.invokeServiceRequestAsync(request: request, token: CancellationToken())
+        let invokeResult = await rpcServiceManager.invokeServiceRequestAsync(request: request, token: CancellationToken())
 
         if invokeResult.isErr {
-            throw try invokeResult.unwrapErr()
+            throw try invokeResult.unwrapErr().innerError ?? invokeResult.unwrapErr()
         }
 
         let flow = try invokeResult.unwrap()
@@ -275,7 +292,6 @@ final class NetworkProvider {
             if response.status == .sessionResumed {
                 _ = syncSecrecyChannel(currentState: ecliptixSecrecyChannelState, serverResponse: response)
                 return .success(true)
-            } else if (response.status == .sessionNotFound) {
             }
             
             _ = syncSecrecyChannel(currentState: ecliptixSecrecyChannelState, serverResponse: response)

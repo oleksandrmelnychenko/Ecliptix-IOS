@@ -16,16 +16,21 @@ internal final class SecrecyChannelRpcService {
         self.appDeviceServiceActionsClient = appDeviceServiceActionsClient
     }
     
-    public func establishAppDeviceSecrecyChannel(request: Ecliptix_Proto_PubKeyExchange) async throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
+    public func establishAppDeviceSecrecyChannel(request: Ecliptix_Proto_PubKeyExchange
+    ) async throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
+        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
+        
         return await Self.executeGrpcCallAsync {
-            try await self.appDeviceServiceActionsClient.establishAppDeviceSecrecyChannel(request)
+            try await self.appDeviceServiceActionsClient.establishAppDeviceSecrecyChannel(request, callOptions: options)
         }
     }
     
-    public func restoreAppDeviceSecrecyChannelAsync(request: Ecliptix_Proto_RestoreSecrecyChannelRequest) async throws -> Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, EcliptixProtocolFailure> {
+    public func restoreAppDeviceSecrecyChannelAsync(request: Ecliptix_Proto_RestoreSecrecyChannelRequest
+    ) async throws -> Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, EcliptixProtocolFailure> {
+        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
         
         return await Self.executeGrpcCallAsync {
-            try await self.appDeviceServiceActionsClient.restoreAppDeviceSecrecyChannel(request)
+            try await self.appDeviceServiceActionsClient.restoreAppDeviceSecrecyChannel(request, callOptions: options)
         }
     }
     
@@ -33,17 +38,12 @@ internal final class SecrecyChannelRpcService {
         _ grpcCallFactory: @escaping () async throws -> Response
     ) async -> Result<Response, EcliptixProtocolFailure> {
         
-        let conditions: [(Error) -> Bool] = [
-            RetryCondition.grpcUnavailableOnly,
-            RetryCondition.grpcDeadlineExceededOnly,
-            RetryCondition.grpcResourceExhaustedOnly
-        ]
-        
         return await Result<Response, EcliptixProtocolFailure>.TryAsync {
-            try await RetryExecutor.execute(retryConditions: conditions) {
+            try await GrpcResiliencePolicies.getSecrecyChannelRetryPolicy {
                 try await grpcCallFactory()
-            }.unwrap()
-        }.mapError { error in
+            }
+        }
+        .mapError { error in
             EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
         }
     }
