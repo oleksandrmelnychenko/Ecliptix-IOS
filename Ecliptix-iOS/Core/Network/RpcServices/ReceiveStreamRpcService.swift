@@ -13,7 +13,10 @@ final class ReceiveStreamRpcService {
     private let client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
     
     private var serviceHandlers: [RpcServiceType: GrpcMethodDelegate] = [:]
-    typealias GrpcMethodDelegate = (_ payload: Ecliptix_Proto_CipherPayload, _ token: CancellationToken) async throws -> Result<RpcFlow, EcliptixProtocolFailure>
+    typealias GrpcMethodDelegate = (
+        _ payload: Ecliptix_Proto_CipherPayload,
+        _ token: CancellationToken
+    ) async throws -> Result<RpcFlow, NetworkFailure>
 
     init(client: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient) {
         self.client = client
@@ -26,9 +29,9 @@ final class ReceiveStreamRpcService {
     func processRequestAsync(	
         request: ServiceRequest,
         token: CancellationToken
-    ) async -> Result<RpcFlow, EcliptixProtocolFailure> {
+    ) async -> Result<RpcFlow, NetworkFailure> {
         guard let hadler = self.serviceHandlers[request.rcpServiceMethod] else {
-            return .failure(.invalidInput("Unsupported handler"))
+            return .failure(.invalidRequestType("Unsupported service method"))
         }
         
         do {
@@ -41,8 +44,8 @@ final class ReceiveStreamRpcService {
     private func initiateVerificationAsync(
         payload: Ecliptix_Proto_CipherPayload,
         token: CancellationToken
-    ) -> Result<RpcFlow, EcliptixProtocolFailure> {
-        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error> { continuation in
+    ) -> Result<RpcFlow, NetworkFailure> {
+        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error> { continuation in
             Task {
                 do {
                     let grpcStream = client.initiateVerification(payload)
@@ -51,7 +54,7 @@ final class ReceiveStreamRpcService {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.yield(.failure(.generic("Error during stream processing: \(error)", inner: error)))
+                    continuation.yield(.failure(.unexpectedError("Error during stream processing: \(error)", inner: error)))
                     continuation.finish()
                 }
             }

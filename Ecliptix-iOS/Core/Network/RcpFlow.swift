@@ -9,21 +9,21 @@ import Foundation
 
 public class RpcFlow {
     final class SingleCall: RpcFlow {
-        public let result: () async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
+        public let result: () async -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure>
 
-        public init(result: @escaping () async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
+        public init(result: @escaping () async -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure>) {
             self.result = result
         }
 
-        public convenience init(immediate: Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>) {
+        public convenience init(immediate: Result<Ecliptix_Proto_CipherPayload, NetworkFailure>) {
             self.init { immediate }
         }
     }
     
     final class InboundStream: RpcFlow {
-        let stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>
+        let stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>
 
-        init(stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>) {
+        init(stream: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>) {
             self.stream = stream
         }
     }
@@ -37,10 +37,10 @@ public class RpcFlow {
     }
     
     final class BidirectionalStream: RpcFlow {
-        let inbound: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>
+        let inbound: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>
         let outbound: IOutboundSink
 
-        init(inbound: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>, outbound: IOutboundSink) {
+        init(inbound: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>, outbound: IOutboundSink) {
             self.inbound = inbound
             self.outbound = outbound
         }
@@ -48,7 +48,7 @@ public class RpcFlow {
     
     // Factory methods
     static func newEmptyInboundStream() -> RpcFlow {
-        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error> { continuation in
+        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error> { continuation in
             continuation.finish()
         }
         return InboundStream(stream: stream)
@@ -63,7 +63,7 @@ public class RpcFlow {
         return BidirectionalStream(inbound: stream, outbound: sink)
     }
     
-    static func toOkStream(from stream: AsyncStream<Ecliptix_Proto_CipherPayload>) -> AsyncStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>> {
+    static func toOkStream(from stream: AsyncStream<Ecliptix_Proto_CipherPayload>) -> AsyncStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>> {
         return AsyncStream { continuation in
             Task {
                 for await payload in stream {
@@ -83,27 +83,27 @@ public class RpcFlow {
 }
 
 internal class DrainSink : IOutboundSink {
-    func sendAsync(_ payload: Ecliptix_Proto_CipherPayload) async -> Result<Unit, EcliptixProtocolFailure> {
+    func sendAsync(_ payload: Ecliptix_Proto_CipherPayload) async -> Result<Unit, NetworkFailure> {
         .success(.value)
     }
 }
 
 internal class ChannelSink : IOutboundSink {
-    private let continuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>.Continuation
+    private let continuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>.Continuation
 
-    private init(continuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>.Continuation) {
+    private init(continuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>.Continuation) {
         self.continuation = continuation
     }
     
-    func sendAsync(_ payload: Ecliptix_Proto_CipherPayload) async -> Result<Unit, EcliptixProtocolFailure> {
+    func sendAsync(_ payload: Ecliptix_Proto_CipherPayload) async -> Result<Unit, NetworkFailure> {
         continuation.yield(.success(payload))
         return .success(.value)
     }
 
-    static func createChannel() -> (AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>, ChannelSink) {
-        var savedContinuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error>.Continuation!
+    static func createChannel() -> (AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>, ChannelSink) {
+        var savedContinuation: AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error>.Continuation!
 
-        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>, Error> { continuation in
+        let stream = AsyncThrowingStream<Result<Ecliptix_Proto_CipherPayload, NetworkFailure>, Error> { continuation in
             savedContinuation = continuation
         }
 

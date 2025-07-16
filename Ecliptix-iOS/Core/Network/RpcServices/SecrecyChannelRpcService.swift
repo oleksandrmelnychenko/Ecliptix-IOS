@@ -16,35 +16,46 @@ internal final class SecrecyChannelRpcService {
         self.appDeviceServiceActionsClient = appDeviceServiceActionsClient
     }
     
-    public func establishAppDeviceSecrecyChannel(request: Ecliptix_Proto_PubKeyExchange
-    ) async throws -> Result<Ecliptix_Proto_PubKeyExchange, EcliptixProtocolFailure> {
-        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
-        
-        return await Self.executeGrpcCallAsync {
-            try await self.appDeviceServiceActionsClient.establishAppDeviceSecrecyChannel(request, callOptions: options)
+    /// Establishes a secrecy channel with the app device service.
+    public func establishAppDeviceSecrecyChannel(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        request: Ecliptix_Proto_PubKeyExchange
+    ) async throws -> Result<Ecliptix_Proto_PubKeyExchange, NetworkFailure> {
+        await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            try await self.appDeviceServiceActionsClient.establishAppDeviceSecrecyChannel(request)
         }
     }
     
-    public func restoreAppDeviceSecrecyChannelAsync(request: Ecliptix_Proto_RestoreSecrecyChannelRequest
-    ) async throws -> Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, EcliptixProtocolFailure> {
-        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
-        
-        return await Self.executeGrpcCallAsync {
-            try await self.appDeviceServiceActionsClient.restoreAppDeviceSecrecyChannel(request, callOptions: options)
+    /// Restores a secrecy channel with the app device service.
+    public func restoreAppDeviceSecrecyChannelAsync(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        request: Ecliptix_Proto_RestoreSecrecyChannelRequest
+    ) async throws -> Result<Ecliptix_Proto_RestoreSecrecyChannelResponse, NetworkFailure> {
+        await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            try await self.appDeviceServiceActionsClient.restoreAppDeviceSecrecyChannel(request)
         }
     }
     
-    private static func executeGrpcCallAsync<Response>(
-        _ grpcCallFactory: @escaping () async throws -> Response
-    ) async -> Result<Response, EcliptixProtocolFailure> {
+    private static func executeGrpcCallAsync<TResponse>(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        _ grpcCallFactory: @escaping () async throws -> TResponse
+    ) async -> Result<TResponse, NetworkFailure> {
         
-        return await Result<Response, EcliptixProtocolFailure>.TryAsync {
-            try await GrpcResiliencePolicies.getSecrecyChannelRetryPolicy {
+        return await Result<TResponse, NetworkFailure>.TryAsync {
+            let response = try await GrpcResiliencePolicies.getSecrecyChannelRetryPolicy(networkEvents: networkEvents) {
                 try await grpcCallFactory()
             }
-        }
-        .mapError { error in
-            EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
+            
+            networkEvents.initiateChangeState(.new(.dataCenterConnected))
+            
+            return response
+        } errorMapper: { error in
+            systemEvents.publish(.new(.dataCenterShutdown))
+            
+            return .dataCenterShutdown(error.localizedDescription)
         }
     }
 }

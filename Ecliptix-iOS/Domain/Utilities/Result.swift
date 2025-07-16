@@ -19,13 +19,13 @@ extension Result {
     }
     
     func unwrapErr() throws -> Failure {
-            switch self {
-            case .failure(let error):
-                return error
-            case .success:
-                throw NSError(domain: "ResultErrorDomain", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot unwrap a Success result"])
-            }
+        switch self {
+        case .failure(let error):
+            return error
+        case .success:
+            throw NSError(domain: "ResultErrorDomain", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot unwrap a Success result"])
         }
+    }
     
     static func fromValue(_ value: Success?, _ errorWhenNull: Failure) -> Result<Success, Failure> {
         return switch value {
@@ -40,19 +40,21 @@ extension Result {
         return predicate(value) ? .success(value) : .failure(error)
     }
 
-    static func Try(_ block: () throws -> Success) -> Result<Success, Failure> {
+    static func Try(
+        _ block: () throws -> Success,
+        errorMapper: (Error) -> Failure
+    ) -> Result<Success, Failure> {
         do {
             let value = try block()
             return .success(value)
-        } catch let error as Failure {
-            return .failure(error)
         } catch {
-            fatalError("Unexpected error type: \(error)")
+            return .failure(errorMapper(error))
         }
     }
     
     static func Try(
         _ block: () throws -> Success,
+        errorMapper: (Error) -> Failure,
         cleanup: () -> Void
     ) -> Result<Success, Failure> {
         defer {
@@ -62,23 +64,21 @@ extension Result {
         do {
             let value = try block()
             return .success(value)
-        } catch let error as Failure {
-            return .failure(error)
         } catch {
-            fatalError("Unexpected error type: \(error)")
+            return .failure(errorMapper(error))
         }
     }
 
 
-    static func TryAsync(_ block: @escaping () async throws -> Success) async -> Result<Success, Failure> {
+    static func TryAsync(
+        _ block: @escaping () async throws -> Success,
+        errorMapper: (Error) -> Failure
+    ) async -> Result<Success, Failure> {
         do {
             let value = try await block()
             return .success(value)
-        } catch let error as Failure {
-            return .failure(error)
         } catch {
-            let wrapped = EcliptixProtocolFailure.generic("Unexpected error in async block", inner: error)
-            return .failure(wrapped as! Failure)
+            return .failure(errorMapper(error))
         }
     }
 
@@ -103,5 +103,3 @@ extension Result {
         return !isOk
     }
 }
-
-

@@ -20,7 +20,7 @@ final class KeychainStorageProvider: SecureStorageProviderProtocol {
         let payload = ExpiringKeyValue(data: data, expirationDate: expirationDate)
         
         guard let encoded = try? JSONEncoder().encode(payload) else {
-            return .failure(.secureStoreNotFound(details: "Encoding error"))
+            return .failure(.secureStoreNotFound("Encoding error"))
         }
         
         let query: [String: Any] = [
@@ -51,7 +51,7 @@ final class KeychainStorageProvider: SecureStorageProviderProtocol {
         case errSecSuccess:
             guard let rawData = result as? Data,
                   let decoded = try? JSONDecoder().decode(ExpiringKeyValue.self, from: rawData) else {
-                return .failure(.secureStoreNotFound(details: "Decode failed"))
+                return .failure(.secureStoreNotFound("Decode failed"))
             }
 
             if decoded.expirationDate < Date() {

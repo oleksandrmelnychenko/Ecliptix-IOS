@@ -36,24 +36,24 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
     static func fromOSStatus(_ status: OSStatus, context: String) -> InternalServiceApiFailure {
         switch status {
         case errSecItemNotFound:
-            return .secureStoreKeyNotFound(details: context)
+            return .secureStoreKeyNotFound(context)
         case errSecAuthFailed:
-            return .secureStoreAccessDenied(details: context)
+            return .secureStoreAccessDenied(context)
         case errSecMissingEntitlement:
-            return .secureStoreAccessDenied(details: "\(context) | Missing Entitlement")
+            return .secureStoreAccessDenied("\(context) | Missing Entitlement")
         default:
-            return .secureStoreUnknown(details: "\(context) | OSStatus: \(status)")
+            return .secureStoreUnknown("\(context) | OSStatus: \(status)")
         }
     }
     
-    static func secureStoreNotFound(details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+    static func secureStoreNotFound(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
         return InternalServiceApiFailure(
             type: .secureStoreNotFound,
             message: details,
             error: inner)
     }
     
-    static func secureStoreKeyNotFound(details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+    static func secureStoreKeyNotFound(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
         return InternalServiceApiFailure(
             type: .secureStoreKeyNotFound,
             message: details,
@@ -61,7 +61,7 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
         )
     }
     
-    static func secureStoreAccessDenied(details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+    static func secureStoreAccessDenied(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
         return InternalServiceApiFailure(
             type: .secureStoreAccessDenied,
             message: details,
@@ -69,7 +69,7 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
         )
     }
     
-    static func secureStoreUnknown(details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+    static func secureStoreUnknown(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
         return InternalServiceApiFailure(
             type: .secureStoreUnknown,
             message: details,

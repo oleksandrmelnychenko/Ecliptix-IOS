@@ -241,7 +241,7 @@ final class EcliptixSystemIdentityKeys {
             let localBundle = PublicKeyBundle(&internalBundle)
             
             return localBundle
-        }.mapError { error in
+        } errorMapper: { error in
             .generic("Failed to create public key bundle.", inner: error)
         }
     }
@@ -538,7 +538,7 @@ final class EcliptixSystemIdentityKeys {
             }
 
             return (skHandle: skHandle!, pk: pkBytes)
-        }.mapError { ex in
+        } errorMapper: { ex in
             EcliptixProtocolFailure.keyGeneration("Failed to generate Ed25519 key pair.", inner: ex)
         }
     }
@@ -569,7 +569,7 @@ final class EcliptixSystemIdentityKeys {
             
             let signResult = Result<Data, EcliptixProtocolFailure>.Try {
                 try PublicKeyAuth.signDetached(message: &spkPk, secretKey: &tempEdSignKeyCopy!)
-            }.mapError { error in
+            } errorMapper: { error in
                 return EcliptixProtocolFailure.generic("Failed to sign signed prekey public key.", inner: error)
             }
             

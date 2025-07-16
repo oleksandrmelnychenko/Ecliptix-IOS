@@ -24,5 +24,10 @@ enum AppServiceConfigurator {
             "Ecliptix.Core.App": .warning,
         ]
         ServiceLocator.shared.register(Logger.self, service: logger)
+        
+        let aggregator: EventAggregator = EventAggregator()
+        ServiceLocator.shared.register(EventAggregatorProtocol.self, service: aggregator)
+        ServiceLocator.shared.register(NetworkEventsProtocol.self, service: NetworkEvents(aggregator: aggregator))
+        ServiceLocator.shared.register(SystemEventsProtocol.self, service: SystemEvents(aggregator: aggregator))
     }
 }

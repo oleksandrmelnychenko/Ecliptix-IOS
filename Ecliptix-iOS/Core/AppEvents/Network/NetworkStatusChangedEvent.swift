@@ -8,6 +8,10 @@
 struct NetworkStatusChangedEvent {
     let state: NetworkStatus
 
+    private init(state: NetworkStatus) {
+        self.state = state
+    }
+    
     static func new(_ state: NetworkStatus) -> NetworkStatusChangedEvent {
         NetworkStatusChangedEvent(state: state)
     }

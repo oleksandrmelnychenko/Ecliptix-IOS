@@ -31,7 +31,7 @@ final class SecrecyKeyExchangeServiceRequest<TRequest: SwiftProtobuf.Message, TR
         method: RpcServiceType,
         pubKeyExchange: TRequest,
     ) -> SecrecyKeyExchangeServiceRequest<TRequest, TResponse> {
-        let reqId = Utilities.generateRandomUInt32()
+        let reqId = Helpers.generateRandomUInt32()
         return SecrecyKeyExchangeServiceRequest(
             reqId: reqId,
             jobType: jobType,

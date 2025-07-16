@@ -52,60 +52,55 @@ public class EcliptixProtocolSystem {
             rootKeyHandle?.dispose()
         }
         
-        do {
-            return Result<Unit, EcliptixProtocolFailure>
-                .validate(.value, predicate: { _ in peerInitialMessageProto.state == .init_ }, error: .invalidInput("Expected peer message state to be Init, but was \(peerInitialMessageProto.state)."))
-                .flatMap { _ in
-                    Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
-                        try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerInitialMessageProto.payload)
-                    }.mapError { error in
-                        .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
+        return Result<Unit, EcliptixProtocolFailure>
+            .validate(.value, predicate: { _ in peerInitialMessageProto.state == .init_ }, error: .invalidInput("Expected peer message state to be Init, but was \(peerInitialMessageProto.state)."))
+            .flatMap { _ in
+                Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
+                    try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerInitialMessageProto.payload)
+                } errorMapper: { error in
+                    .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
+                }
+            }
+            .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
+            .flatMap { peerBundle in
+                EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
+                    .flatMap { spkValid in
+                        Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed."))
                     }
-                }
-                .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
-                .flatMap { peerBundle in
-                    EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
-                        .flatMap { spkValid in
-                            Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed."))
-                        }
-                        .flatMap { _ in
-                            self.ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
-                            return self.ecliptixSystemIdentityKeys.createPublicBundle()
-                        }
-                        .flatMap { localBundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: false)
-                                .flatMap { session in
-                                    self.protocolConnection = session
-                                    return self.ecliptixSystemIdentityKeys.calculateSharedSecretAsRecipient(
-                                        remoteIdentityPublicKeyX: peerBundle.identityX25519,
-                                        remoteEphemeralPublicKeyX: peerBundle.ephemeralX25519!,
-                                        usedLocalOpkId: peerBundle.oneTimePreKeys.first?.preKeyId,
-                                        info: Constants.x3dhInfo)
-                                    .flatMap { derivedKeyHandle in
-                                        rootKeyHandle = derivedKeyHandle
-                                        return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
-                                    }
-                                    .flatMap { rootKeyBytes in
-                                        var rootKeyBytesCopy = rootKeyBytes
-                                        return session.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerInitialMessageProto.initialDhPublicKey)
-                                    }
-                                    .flatMap { _ in session.setPeerBundle(peerBundle) }
-                                    .flatMap { _ in session.setConnectionState(.complete) }
-                                    .flatMap { _ in session.getCurrentSenderDhPublicKey() }
-                                    .map { dhPublicKey in
-                                        var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
-                                        pubKeyExchange.state = .pending
-                                        pubKeyExchange.ofType = peerInitialMessageProto.ofType
-                                        pubKeyExchange.payload = try! localBundle.toProtobufExchange().serializedData()
-                                        pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
-                                        return pubKeyExchange
-                                    }
+                    .flatMap { _ in
+                        self.ecliptixSystemIdentityKeys.generateEphemeralKeyPair()
+                        return self.ecliptixSystemIdentityKeys.createPublicBundle()
+                    }
+                    .flatMap { localBundle in EcliptixProtocolConnection.create(connectId: connectId, isInitiator: false)
+                            .flatMap { session in
+                                self.protocolConnection = session
+                                return self.ecliptixSystemIdentityKeys.calculateSharedSecretAsRecipient(
+                                    remoteIdentityPublicKeyX: peerBundle.identityX25519,
+                                    remoteEphemeralPublicKeyX: peerBundle.ephemeralX25519!,
+                                    usedLocalOpkId: peerBundle.oneTimePreKeys.first?.preKeyId,
+                                    info: Constants.x3dhInfo)
+                                .flatMap { derivedKeyHandle in
+                                    rootKeyHandle = derivedKeyHandle
+                                    return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
                                 }
-                        }
-                }
-        } catch {
-            debugPrint("[ShieldPro] Error in processAndRespondToPubKeyExchange for session \(connectId): \(error)")
-            throw error
-        }
+                                .flatMap { rootKeyBytes in
+                                    var rootKeyBytesCopy = rootKeyBytes
+                                    return session.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerInitialMessageProto.initialDhPublicKey)
+                                }
+                                .flatMap { _ in session.setPeerBundle(peerBundle) }
+                                .flatMap { _ in session.setConnectionState(.complete) }
+                                .flatMap { _ in session.getCurrentSenderDhPublicKey() }
+                                .map { dhPublicKey in
+                                    var pubKeyExchange = Ecliptix_Proto_PubKeyExchange()
+                                    pubKeyExchange.state = .pending
+                                    pubKeyExchange.ofType = peerInitialMessageProto.ofType
+                                    pubKeyExchange.payload = try! localBundle.toProtobufExchange().serializedData()
+                                    pubKeyExchange.initialDhPublicKey = Data(dhPublicKey!)
+                                    return pubKeyExchange
+                                }
+                            }
+                    }
+            }
     }
 
     func completeDataCenterPubKeyExchange(peerMessage: inout Ecliptix_Proto_PubKeyExchange) throws {
@@ -115,29 +110,25 @@ public class EcliptixProtocolSystem {
             rootKeyHandle?.dispose()
         }
         
-        do {
-            Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
-                try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerMessage.payload)
-            }.mapError { error in
-                .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
-            }
-            .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
-            .flatMap { peerBundle in EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
-                    .flatMap { spkValid in Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed during completion.")) }
-                    .flatMap { _ in self.ecliptixSystemIdentityKeys.x3dhDeriveSharedSecret(remoteBundle: peerBundle, info: Constants.x3dhInfo) }
-                    .flatMap { derivedKeyHandle in
-                        rootKeyHandle = derivedKeyHandle
-                        return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
-                    }
-                    .flatMap { rootKeyBytes in
-                        var rootKeyBytesCopy = rootKeyBytes
-                        return self.protocolConnection!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerMessage.initialDhPublicKey)
-                    }
-                    .flatMap { _ in self.protocolConnection!.setPeerBundle(peerBundle) }
-                    .flatMap { _ in self.protocolConnection!.setConnectionState(.complete) }
-            }
-        } catch {
-            debugPrint("Unexpected error in completeDataCenterPubKeyExchange: \(error)")
+        _ = Result<Ecliptix_Proto_PublicKeyBundle, EcliptixProtocolFailure>.Try {
+            try Helpers.parseFromBytes(Ecliptix_Proto_PublicKeyBundle.self, data: peerMessage.payload)
+        } errorMapper: { error in
+            .decode("Failed to parse peer public key bundle from protobuf.", inner: error)
+        }
+        .flatMap { proto in PublicKeyBundle.fromProtobufExchange(proto) }
+        .flatMap { peerBundle in EcliptixSystemIdentityKeys.verifyRemoteSpkSignature(remoteIdentityEd25519: peerBundle.identityEd25519, remoteSpkPublic: peerBundle.signedPreKeyPublic, remoteSpkSignature: peerBundle.signedPreKeySignature)
+                .flatMap { spkValid in Result<Unit, EcliptixProtocolFailure>.validate(Unit.value, predicate: { _ in spkValid }, error: .handshake("SPK signature validation failed during completion.")) }
+                .flatMap { _ in self.ecliptixSystemIdentityKeys.x3dhDeriveSharedSecret(remoteBundle: peerBundle, info: Constants.x3dhInfo) }
+                .flatMap { derivedKeyHandle in
+                    rootKeyHandle = derivedKeyHandle
+                    return Self.readAndWipeSecureHandle(handle: derivedKeyHandle, size: Constants.x25519KeySize)
+                }
+                .flatMap { rootKeyBytes in
+                    var rootKeyBytesCopy = rootKeyBytes
+                    return self.protocolConnection!.finalizeChainAndDhKeys(initialRootKey: &rootKeyBytesCopy, initialPeerDhPublicKey: &peerMessage.initialDhPublicKey)
+                }
+                .flatMap { _ in self.protocolConnection!.setPeerBundle(peerBundle) }
+                .flatMap { _ in self.protocolConnection!.setConnectionState(.complete) }
         }
     }
 
@@ -192,24 +183,20 @@ public class EcliptixProtocolSystem {
             messageKeyClone?.dispose()
         }
 
-        do {
-            var receivedDhKey = cipherPayloadProto.dhPublicKey.count > 0 ? cipherPayloadProto.dhPublicKey : nil
-            
-            return performRatchetIfNeeded(receivedDhKey: receivedDhKey)
-                .flatMap { _ in self.protocolConnection!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
-                }
-                .flatMap { key in Self.cloneMessageKey(key: key) }
-                .flatMap { clonedKey in
-                    messageKeyClone = clonedKey
-                    return self.protocolConnection!.getPeerBundle()
-                }
-                .flatMap { peerBundle in
-                    let ad = Self.createAssociatedData(peerBundle.identityX25519, self.ecliptixSystemIdentityKeys.identityX25519PublicKey)
-                    return Self.decrypt(key: messageKeyClone!, payload: cipherPayloadProto, ad: ad)
-                }
-        } catch {
-            throw error
-        }
+        var receivedDhKey = cipherPayloadProto.dhPublicKey.count > 0 ? cipherPayloadProto.dhPublicKey : nil
+        
+        return performRatchetIfNeeded(receivedDhKey: receivedDhKey)
+            .flatMap { _ in self.protocolConnection!.processReceivedMessage(receivedIndex: cipherPayloadProto.ratchetIndex, receivedDhPublicKeyBytes: &receivedDhKey)
+            }
+            .flatMap { key in Self.cloneMessageKey(key: key) }
+            .flatMap { clonedKey in
+                messageKeyClone = clonedKey
+                return self.protocolConnection!.getPeerBundle()
+            }
+            .flatMap { peerBundle in
+                let ad = Self.createAssociatedData(peerBundle.identityX25519, self.ecliptixSystemIdentityKeys.identityX25519PublicKey)
+                return Self.decrypt(key: messageKeyClone!, payload: cipherPayloadProto, ad: ad)
+            }
     }
     
     static func createFrom(keys: EcliptixSystemIdentityKeys, connection: EcliptixProtocolConnection) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
@@ -261,9 +248,7 @@ public class EcliptixProtocolSystem {
             if readResult.isErr {
                 return .failure(try readResult.unwrapErr())
             }
-            
-            print("keyMaterial: \(keyMaterial!.hexEncodedString())")
-            
+                    
             var encryptValues = try AesGcmService.encryptAllocating(key: keyMaterial!, nonce: nonce, plaintext: plaintext, associatedData: ad)
             let ciphertextAndTag = encryptValues.ciphertext + encryptValues.tag
                         
@@ -299,9 +284,7 @@ public class EcliptixProtocolSystem {
             
             tagBytes = Data(count: tagSize)
             tagBytes = fullCipher.suffix(tagSize)
-            
-            print("keyMaterial: \(keyMaterial!.hexEncodedString())")
-            
+                    
             let result = try AesGcmService.decryptAllocating(key: keyMaterial!, nonce: payload.nonce, ciphertext: cipherOnlyBytes!, tag: tagBytes!, associatedData: ad)
             
             return .success(result)

@@ -22,4 +22,17 @@ final class HashToPointTests: XCTestCase {
 //            XCTFail("Failed with error: \(error)")
 //        }
 //    }
+    
+    func test_hashToPoint_shouldMatchExpected() {
+        let phoneNumber = "+380970177981"
+        let 
+        
+        TranscriptHasher.hash(
+            phoneNumber: <#T##String#>,
+            oprfResponse: <#T##Data#>,
+            clientStaticPublicKey: <#T##Data#>,
+            clientEphemeralPublicKey: <#T##Data#>,
+            serverStaticPublicKey: <#T##Data#>,
+            serverEphemeralPublicKey: <#T##Data#>)
+    }
 }

@@ -18,4 +18,12 @@ extension Data {
             swap(&ptr[i], &ptr[j])
         }
     }
+    
+    var bytes: [UInt8] {
+        return [UInt8](self)
+    }
+    
+    func hexEncodedString() -> String {
+        self.map { String(format: "%02hhx", $0) }.joined()
+    }
 }

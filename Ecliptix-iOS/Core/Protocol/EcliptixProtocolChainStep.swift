@@ -190,7 +190,6 @@ final class EcliptixProtocolChainStep {
             }
             
         } catch {
-            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
             return .failure(.generic("Error during get or derive key.", inner: error))
         }
     }
@@ -312,7 +311,6 @@ final class EcliptixProtocolChainStep {
             }
         }
         catch {
-            debugPrint("[ShieldChainStep] Error during pruning old keys: \(error)")
             return
         }
     }
@@ -346,7 +344,6 @@ final class EcliptixProtocolChainStep {
         return SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
             .flatMap { handle in
                 dhPrivateKeyHandle = handle
-                debugPrint("[ShieldChainStep] Writing initial DH private key: \(initialDhPrivateKey!.hexEncodedString())")
                                 
                 return initialDhPrivateKey!.withUnsafeBytes { bufferPointer in
                     handle.write(data: bufferPointer).mapSodiumFailure()
@@ -354,7 +351,6 @@ final class EcliptixProtocolChainStep {
             }
             .map { _ in
                 let dhPublicKeyCloned = initialDhPublicKey!
-                debugPrint("[ShieldChainStep] Cloned DH public key: \(dhPublicKeyCloned.hexEncodedString())")
                 
                 return DhKeyInfo(dhPrivateKeyHandle: dhPrivateKeyHandle, dhPublicKeyCloned: dhPublicKeyCloned)
             }
@@ -514,7 +510,6 @@ final class EcliptixProtocolChainStep {
             dhPrivateKeyHandle = try allocResult.unwrap()
             return Self.okResult
         } catch {
-            debugPrint("[ShieldChainStep] Error during get or derive key: \(error)")
             return .failure(.generic("Failed to allocate memory for DH private key.", inner: error))
         }
     }
@@ -522,7 +517,6 @@ final class EcliptixProtocolChainStep {
     private func dispose(disposing: Bool) {
         guard !disposed else { return }
         disposed = true
-        debugPrint("[ShieldChainStep] Disposing chain step of type \(stepType)")
 
         chainKeyHandle.dispose()
         dhPrivateKeyHandle?.dispose()

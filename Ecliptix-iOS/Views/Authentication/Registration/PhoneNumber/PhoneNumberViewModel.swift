@@ -9,8 +9,8 @@ import Foundation
 
 @MainActor
 final class PhoneNumberViewModel: ObservableObject {
-    @Published var phoneNumber: String = ""
-    @Published var phoneCode: String = "+"
+    @Published var phoneNumber: String = "970177999"
+    @Published var phoneCode: String = "+380"
     @Published var isLoading = false
     @Published var errorMessage: String?
 

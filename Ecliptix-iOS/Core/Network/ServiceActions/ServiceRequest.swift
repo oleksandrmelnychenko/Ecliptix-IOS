@@ -35,7 +35,12 @@ class ServiceRequest {
         encryptedChunls: [Ecliptix_Proto_CipherPayload]
     ) -> ServiceRequest {
         
-        let reqId = Utilities.generateRandomUInt32(in: 10...UInt32.max)
-        return ServiceRequest(reqId: reqId, actionType: actionType, rcpServiceMethod: rcpServiceMethod, payload: payload, encryptedChunls: encryptedChunls)
+        let reqId = Helpers.generateRandomUInt32(in: 10...UInt32.max)
+        return ServiceRequest(
+            reqId: reqId,
+            actionType: actionType,
+            rcpServiceMethod: rcpServiceMethod,
+            payload: payload,
+            encryptedChunls: encryptedChunls)
     }
 }

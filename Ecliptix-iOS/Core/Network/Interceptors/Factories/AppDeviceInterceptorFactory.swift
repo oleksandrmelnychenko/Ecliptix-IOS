@@ -19,20 +19,14 @@ final class AppDeviceInterceptorFactory: Ecliptix_Proto_AppDevice_AppDeviceServi
     }
     
     func makeEstablishAppDeviceSecrecyChannelInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_PubKeyExchange, Ecliptix_Proto_PubKeyExchange>(
-            rpcMetaDataProvider: rpcMetaDataProvider
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
     
     func makeRestoreAppDeviceSecrecyChannelInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>(
-            rpcMetaDataProvider: rpcMetaDataProvider
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
     
     func makeRegisterDeviceAppIfNotExistInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
-        return [RequestMetadataInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>(
-            rpcMetaDataProvider: rpcMetaDataProvider
-        )]
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
 }

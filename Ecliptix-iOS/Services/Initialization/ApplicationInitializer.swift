@@ -10,20 +10,29 @@ import Foundation
 final class ApplicationInitializer: ApplicationInitializerProtocol {
     private let networkProvider: NetworkProvider
     private let secureStorageProvider: SecureStorageProviderProtocol
+    private let systemEvents: SystemEventsProtocol
     private let logger: Logger
     
-    init() {
-        self.networkProvider = ServiceLocator.shared.resolve(NetworkProvider.self)
-        self.secureStorageProvider = ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
+    init(
+        networkProvider: NetworkProvider,
+        secureStorageProvider: SecureStorageProviderProtocol,
+        systemEvents: SystemEventsProtocol
+    ) {
+        self.networkProvider = networkProvider
+        self.secureStorageProvider = secureStorageProvider
+        self.systemEvents = systemEvents
         self.logger = ServiceLocator.shared.resolve(Logger.self)
     }
     
     public func initializeAsync() async -> Bool {
         
         do {
+            self.systemEvents.publish(.new(.initializing))
+            
             let settingsResult = getOrCreateInstanceSettingsAsync()
             guard settingsResult.isOk else {
                 logger.log(.error, "Failed to get or create application instance settings: \(try! settingsResult.unwrapErr())", category: "AppInit")
+                self.systemEvents.publish(.new(.fatalError))
                 return false
             }
             
@@ -44,8 +53,10 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 logger.log(.error, "Device registration failed: \(try! registrationResult.unwrapErr())", category: "AppInit")
                 return false
             }
-            
+
             logger.log(.info, "Application initialized successfully", category: "AppInit")
+            
+            self.systemEvents.publish(.new(.running))
             return true
             
         } catch {
@@ -56,13 +67,13 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
     
     private func getOrCreateInstanceSettingsAsync() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
         let settingsKey = "ApplicationInstanceSettings"
-        
+                
         do {
-            let getResult = secureStorageProvider.tryGetByKey(key: settingsKey)
+            let getResult = self.secureStorageProvider.tryGetByKey(key: settingsKey)
             guard getResult.isOk else {
                 return .failure(try getResult.unwrapErr())
             }
-            
+                        
             let maybeSettingsData = try getResult.unwrap()
             
             if let data = maybeSettingsData {
@@ -71,8 +82,9 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             }
             
             var newSettings = Ecliptix_Proto_AppDevice_ApplicationInstanceSettings()
-            newSettings.appInstanceID = Utilities.guidToData(UUID())
-            newSettings.deviceID = Utilities.guidToData(UUID())
+            newSettings.appInstanceID = Helpers.guidToData(UUID(uuidString: "c9d02c08-09dc-4c43-a63a-a977d1275d67")!)
+            newSettings.deviceID = Helpers.guidToData(UUID(uuidString: "732ba091-cb23-4933-b19f-afabd04695aa")!)
+//            newSettings.culture = "en-US"
             
             let storeResult = secureStorageProvider.store(key: settingsKey, data: try newSettings.serializedData())
             
@@ -83,15 +95,18 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 return .failure(error)
             }
         } catch {
-            return .failure(.secureStoreUnknown(details: "An unexpected error occurred while retrieving or storing instance settings", inner: error))
+            return .failure(.secureStoreUnknown("An unexpected error occurred while retrieving or storing instance settings", inner: error))
         }
     }
     
     public func ensureSecrecyChannelAsync(
-        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, isNewInstance: Bool
-    ) async -> Result<UInt32, EcliptixProtocolFailure> {
+        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
+        isNewInstance: Bool
+    ) async -> Result<UInt32, NetworkFailure> {
         do {
-            let connectId = NetworkProvider.computeUniqueConnectId(applicationInstanceSettings: settings, pubKeyExchangeType: .dataCenterEphemeralConnect)
+            let connectId = NetworkProvider.computeUniqueConnectId(
+                applicationInstanceSettings: settings,
+                pubKeyExchangeType: .dataCenterEphemeralConnect)
             
             if !isNewInstance {
                 let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
@@ -134,7 +149,10 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         }
     }
     
-    private func registerDeviceAsync(connectId: UInt32, settings: inout Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -> Result<Unit, EcliptixProtocolFailure> {
+    private func registerDeviceAsync(
+        connectId: UInt32,
+        settings: inout Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
+    ) async -> Result<Unit, NetworkFailure> {
         
         var newSettings = settings
         
@@ -151,23 +169,27 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 flowType: .single,
                 onSuccessCallback: { decryptedPayload in
                     do {
-                        let reply = try Utilities.parseFromBytes(Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply.self, data: decryptedPayload)
+                        let reply = try Helpers.parseFromBytes(Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply.self, data: decryptedPayload)
                         
-                        let appServerInstanceId = try Utilities.fromDataToGuid(reply.uniqueID)
+                        let appServerInstanceId = try Helpers.fromDataToGuid(reply.uniqueID)
+                        
                         
                         newSettings.systemDeviceIdentifier = appServerInstanceId.uuidString
                         newSettings.serverPublicKey = reply.serverPublicKey
+                        
                         
                         self.logger.log(.info, "Device successfully registered with server ID: \(appServerInstanceId)", category: "AppInit")
 
                         return .success(.value)
                     } catch {
-                        return .failure(.generic("Failed to parse reply", inner: error))
+                        return .failure(.unexpectedError("Failed to parse reply", inner: error))
                     }
                 },
                 token: nil)
             
             settings = newSettings
+            
+            _ = self.secureStorageProvider.store(key: "ApplicationInstanceSettings", data: try settings.serializedData())
             
             return result
         } catch {

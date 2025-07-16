@@ -15,7 +15,12 @@ final class UnaryRpcService {
     private let authClient: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient
     
     private var serviceMethods: [RpcServiceType: GrpcMethodDelegate] = [:]
-    typealias GrpcMethodDelegate = (_ payload: Ecliptix_Proto_CipherPayload, _ token: CancellationToken) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>
+    typealias GrpcMethodDelegate = (
+        _ payload: Ecliptix_Proto_CipherPayload,
+        _ networkEvents: NetworkEventsProtocol,
+        _ systemEvents: SystemEventsProtocol,
+        _ token: CancellationToken
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure>
 
     init(
         membershipClient: Ecliptix_Proto_Membership_MembershipServicesAsyncClient,
@@ -38,15 +43,17 @@ final class UnaryRpcService {
     }
 
     func invokeRequestAsync(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         request: ServiceRequest,
         token: CancellationToken
-    ) async -> Result<RpcFlow, EcliptixProtocolFailure> {
+    ) async -> Result<RpcFlow, NetworkFailure> {
         guard let handler = self.serviceMethods[request.rcpServiceMethod] else {
-            return .failure(.invalidInput("Unsupported method"))
+            return .failure(.invalidRequestType("Unsupported service method"))
         }
         
         do {
-            let task = try await handler(request.payload, token)
+            let task = try await handler(request.payload, networkEvents, systemEvents, token)
             
             switch task {
             case .success:
@@ -61,92 +68,109 @@ final class UnaryRpcService {
     
     private func registerDeviceAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        let options = CallOptions(timeLimit: .timeout(.seconds(20)))
-        
-        return await Self.executeGrpcCallAsync {
-            return try await self.appDeviceClient.registerDeviceAppIfNotExist(payload, callOptions: options)
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            return try await self.appDeviceClient.registerDeviceAppIfNotExist(payload)
         }
     }
 
     private func validatePhoneNumberAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
         
         
-        return await Self.executeGrpcCallAsync {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.authClient.validatePhoneNumber(payload)
         }
     }
 
     private func verifyCodeAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
         
-        return await Self.executeGrpcCallAsync {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.authClient.verifyOtp(payload)
         }
     }
     
     private func opaqueRegistrationRecordRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return await Self.executeGrpcCallAsync {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueRegistrationInitRequest(payload)
         }
     }
     
     private func opaqueRegistrationCompleteRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return await Self.executeGrpcCallAsync {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueRegistrationCompleteRequest(payload)
         }
     }
     
     private func opaqueSignInInitRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return await Self.executeGrpcCallAsync {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueSignInInitRequest(payload)
         }
     }
 
     private func opaqueSignInCompleteRequestAsync(
         payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
-    ) async throws -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
-        return await Self.executeGrpcCallAsync {
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueSignInCompleteRequest(payload)
         }
     }
     
     private static func executeGrpcCallAsync(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
         _ grpcCallFactory: @escaping () async throws -> Ecliptix_Proto_CipherPayload
-    ) async -> Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure> {
+    ) async -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
         
-//        return await Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>.TryAsync {
-//            try await RetryExecutor.execute(maxRetryCount: nil, retryConditions: conditions) {
-//                try await grpcCallFactory()
-//            }.unwrap()
-//        }.mapError { error in
-//            EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
-//        }
-        
-        
-        return await Result<Ecliptix_Proto_CipherPayload, EcliptixProtocolFailure>.TryAsync {
-            try await GrpcResiliencePolicies.getAuthenticatedPolicy(networkProvider: ServiceLocator.shared.resolve(NetworkProviderProtocol.self)) {
+        return await Result<Ecliptix_Proto_CipherPayload, NetworkFailure>.TryAsync {
+            let response = try await GrpcResiliencePolicies.getSecrecyChannelRetryPolicy(networkEvents: networkEvents) {
                 try await grpcCallFactory()
             }
-        }
-        .mapError { error in
-            EcliptixProtocolFailure.generic(error.message, inner: error.innerError)
+            
+            networkEvents.initiateChangeState(.new(.dataCenterDisconnected))
+            
+            return response
+        } errorMapper: { error in
+            systemEvents.publish(.new(.dataCenterShutdown))
+
+            let message: String
+            if let grpcStatus = error as? GRPCStatus {
+                message = grpcStatus.message ?? grpcStatus.description
+            } else {
+                message = error.localizedDescription
+            }
+
+            return .dataCenterShutdown(message, inner: error)
         }
     }
 }

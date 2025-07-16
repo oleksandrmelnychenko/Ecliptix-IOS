@@ -6,7 +6,7 @@
 //
 
 protocol NetworkProviderProtocol {
-    func restoreSecrecyChannelAsync() async -> Result<Unit, EcliptixProtocolFailure>
+    func restoreSecrecyChannelAsync() async -> Result<Unit, NetworkFailure>
 
     func setSecrecyChannelAsUnhealthy()
 }

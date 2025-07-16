@@ -82,203 +82,224 @@ final class VerificationCodeViewModel: ObservableObject {
     private func validatePhoneNumber(phoneNumber: String) async {
         let cancellationToken = CancellationToken()
 
-//        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
-//            errorMessage = "Invalid device ID"
-//            return
-//        }
-//
-//        guard UUID(uuidString: phoneNumber) == nil else {
-//            errorMessage = "Phone number must not be a GUID"
-//            return
-//        }
-//
-//        var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
-//        request.phoneNumber = phoneNumber
-//        request.appDeviceIdentifier = Utilities.guidToData(systemDeviceIdentifier)
-//
-//        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-//
-//        do {
-//            _ = try await networkController.executeServiceAction(
-//                connectId: connectId,
-//                serviceType: .validatePhoneNumber,
-//                plainBuffer: try request.serializedData(),
-//                flowType: .single,
-//                onSuccessCallback: { [weak self] payload in
-//                    guard let self else {
-//                        return .failure(.unexpectedError("Self is nil"))
-//                    }
-//
-//                    do {
-//                        self.validatePhoneNumberResponce = try Utilities.parseFromBytes(
-//                            Ecliptix_Proto_Membership_ValidatePhoneNumberResponse.self,
-//                            data: payload
-//                        )
-//
-//                        if self.validatePhoneNumberResponce!.result == .invalidPhone {
-//                            self.errorMessage = self.validatePhoneNumberResponce!.message
-//                        } else {
-//                            await self.initiateVerification(
-//                                phoneNumberIdentifier: self.validatePhoneNumberResponce!.phoneNumberIdentifier,
-//                                type: .sendOtp
-//                            )
-//                        }
-//
-//                        return .success(.value)
-//                    } catch {
-//                        debugPrint("Validation parsing error: \(error)")
-//                        return .failure(.generic("Failed to parse validation response", inner: error))
-//                    }
-//                },
-//                token: cancellationToken
-//            )
-//        } catch {
-//            debugPrint("Validation execution error: \(error)")
-//            errorMessage = "Network error during validation"
-//        }
+        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
+            errorMessage = "Invalid device ID"
+            return
+        }
+
+        guard UUID(uuidString: phoneNumber) == nil else {
+            errorMessage = "Phone number must not be a GUID"
+            return
+        }
+        
+        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
+            errorMessage = "Invalid UUID format"
+            return
+        }
+        
+        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
+
+        var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
+        request.phoneNumber = phoneNumber
+        request.appDeviceIdentifier = deviceIdData
+
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+
+        do {
+            _ = try await networkController.executeServiceAction(
+                connectId: connectId,
+                serviceType: .validatePhoneNumber,
+                plainBuffer: try request.serializedData(),
+                flowType: .single,
+                onSuccessCallback: { [weak self] payload in
+                    guard let self else {
+                        return .failure(.unexpectedError("Self is nil"))
+                    }
+
+                    do {
+                        self.validatePhoneNumberResponce = try Helpers.parseFromBytes(
+                            Ecliptix_Proto_Membership_ValidatePhoneNumberResponse.self,
+                            data: payload
+                        )
+
+                        if self.validatePhoneNumberResponce!.result == .invalidPhone {
+                            self.errorMessage = self.validatePhoneNumberResponce!.message
+                        } else {
+                            await self.initiateVerification(
+                                phoneNumberIdentifier: self.validatePhoneNumberResponce!.phoneNumberIdentifier,
+                                type: .sendOtp
+                            )
+                        }
+
+                        return .success(.value)
+                    } catch {
+                        debugPrint("Validation parsing error: \(error)")
+                        return .failure(.unexpectedError("Failed to parse validation response", inner: error))
+                    }
+                },
+                token: cancellationToken
+            )
+        } catch {
+            debugPrint("Validation execution error: \(error)")
+            errorMessage = "Network error during validation"
+        }
     }
 
     
     private func initiateVerification(phoneNumberIdentifier: Data, type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum) async {
         let cancellationToken = CancellationToken()
 
-//        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
-//            errorMessage = "Invalid device ID"
-//            return
-//        }
-//
-//        var request = Ecliptix_Proto_Membership_InitiateVerificationRequest()
-//        request.phoneNumberIdentifier = phoneNumberIdentifier
-//        request.appDeviceIdentifier = Utilities.guidToData(systemDeviceIdentifier)
-//        request.purpose = .registration
-//        request.type = type
-//
-//        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-//
-//        do {
-//            let result = try await networkController.executeServiceAction(
-//                connectId: connectId,
-//                serviceType: .initiateVerification,
-//                plainBuffer: try request.serializedData(),
-//                flowType: .receiveStream,
-//                onSuccessCallback: { [weak self] payload in
-//                    guard let self else {
-//                        return .failure(.unexpectedError("Self is nil"))
-//                    }
-//
-//                    do {
-//                        let timerTick = try Utilities.parseFromBytes(
-//                            Ecliptix_Proto_Membership_VerificationCountdownUpdate.self,
-//                            data: payload
-//                        )
-//
-//                        if timerTick.alreadyVerified {
-//                        }
-//
-//                        if timerTick.status == .failed {
-//                        }
-//                        
-//                        if timerTick.status == .expired {
-//                            // redirect to Phone verification view
-//                        }
-//                        
-//                        if timerTick.status == .maxAttemptsReached {
-//                            // redirect to Phone verification view
-//                        }
-//                        
-//                        if timerTick.status == .notFound {
-//                        }
-//                        
-//                        
-//                        if self.verificationSessionIdentifier == nil {
-//                            self.verificationSessionIdentifier = try Utilities.fromDataToGuid(timerTick.sessionIdentifier)
-//                        }
-//
-//                        await MainActor.run {
-//                            self.secondsRemaining = Int(timerTick.secondsRemaining)
-//                            self.remainingTime = Self.formatRemainingTime(timerTick.secondsRemaining)
-//                        }
-//
-//                        return .success(.value)
-//                    } catch {
-//                        debugPrint("Error parsing verification countdown: \(error)")
-//                        return .failure(.generic("Failed to parse countdown", inner: error))
-//                    }
-//                },
-//                token: cancellationToken
-//            )
-//            
-//            if result.isErr {
-//                // hadle this
-//            }
-//        } catch {
-//            debugPrint("Verification execution error: \(error)")
-//            errorMessage = "Failed to initiate verification"
-//        }
+        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
+            errorMessage = "Invalid device ID"
+            return
+        }
+        
+        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
+            errorMessage = "Invalid UUID format"
+            return
+        }
+
+        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
+
+        var request = Ecliptix_Proto_Membership_InitiateVerificationRequest()
+        request.phoneNumberIdentifier = phoneNumberIdentifier
+        request.appDeviceIdentifier = deviceIdData
+        request.purpose = .registration
+        request.type = type
+
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+
+        do {
+            let result = try await networkController.executeServiceAction(
+                connectId: connectId,
+                serviceType: .initiateVerification,
+                plainBuffer: try request.serializedData(),
+                flowType: .receiveStream,
+                onSuccessCallback: { [weak self] payload in
+                    guard let self else {
+                        return .failure(.unexpectedError("Self is nil"))
+                    }
+
+                    do {
+                        let timerTick = try Helpers.parseFromBytes(
+                            Ecliptix_Proto_Membership_VerificationCountdownUpdate.self,
+                            data: payload
+                        )
+
+                        if timerTick.alreadyVerified {
+                        }
+
+                        if timerTick.status == .failed {
+                        }
+                        
+                        if timerTick.status == .expired {
+                            // redirect to Phone verification view
+                        }
+                        
+                        if timerTick.status == .maxAttemptsReached {
+                            // redirect to Phone verification view
+                        }
+                        
+                        if timerTick.status == .notFound {
+                        }
+                        
+                        
+                        if self.verificationSessionIdentifier == nil {
+                            self.verificationSessionIdentifier = try Helpers.fromDataToGuid(timerTick.sessionIdentifier)
+                        }
+
+                        await MainActor.run {
+                            self.secondsRemaining = Int(timerTick.secondsRemaining)
+                            self.remainingTime = Self.formatRemainingTime(timerTick.secondsRemaining)
+                        }
+
+                        return .success(.value)
+                    } catch {
+                        debugPrint("Error parsing verification countdown: \(error)")
+                        return .failure(.unexpectedError("Failed to parse countdown", inner: error))
+                    }
+                },
+                token: cancellationToken
+            )
+            
+            if result.isErr {
+                // hadle this
+            }
+        } catch {
+            debugPrint("Verification execution error: \(error)")
+            errorMessage = "Failed to initiate verification"
+        }
     }
 
     private func sendVerificationCode() async {
-//        guard let systemDeviceIdentifier = await ViewModelBase.systemDeviceIdentifier() else {
-//            await MainActor.run {
-//                self.errorMessage = "Invalid device ID"
-//            }
-//            return
-//        }
-//        
-//        await MainActor.run {
-//            self.errorMessage = nil
-//            self.isLoading = true
-//        }
-//        
-//        var verifyCodeRequest = Ecliptix_Proto_Membership_VerifyCodeRequest()
-//        verifyCodeRequest.code = combinedCode.replacingOccurrences(of: Self.emptySign, with: "")
-//        verifyCodeRequest.purpose = .registration
-//        verifyCodeRequest.appDeviceIdentifier = Utilities.guidToData(systemDeviceIdentifier)
-//        
-//        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
+            await MainActor.run {
+                self.errorMessage = "Invalid device ID"
+            }
+            return
+        }
         
-//        do {
-//            _ = try await networkController.executeServiceAction(
-//                connectId: connectId,
-//                serviceAction: .verifyOtp,
-//                plainBuffer: try verifyCodeRequest.serializedData(),
-//                flowType: .single,
-//                onSuccessCallback: { [weak self] payload in
-//                    guard let self = self else {
-//                        return .failure(.unexpectedError("Object deallocated"))
-//                    }
-//                    
-//                    do {
-//                        let verifyCodeResponse = try Utilities.parseFromBytes(Ecliptix_Proto_Membership_VerifyCodeResponse.self, data: payload)
-//                        
-//                        await MainActor.run {
-//                            self.isLoading = false
-//                            
-//                            if verifyCodeResponse.result == .succeeded {
-//                                let membership = verifyCodeResponse.membership
-//                                
-//                                self.navigation.navigate(to: .passwordSetup(membership.uniqueIdentifier))
-//                            } else if verifyCodeResponse.result == .invalidOtp {
-//                                
-//                            }
-//                        }
-//                        
-//                        return .success(.value)
-//                    } catch {
-//                        await MainActor.run {
-//                            self.isLoading = false
-//                            self.errorMessage = "Failed to parse server response"
-//                        }
-//                        return .failure(.generic("Deserialization failed", inner: error))
-//                    }
-//                }
-//            )
-//        } catch {
-//            await MainActor.run {
-//                self.isLoading = false
-//                self.errorMessage = "Network error: \(error.localizedDescription)"
-//            }
-//        }
+        await MainActor.run {
+            self.errorMessage = nil
+            self.isLoading = true
+        }
+        
+        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
+            errorMessage = "Invalid UUID format"
+            return
+        }
+
+        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
+        
+        var verifyCodeRequest = Ecliptix_Proto_Membership_VerifyCodeRequest()
+        verifyCodeRequest.code = combinedCode.replacingOccurrences(of: Self.emptySign, with: "")
+        verifyCodeRequest.purpose = .registration
+        verifyCodeRequest.appDeviceIdentifier = deviceIdData
+        
+        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        
+        do {
+            _ = try await networkController.executeServiceAction(
+                connectId: connectId,
+                serviceType: .verifyOtp,
+                plainBuffer: try verifyCodeRequest.serializedData(),
+                flowType: .single,
+                onSuccessCallback: { [weak self] payload in
+                    guard let self = self else {
+                        return .failure(.unexpectedError("Object deallocated"))
+                    }
+                    
+                    do {
+                        let verifyCodeResponse = try Helpers.parseFromBytes(Ecliptix_Proto_Membership_VerifyCodeResponse.self, data: payload)
+                        
+                        await MainActor.run {
+                            self.isLoading = false
+                            
+                            if verifyCodeResponse.result == .succeeded {
+                                let membership = verifyCodeResponse.membership
+                                
+                                self.navigation.navigate(to: .passwordSetup(membership.uniqueIdentifier))
+                            } else if verifyCodeResponse.result == .invalidOtp {
+                                
+                            }
+                        }
+                        
+                        return .success(.value)
+                    } catch {
+                        await MainActor.run {
+                            self.isLoading = false
+                            self.errorMessage = "Failed to parse server response"
+                        }
+                        return .failure(.unexpectedError("Deserialization failed", inner: error))
+                    }
+                }
+            )
+        } catch {
+            await MainActor.run {
+                self.isLoading = false
+                self.errorMessage = "Network error: \(error.localizedDescription)"
+            }
+        }
     }
     
     func reSendVerificationCode() async {

@@ -145,40 +145,35 @@ public final class HkdfSha256 {
             }
         }
         
-        do {
-            hmacInputBuffer = Data(count: hmacInputSize)
+        hmacInputBuffer = Data(count: hmacInputSize)
+        
+        while bytesWritten < output.count {
+            var currentInputLength = 0
             
-            while bytesWritten < output.count {
-                var currentInputLength = 0
-                
-                if bytesWritten == 0 {
-                    hmacInputBuffer!.replaceSubrange(0..<info.count, with: info)
-                    hmacInputBuffer![info.count] = UInt8(counter)
-                    currentInputLength = info.count + 1
-                } else {
-                    hmacInputBuffer!.replaceSubrange(0..<Self.hashOutputLength, with: previousHash)
-                    hmacInputBuffer!.replaceSubrange(Self.hashOutputLength..<(Self.hashOutputLength + info.count), with: info)
-                    hmacInputBuffer![Self.hashOutputLength + info.count] = UInt8(counter)
-                    currentInputLength = Self.hashOutputLength + info.count + 1
-                }
-                
-                var inputSlice = hmacInputBuffer!.prefix(currentInputLength)
-                var tempHashResult = signHmacSha256(ikm: &inputSlice, salt: &prk)
-                
-                let bytesToCopy = min(Self.hashOutputLength, output.count - bytesWritten)
-                output.replaceSubrange(bytesWritten..<bytesWritten + bytesToCopy, with: tempHashResult.prefix(bytesToCopy))
-                bytesWritten = bytesWritten + bytesToCopy
-                
-                if bytesWritten < output.count {
-                    previousHash.replaceSubrange(0..<tempHashResult.count, with: tempHashResult)
-                }
-                
-                _ = SodiumInterop.secureWipe(&tempHashResult)
-                counter += 1
+            if bytesWritten == 0 {
+                hmacInputBuffer!.replaceSubrange(0..<info.count, with: info)
+                hmacInputBuffer![info.count] = UInt8(counter)
+                currentInputLength = info.count + 1
+            } else {
+                hmacInputBuffer!.replaceSubrange(0..<Self.hashOutputLength, with: previousHash)
+                hmacInputBuffer!.replaceSubrange(Self.hashOutputLength..<(Self.hashOutputLength + info.count), with: info)
+                hmacInputBuffer![Self.hashOutputLength + info.count] = UInt8(counter)
+                currentInputLength = Self.hashOutputLength + info.count + 1
             }
-        } catch {
-            debugPrint("[HkdfSha256] Error expanding HKDF: \(error)")
-            return
+            
+            var inputSlice = hmacInputBuffer!.prefix(currentInputLength)
+            var tempHashResult = signHmacSha256(ikm: &inputSlice, salt: &prk)
+            
+            let bytesToCopy = min(Self.hashOutputLength, output.count - bytesWritten)
+            output.replaceSubrange(bytesWritten..<bytesWritten + bytesToCopy, with: tempHashResult.prefix(bytesToCopy))
+            bytesWritten = bytesWritten + bytesToCopy
+            
+            if bytesWritten < output.count {
+                previousHash.replaceSubrange(0..<tempHashResult.count, with: tempHashResult)
+            }
+            
+            _ = SodiumInterop.secureWipe(&tempHashResult)
+            counter += 1
         }
     }
     
@@ -211,11 +206,5 @@ public final class HkdfSha256 {
             }
             disposed = true
         }
-    }
-}
-
-private extension Data {
-    var bytes: [UInt8] {
-        return [UInt8](self)
     }
 }

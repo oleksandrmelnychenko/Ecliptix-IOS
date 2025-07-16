@@ -11,9 +11,11 @@ import SwiftProtobuf
 final class NetworkProvider: NetworkProviderProtocol {
     private static let defaultOneTimeKeyCount: UInt32 = 5
     
-    private let secureStorageProvider: SecureStorageProviderProtocol
     private let rpcMetaDataProvider: RpcMetaDataProviderProtocol
+    private let secureStorageProvider: SecureStorageProviderProtocol
     private let rpcServiceManager: RpcServiceManager
+    private let networkEvents: NetworkEventsProtocol
+    private let systemEvents: SystemEventsProtocol
     
     private var connections: [UInt32: EcliptixProtocolSystem] = [:]
     private let lock = DispatchSemaphore(value: 1)
@@ -23,13 +25,24 @@ final class NetworkProvider: NetworkProviderProtocol {
     
     private lazy var sessionLock = SessionLock(networkProvider: self)
     
-    init(secureStorageProvider: SecureStorageProviderProtocol, rpcMetaDataProvider: RpcMetaDataProviderProtocol, rpcServiceManager: RpcServiceManager) {
+    init(
+        secureStorageProvider: SecureStorageProviderProtocol,
+        rpcMetaDataProvider: RpcMetaDataProviderProtocol,
+        rpcServiceManager: RpcServiceManager,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol
+    ) {
         self.secureStorageProvider = secureStorageProvider
         self.rpcMetaDataProvider = rpcMetaDataProvider
         self.rpcServiceManager = rpcServiceManager
+        self.networkEvents = networkEvents
+        self.systemEvents = systemEvents
     }
     
-    func initiateEcliptixProtocolSystem(applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, connectId: UInt32) async {
+    func initiateEcliptixProtocolSystem(
+        applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
+        connectId: UInt32
+    ) async {
         do {
             self.applicationInstanceSettings = applicationInstanceSettings
             
@@ -38,8 +51,8 @@ final class NetworkProvider: NetworkProviderProtocol {
             
             self.connections[connectId] = protocolSystem
             
-            let appInstanceId = try Utilities.fromDataToGuid(applicationInstanceSettings.appInstanceID)
-            let deviceId = try Utilities.fromDataToGuid(applicationInstanceSettings.deviceID)
+            let appInstanceId = try Helpers.fromDataToGuid(applicationInstanceSettings.appInstanceID)
+            let deviceId = try Helpers.fromDataToGuid(applicationInstanceSettings.deviceID)
             
             self.rpcMetaDataProvider.setAppInfo(appInstanceId: appInstanceId, deviceId: deviceId)
         } catch {
@@ -49,10 +62,10 @@ final class NetworkProvider: NetworkProviderProtocol {
     
     func setSecrecyChannelAsUnhealthy() {
         self.isSessionConsiderdHealthy = false
-        print("Sesion marked unhealthy")
+        debugPrint("Sesion marked unhealthy")
     }
     
-    func restoreSecrecyChannelAsync() async -> Result<Unit, EcliptixProtocolFailure> {
+    func restoreSecrecyChannelAsync() async -> Result<Unit, NetworkFailure> {
         await sessionLock.restoreSecrecyChannelAsync()
     }
     
@@ -63,25 +76,29 @@ final class NetworkProvider: NetworkProviderProtocol {
             self.networkProvider = networkProvider
         }
         
-        func restoreSecrecyChannelAsync() async -> Result<Unit, EcliptixProtocolFailure> {
+        func restoreSecrecyChannelAsync() async -> Result<Unit, NetworkFailure> {
             if self.networkProvider.isSessionConsiderdHealthy {
-                print("Session was already recovered by another thread. Skipping redundant recovery")
+                debugPrint("Session was already recovered by another thread. Skipping redundant recovery")
                 return .success(.value)
             }
 
-            print("Starting session recovery process...")
+            debugPrint("Starting session recovery process...")
             let result = await self.networkProvider.perfromFullRecoveryLogic()
             
             self.networkProvider.isSessionConsiderdHealthy = result.isOk
             if result.isErr {
-                print("\(try! result.unwrapErr()) session recovery failed")
+                debugPrint("\(try! result.unwrapErr()) session recovery failed")
             }
 
             return result
         }
     }
     
-    private func perfromFullRecoveryLogic() async -> Result<Unit, EcliptixProtocolFailure> {
+    private func perfromFullRecoveryLogic() async -> Result<Unit, NetworkFailure> {
+        guard self.applicationInstanceSettings != nil else {
+            return .failure(.invalidRequestType("Application instance settings not available"))
+        }
+        
         let connectId = Self.computeUniqueConnectId(
             applicationInstanceSettings: self.applicationInstanceSettings!,
             pubKeyExchangeType: .dataCenterEphemeralConnect)
@@ -89,18 +106,19 @@ final class NetworkProvider: NetworkProviderProtocol {
         self.connections.removeValue(forKey: connectId)
         
         do {
-            let storedStateResult = secureStorageProvider.tryGetByKey(key: String(connectId))
+            let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
+            
             if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
                 let state = try Ecliptix_Proto_EcliptixSecrecyChannelState(serializedBytes: data)
                 let restoreResult = await restoreSecrecyChannel(
                     ecliptixSecrecyChannelState: state,
                     applicationInstanceSettings: self.applicationInstanceSettings!)
                 if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
-                    print("Session successfully restored from storage")
+                    debugPrint("Session successfully restored from storage")
                     return .success(.value)
                 }
                 
-                print("Failed to restore session from storage, will attempt full re-establishment")
+                debugPrint("Failed to restore session from storage, will attempt full re-establishment")
             }
             
             await self.initiateEcliptixProtocolSystem(applicationInstanceSettings: self.applicationInstanceSettings!, connectId: connectId)
@@ -110,21 +128,23 @@ final class NetworkProvider: NetworkProviderProtocol {
                 return .failure(try establishResult.unwrapErr())
             }
             
-            let storedResult = secureStorageProvider.store(key: String(connectId), data: try establishResult.unwrap().serializedData())
+            let storedResult = self.secureStorageProvider.store(key: String(connectId), data: try establishResult.unwrap().serializedData())
             if storedResult.isErr {
-                print("Failed to store newly established session state: \(try storedResult.unwrapErr())")
+                debugPrint("Failed to store newly established session state: \(try storedResult.unwrapErr())")
             }
             
-            print("Session successfully established via new key exchange")
+            debugPrint("Session successfully established via new key exchange")
             return .success(.value)
         } catch {
             return .failure(.unexpectedError("An unhandled error occurred during full recovery logic", inner: error))
         }
     }
     
-    static func computeUniqueConnectId(applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType) -> UInt32 {
-        
-        return Utilities.computeUniqueConnectId(
+    static func computeUniqueConnectId(
+        applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
+        pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType
+    ) -> UInt32 {
+        return Helpers.computeUniqueConnectId(
             appInstanceId: applicationInstanceSettings.appInstanceID,
             appDeviceId: applicationInstanceSettings.deviceID,
             contextType: pubKeyExchangeType)
@@ -135,48 +155,63 @@ final class NetworkProvider: NetworkProviderProtocol {
         serviceType: RpcServiceType,
         plainBuffer: Data,
         flowType: ServiceFlowType,
-        onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,
+        onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         token: CancellationToken? = CancellationToken()
-    ) async throws -> Result<Unit, EcliptixProtocolFailure> {
-        guard let protocolSystem = connections[connectId] else {
-            return .failure(.generic("Connection not found"))
-        }
+    ) async throws -> Result<Unit, NetworkFailure> {
         
-        do {
-            return try await sendRequest(
-                connectId: connectId,
-                protocolSystem: protocolSystem,
-                onSuccessCallback: onSuccessCallback,
-                buildRequest(protocolSystem: protocolSystem, plainBuffer: plainBuffer, flowType: flowType, serviceType: serviceType)
-            )
-        } catch {
-            switch SessionError.parse(from: error) {
-            case .sessionExpired:
-                if serviceType == .registerAppDevice {
-                    _ = await self.restoreSecrecyChannelAsync()
-                } else {
-                    _ = await ApplicationInitializer().initializeAsync()
-                }
-                
-                guard let protocolSystem = connections[connectId] else {
-                    return .failure(.generic("Connection not found"))
-                }
+        return await RetryExecutor.executeResult(
+                maxRetryCount: nil,
+                retryCondition: { result in
+                    guard result.isErr else { return false }
+                    
+                    let failure: NetworkFailure
+                    do {
+                        failure = try result.unwrapErr()
+                    } catch {
+                        return false
+                    }
 
-                do {
-                    return try await sendRequest(
-                        connectId: connectId,
-                        protocolSystem: protocolSystem,
-                        onSuccessCallback: onSuccessCallback,
-                        buildRequest(protocolSystem: protocolSystem, plainBuffer: plainBuffer, flowType: flowType, serviceType: serviceType)
-                    )
-                } catch {
-                    return .failure(.generic("Reattempt after session expired failed", inner: error))
-                }
+                    let errorToParse = failure.innerError ?? failure
+                    if case .sessionExpired = SessionError.parse(from: errorToParse) {
+                        return true
+                    } else {
+                        return false
+                    }
+                },
+                onRetry: { _, _ in
+                    if serviceType == .registerAppDevice {
+                        _ = await SessionProvider.establishSession(settings: self.applicationInstanceSettings!)
+                    } else {
+                        _ = await SessionProvider.recoverSession(settings: &self.applicationInstanceSettings!)
+                    }
+                })
+                {
+                    guard let protocolSystem = self.connections[connectId] else {
+                        return .failure(.invalidRequestType("Connection not found"))
+                    }
 
-            case .other(let inner):
-                throw inner
-            }
-        }
+                    do {
+                        let requestResult = self.buildRequest(
+                            protocolSystem: protocolSystem,
+                            plainBuffer: plainBuffer,
+                            flowType: flowType,
+                            serviceType: serviceType
+                        )
+                        
+                        guard requestResult.isOk else {
+                            return .failure(try requestResult.unwrapErr())
+                        }
+                        
+                        return try await self.sendRequest(
+                            connectId: connectId,
+                            protocolSystem: protocolSystem,
+                            onSuccessCallback: onSuccessCallback,
+                            requestResult.unwrap()
+                        )
+                    } catch {
+                        return .failure(.unexpectedError("Unhandled error during execution to reqeust.", inner: error))
+                    }
+                }
     }
     
     func buildRequest(
@@ -184,98 +219,109 @@ final class NetworkProvider: NetworkProviderProtocol {
         plainBuffer: Data,
         flowType: ServiceFlowType,
         serviceType: RpcServiceType
-    ) throws -> ServiceRequest {
-        let outboundPayload = try protocolSystem.produceOutboundMessage(
-            plainPayload: plainBuffer
-        )
-        
-        return ServiceRequest.new(
-            actionType: flowType,
-            rcpServiceMethod: serviceType,
-            payload: try outboundPayload.unwrap(),
-            encryptedChunls: []
-        )
+    ) -> Result<ServiceRequest, NetworkFailure> {
+        do {
+            let outboundPayload = try protocolSystem.produceOutboundMessage(
+                plainPayload: plainBuffer
+            )
+            
+            let request = ServiceRequest.new(
+                actionType: flowType,
+                rcpServiceMethod: serviceType,
+                payload: try outboundPayload.unwrap(),
+                encryptedChunls: []
+            )
+            
+            return .success(request)
+        } catch {
+            return .failure(.unexpectedError("Failed to build the request", inner: error))
+        }
     }
     
     private func sendRequest(
         connectId: UInt32,
         protocolSystem: EcliptixProtocolSystem,
-        onSuccessCallback: @escaping (Data) async -> Result<Unit, EcliptixProtocolFailure>,
+        onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         _ request: ServiceRequest
-    ) async throws -> Result<Unit, EcliptixProtocolFailure> {
-        let invokeResult = await rpcServiceManager.invokeServiceRequestAsync(request: request, token: CancellationToken())
+    ) async -> Result<Unit, NetworkFailure> {
+        do {
+            let invokeResult = await rpcServiceManager.invokeServiceRequestAsync(request: request, token: CancellationToken())
 
-        if invokeResult.isErr {
-            throw try invokeResult.unwrapErr().innerError ?? invokeResult.unwrapErr()
-        }
+            if invokeResult.isErr {
+                return .failure(try invokeResult.unwrapErr())
+            }
 
-        let flow = try invokeResult.unwrap()
+            let flow = try invokeResult.unwrap()
 
-        switch flow {
-            case let singleCall as RpcFlow.SingleCall:
-                do {
-                    let callResult = await singleCall.result()
-                    if callResult.isErr {
-                        return .failure(try callResult.unwrapErr())
-                    }
-
-                    let inboundPayload = try callResult.unwrap()
-                    let decryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: inboundPayload)
-                    let callbackOutcome = await onSuccessCallback(try decryptedData.unwrap())
-                    if callbackOutcome.isErr {
-                        return callbackOutcome
-                    }
-                } catch {
-                    return .failure(.generic("Failed to process single call response", inner: error))
-                }
-
-            case let inboundStream as RpcFlow.InboundStream:
-                do {
-                    try await withTaskCancellationHandler(operation: {
-                        for try await streamItem in inboundStream.stream {
-                            if streamItem.isErr {
-//                                throw try streamItem.unwrapErr()
-                                continue
-                            }
-
-                            let streamPayload = try streamItem.unwrap()
-                            let streamDecryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: streamPayload)
-
-                            let streamCallbackOutcome = await onSuccessCallback(try streamDecryptedData.unwrap())
-                            if streamCallbackOutcome.isErr {
-                                debugPrint("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
-                            }
+            switch flow {
+                case let singleCall as RpcFlow.SingleCall:
+                    do {
+                        let callResult = await singleCall.result()
+                        if callResult.isErr {
+                            return .failure(try callResult.unwrapErr())
                         }
-                    }, onCancel: {
-                        debugPrint("Stream cancelled for connectId: \(connectId)")
-                    })
-                } catch {
-                    throw error
-                }
+
+                        let inboundPayload = try callResult.unwrap()
+                        let decryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: inboundPayload)
+                        let callbackOutcome = await onSuccessCallback(try decryptedData.unwrap())
+                        if callbackOutcome.isErr {
+                            return callbackOutcome
+                        }
+                    } catch {
+                        return .failure(.unexpectedError("Failed to process single call response", inner: error))
+                    }
+
+                case let inboundStream as RpcFlow.InboundStream:
+                    do {
+                        try await withTaskCancellationHandler(operation: {
+                            for try await streamItem in inboundStream.stream {
+                                if streamItem.isErr {
+    //                                throw try streamItem.unwrapErr()
+                                    continue
+                                }
+
+                                let streamPayload = try streamItem.unwrap()
+                                let streamDecryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: streamPayload)
+
+                                let streamCallbackOutcome = await onSuccessCallback(try streamDecryptedData.unwrap())
+                                if streamCallbackOutcome.isErr {
+                                    debugPrint("Callback error: \(try streamCallbackOutcome.unwrapErr().message)")
+                                }
+                            }
+                        }, onCancel: {
+                            debugPrint("Stream cancelled for connectId: \(connectId)")
+                        })
+                    } catch {
+                        throw error
+                    }
 
 
-            case is RpcFlow.OutboundSink, is RpcFlow.BidirectionalStream:
-                return .failure(.generic("Unsupported stream type"))
+                case is RpcFlow.OutboundSink, is RpcFlow.BidirectionalStream:
+                    return .failure(.invalidRequestType("Unsupported stream type"))
 
-            default:
-                return .failure(.generic("Unsupported stream type"))
+                default:
+                    return .failure(.invalidRequestType("Unsupported stream type"))
+            }
+
+            return .success(.value)
+        } catch {
+            return .failure(.unexpectedError("Unhandled error", inner: error))
         }
-
-        return .success(Unit.value)
+        
     }
 
     public func restoreSecrecyChannel(
         ecliptixSecrecyChannelState: Ecliptix_Proto_EcliptixSecrecyChannelState,
         applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
-    ) async -> Result<Bool, EcliptixProtocolFailure> {
+    ) async -> Result<Bool, NetworkFailure> {
         if self.applicationInstanceSettings == nil {
             self.applicationInstanceSettings = applicationInstanceSettings
         }
         
         do {
             self.rpcMetaDataProvider.setAppInfo(
-                appInstanceId: try Utilities.fromDataToGuid(applicationInstanceSettings.appInstanceID),
-                deviceId: try Utilities.fromDataToGuid(applicationInstanceSettings.deviceID))
+                appInstanceId: try Helpers.fromDataToGuid(applicationInstanceSettings.appInstanceID),
+                deviceId: try Helpers.fromDataToGuid(applicationInstanceSettings.deviceID))
             
             let request = Ecliptix_Proto_RestoreSecrecyChannelRequest()
             let serviceRequest = SecrecyKeyExchangeServiceRequest<Ecliptix_Proto_RestoreSecrecyChannelRequest, Ecliptix_Proto_RestoreSecrecyChannelResponse>.new(
@@ -283,11 +329,14 @@ final class NetworkProvider: NetworkProviderProtocol {
                 method: .restoreSecrecyChannel,
                 pubKeyExchange: request)
             
-            let responseResult = await rpcServiceManager.restoreAppDeviceSecrecyChannel(serviceRequest: serviceRequest)
-            if responseResult.isErr {
-                return responseResult.map { _ in false }
+            let restoreAppDeviceSecrecyChannelResponse = await rpcServiceManager.restoreAppDeviceSecrecyChannel(
+                networkEvents: self.networkEvents,
+                systemEvents: self.systemEvents,
+                serviceRequest: serviceRequest)
+            if restoreAppDeviceSecrecyChannelResponse.isErr {
+                return .failure(try restoreAppDeviceSecrecyChannelResponse.unwrapErr())
             }
-            let response = try responseResult.unwrap()
+            let response = try restoreAppDeviceSecrecyChannelResponse.unwrap()
             
             if response.status == .sessionResumed {
                 _ = syncSecrecyChannel(currentState: ecliptixSecrecyChannelState, serverResponse: response)
@@ -301,10 +350,12 @@ final class NetworkProvider: NetworkProviderProtocol {
         }
     }
     
-    public func establishSecrecyChannel(connectId: UInt32) async -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, EcliptixProtocolFailure> {
+    public func establishSecrecyChannel(
+        connectId: UInt32
+    ) async -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, NetworkFailure> {
         
         guard let protocolSystem = connections[connectId] else {
-            return .failure(.generic("Connection not found"))
+            return .failure(.invalidRequestType("Connection not found"))
         }
         
         do {
@@ -315,11 +366,14 @@ final class NetworkProvider: NetworkProviderProtocol {
                 method: .establishSecrecyChannel,
                 pubKeyExchange: try pubKeyExchange.unwrap())
             
-            let peerPubKeyExchangeResult = await self.rpcServiceManager.establishAppDeviceSecrecyChannel(serviceRequest: action)
-            guard peerPubKeyExchangeResult.isOk else {
-                return .failure(try peerPubKeyExchangeResult.unwrapErr())
+            let establishAppDeviceSecrecyChannelResult = await self.rpcServiceManager.establishAppDeviceSecrecyChannel(
+                networkEvents: self.networkEvents,
+                systemEvents: self.systemEvents,
+                serviceRequest: action)
+            guard establishAppDeviceSecrecyChannelResult.isOk else {
+                return .failure(try establishAppDeviceSecrecyChannelResult.unwrapErr())
             }
-            var peerPubKeyExchange = try peerPubKeyExchangeResult.unwrap()
+            var peerPubKeyExchange = try establishAppDeviceSecrecyChannelResult.unwrap()
             
             try protocolSystem.completeDataCenterPubKeyExchange(peerMessage: &peerPubKeyExchange)
             
@@ -339,7 +393,7 @@ final class NetworkProvider: NetworkProviderProtocol {
 
                 }
             
-            return ecliptixSecrecyChannelStateResult
+            return ecliptixSecrecyChannelStateResult.mapEcliptixProtocolFailure()
         } catch {
             return .failure(.unexpectedError("An unexpected error occurred during establish Secrecy Channel", inner: error))
         }
@@ -376,7 +430,9 @@ final class NetworkProvider: NetworkProviderProtocol {
 
     }
     
-    private static func recreateSystemFromState(state: Ecliptix_Proto_EcliptixSecrecyChannelState) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
+    private static func recreateSystemFromState(
+        state: Ecliptix_Proto_EcliptixSecrecyChannelState
+    ) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
         do {
             let idKeysResult = EcliptixSystemIdentityKeys.fromProtoState(proto: state.identityKeys)
             guard idKeysResult.isOk else {
@@ -395,7 +451,10 @@ final class NetworkProvider: NetworkProviderProtocol {
         }
     }
     
-    private static func createStateFromSystem(oldState: Ecliptix_Proto_EcliptixSecrecyChannelState, system: EcliptixProtocolSystem) -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, EcliptixProtocolFailure> {
+    private static func createStateFromSystem(
+        oldState: Ecliptix_Proto_EcliptixSecrecyChannelState,
+        system: EcliptixProtocolSystem
+    ) -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, EcliptixProtocolFailure> {
         
         do {
             return try system.getConnection().toProtoState().map { newRatchetState in

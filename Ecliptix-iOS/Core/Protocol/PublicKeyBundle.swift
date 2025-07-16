@@ -151,8 +151,8 @@ class PublicKeyBundle {
             let localPublicKeyBundle = PublicKeyBundle(&internalData)
             
             return localPublicKeyBundle
-        }.mapError { error in
-            return error
+        } errorMapper: { error in
+            return .decode("Unexpected error creating LocalPublicKeyBundle from Protobuf: \(error.localizedDescription)", inner: error)
         }
     }
 }

@@ -177,7 +177,6 @@ final class EcliptixProtocolConnection {
             return overallResult
 
         } catch {
-            debugPrint("[ShieldSession] Unexpected error creating session \(connectId): \(error.localizedDescription)")
             initialSendingDhPrivateKeyHandle?.dispose()
             sendingStep?.dispose()
             persistentDhPrivateKeyHandle?.dispose()
@@ -407,7 +406,6 @@ final class EcliptixProtocolConnection {
                 return Unit.value
             }
             .mapError { err in
-                debugPrint("[ShieldSession] Error finalizing chain and DH keys: \(err.localizedDescription)")
                 tempRootHandle?.dispose()
                 return err
             }
@@ -520,7 +518,7 @@ final class EcliptixProtocolConnection {
             }
             
             return .value
-        }.mapError { error in
+        } errorMapper: { error in
             EcliptixProtocolFailure.deriveKey("Failed to derive initial chain keys.", inner: error)
         }
     }
@@ -657,7 +655,7 @@ final class EcliptixProtocolConnection {
                     
                 }
                 return .value
-            }.mapError { error in
+            } errorMapper: { error in
                 EcliptixProtocolFailure.deriveKey("DH calculation failed during ratchet.", inner: error)
             }
              
@@ -713,24 +711,18 @@ final class EcliptixProtocolConnection {
         return checkDisposed().map { _ in
             var nonceBuffer = Data(count: EcliptixProtocolConnection.aesGcmNonceSize)
             
-            // Fill first 8 bytes with random data
             var randomBytes = [UInt8](repeating: 0, count: 8)
             let result = SecRandomCopyBytes(kSecRandomDefault, 8, &randomBytes)
             if result == errSecSuccess {
                 nonceBuffer.replaceSubrange(0..<8, with: randomBytes)
             } else {
-                // You may want to handle random generation errors differently
                 fatalError("Failed to generate random bytes for nonce")
             }
             
             let currentNonce = nonceCounter.wrappingIncrementThenLoad(ordering: .relaxed) - 1
             
-            // Write the UInt32 counter in little-endian format to nonceBuffer[8...]
             var counterBytes = withUnsafeBytes(of: currentNonce.littleEndian) { Data($0) }
             nonceBuffer.replaceSubrange(8..<12, with: counterBytes)
-            
-            // Debug logging (Swift equivalent of Debug.WriteLine)
-            debugPrint("[ShieldSession] Generated nonce: \(nonceBuffer.hexEncodedString()) for counter: \(currentNonce)")
             
             randomBytes.resetBytes(in: 0..<randomBytes.count)
             counterBytes.resetBytes(in: 0..<counterBytes.count)
@@ -770,14 +762,6 @@ final class EcliptixProtocolConnection {
         }
     }
     
-//    private func clearMessageKeyCache() {
-//        debugPrint("[ShieldSession] Clearing message key cache for session \(id)")
-//        for (key, value) in messageKeys {
-//            value.dispose()
-//        }
-//        messageKeys.removeAll()
-//    }
-    
     private func checkDisposed() -> Result<Unit, EcliptixProtocolFailure> {
         if disposed {
             return .failure(.objectDisposed(String(describing: EcliptixProtocolConnection.self)))
@@ -800,7 +784,6 @@ final class EcliptixProtocolConnection {
     private func dispose(disposing: Bool) {
         if disposed { return }
         
-        debugPrint("[ShieldSession] Disposing session \(id)")
         disposed = true
         
         if disposing {
@@ -819,12 +802,6 @@ final class EcliptixProtocolConnection {
         initialSendingDhPrivateKeyHandle?.dispose()
         _ = EcliptixProtocolConnection.wipeIfNotNil(&peerDhPublicKey)
         _ = EcliptixProtocolConnection.wipeIfNotNil(&persistentDhPublicKey)
-    }
-}
-
-extension Data {
-    func hexEncodedString() -> String {
-        return self.map { String(format: "%02x", $0) }.joined()
     }
 }
 

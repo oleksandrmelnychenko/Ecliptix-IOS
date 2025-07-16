@@ -67,7 +67,7 @@ public struct OneTimePreKeyLocal {
             
             let deriveResult = Result<Data, EcliptixProtocolFailure>.Try {
                 return try ScalarMult.base(&tempPrivKeyCopy!)
-            }.mapError { error in
+            } errorMapper: { error in
                 return EcliptixProtocolFailure.deriveKey("Failed to derive public key for OPK ID \(preKeyId)", inner: error)
             }
             

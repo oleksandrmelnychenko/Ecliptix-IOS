@@ -22,7 +22,10 @@ struct Ecliptix_iOSApp: App {
         let locService = ServiceLocator.shared.resolve(LocalizationService.self)
         _localizationService = StateObject(wrappedValue: locService)
         
-        establishConnectionExecutor = ApplicationInitializer()
+        establishConnectionExecutor = ApplicationInitializer(
+            networkProvider: ServiceLocator.shared.resolve(NetworkProvider.self),
+            secureStorageProvider: ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
+            systemEvents: ServiceLocator.shared.resolve(SystemEventsProtocol.self))
     }
     
     var body: some Scene {
