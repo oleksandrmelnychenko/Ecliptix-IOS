@@ -39,6 +39,8 @@ final class UnaryRpcService {
             .opaqueRegistrationComplete: opaqueRegistrationCompleteRequestAsync,
             .opaqueSignInInitRequest: opaqueSignInInitRequestAsync,
             .opaqueSignInCompleteRequest: opaqueSignInCompleteRequestAsync,
+            
+            .recoverySecretKeyPhoneVerification: recoverySecretKeyPhoneVerificationAsync,
             .opaqueRecoverySecretKeyInitRequest: opaqueRecoverySecretKeyInitRequestAsync,
             .opaqueRecoverySecretKeyCompleteRequest: opaqueRecoverySecretKeyCompleteRequestAsync
         ]
@@ -167,6 +169,17 @@ final class UnaryRpcService {
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
         return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueRecoverySecretKeyCompleteRequest(payload)
+        }
+    }
+    
+    private func recoverySecretKeyPhoneVerificationAsync(
+        payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        cancellation: CancellationToken
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            try await self.authClient.recoverySecretKeyPhoneVerification(payload)
         }
     }
     

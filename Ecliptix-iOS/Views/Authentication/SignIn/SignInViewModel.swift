@@ -9,8 +9,7 @@ import Foundation
 
 @MainActor
 final class SignInViewModel: ObservableObject {
-    @Published var phoneNumber: String = "970177981"
-    @Published var phoneCode: String = "+380"
+    @Published var phoneNumber: String = "+970177981"
     @Published var password: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -22,12 +21,8 @@ final class SignInViewModel: ObservableObject {
     
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     
-    var fullPhoneNumber: String {
-        return phoneCode + phoneNumber
-    }
-    
     var phoneValidationErrors: [PhoneValidationError] {
-        phoneValidator.validate(fullPhoneNumber)
+        phoneValidator.validate(phoneNumber)
     }
     
     var passwordValidationErrors: [PasswordValidationError] {
@@ -38,7 +33,7 @@ final class SignInViewModel: ObservableObject {
         passwordValidationErrors.isEmpty &&
         phoneValidationErrors.isEmpty &&
         !password.isEmpty &&
-        !fullPhoneNumber.isEmpty
+        !phoneNumber.isEmpty
     }
     
     init(navigation: NavigationService) {
@@ -143,7 +138,7 @@ final class SignInViewModel: ObservableObject {
             let blind = try oprfResult.unwrap().blind
 
             var initRequest = Ecliptix_Proto_Membership_OpaqueSignInInitRequest()
-            initRequest.phoneNumber = fullPhoneNumber
+            initRequest.phoneNumber = self.phoneNumber
             initRequest.peerOprf = oprfRequest
 
             let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
@@ -158,7 +153,7 @@ final class SignInViewModel: ObservableObject {
                         let initResponse = try Helpers.parseFromBytes(Ecliptix_Proto_Membership_OpaqueSignInInitResponse.self, data: payload)
 
                         let finalizationResult = clientOpaqueService.createSignInFinalizationRequest(
-                            phoneNumber: self.fullPhoneNumber,
+                            phoneNumber: self.phoneNumber,
                             password: passwordBytes,
                             response: initResponse,
                             blind: blind

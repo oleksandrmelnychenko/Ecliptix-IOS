@@ -29,4 +29,8 @@ final class AuthInterceptorFactory: Ecliptix_Proto_Membership_AuthVerificationSe
     func makeValidatePhoneNumberInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
+    
+    func makeRecoverySecretKeyPhoneVerificationInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
+    }
 }

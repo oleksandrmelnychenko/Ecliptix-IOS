@@ -31,6 +31,11 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesClientProtoc
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func recoverySecretKeyPhoneVerification(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
 }
 
 extension Ecliptix_Proto_Membership_AuthVerificationServicesClientProtocol {
@@ -92,6 +97,24 @@ extension Ecliptix_Proto_Membership_AuthVerificationServicesClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeValidatePhoneNumberInterceptors() ?? []
+    )
+  }
+
+  /// Unary call to RecoverySecretKeyPhoneVerification
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to RecoverySecretKeyPhoneVerification.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func recoverySecretKeyPhoneVerification(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeUnaryCall(
+      path: Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.recoverySecretKeyPhoneVerification.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRecoverySecretKeyPhoneVerificationInterceptors() ?? []
     )
   }
 }
@@ -172,6 +195,11 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClientP
     _ request: Ecliptix_Proto_CipherPayload,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
+
+  func makeRecoverySecretKeyPhoneVerificationCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -219,6 +247,18 @@ extension Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClientProtocol 
       interceptors: self.interceptors?.makeValidatePhoneNumberInterceptors() ?? []
     )
   }
+
+  internal func makeRecoverySecretKeyPhoneVerificationCall(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload> {
+    return self.makeAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.recoverySecretKeyPhoneVerification.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRecoverySecretKeyPhoneVerificationInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -258,6 +298,18 @@ extension Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClientProtocol 
       interceptors: self.interceptors?.makeValidatePhoneNumberInterceptors() ?? []
     )
   }
+
+  internal func recoverySecretKeyPhoneVerification(
+    _ request: Ecliptix_Proto_CipherPayload,
+    callOptions: CallOptions? = nil
+  ) async throws -> Ecliptix_Proto_CipherPayload {
+    return try await self.performAsyncUnaryCall(
+      path: Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.recoverySecretKeyPhoneVerification.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeRecoverySecretKeyPhoneVerificationInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -287,6 +339,9 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesClientInterc
 
   /// - Returns: Interceptors to use when invoking 'validatePhoneNumber'.
   func makeValidatePhoneNumberInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when invoking 'recoverySecretKeyPhoneVerification'.
+  func makeRecoverySecretKeyPhoneVerificationInterceptors() -> [ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 }
 
 internal enum Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata {
@@ -297,6 +352,7 @@ internal enum Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata {
       Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.initiateVerification,
       Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.verifyOtp,
       Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.validatePhoneNumber,
+      Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata.Methods.recoverySecretKeyPhoneVerification,
     ]
   )
 
@@ -318,6 +374,12 @@ internal enum Ecliptix_Proto_Membership_AuthVerificationServicesClientMetadata {
       path: "/ecliptix.proto.membership.AuthVerificationServices/ValidatePhoneNumber",
       type: GRPCCallType.unary
     )
+
+    internal static let recoverySecretKeyPhoneVerification = GRPCMethodDescriptor(
+      name: "RecoverySecretKeyPhoneVerification",
+      path: "/ecliptix.proto.membership.AuthVerificationServices/RecoverySecretKeyPhoneVerification",
+      type: GRPCCallType.unary
+    )
   }
 }
 
@@ -330,6 +392,8 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesProvider: Ca
   func verifyOtp(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
 
   func validatePhoneNumber(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
+
+  func recoverySecretKeyPhoneVerification(request: Ecliptix_Proto_CipherPayload, context: StatusOnlyCallContext) -> EventLoopFuture<Ecliptix_Proto_CipherPayload>
 }
 
 extension Ecliptix_Proto_Membership_AuthVerificationServicesProvider {
@@ -371,6 +435,15 @@ extension Ecliptix_Proto_Membership_AuthVerificationServicesProvider {
         userFunction: self.validatePhoneNumber(request:context:)
       )
 
+    case "RecoverySecretKeyPhoneVerification":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeRecoverySecretKeyPhoneVerificationInterceptors() ?? [],
+        userFunction: self.recoverySecretKeyPhoneVerification(request:context:)
+      )
+
     default:
       return nil
     }
@@ -395,6 +468,11 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesAsyncProvide
   ) async throws -> Ecliptix_Proto_CipherPayload
 
   func validatePhoneNumber(
+    request: Ecliptix_Proto_CipherPayload,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Ecliptix_Proto_CipherPayload
+
+  func recoverySecretKeyPhoneVerification(
     request: Ecliptix_Proto_CipherPayload,
     context: GRPCAsyncServerCallContext
   ) async throws -> Ecliptix_Proto_CipherPayload
@@ -446,6 +524,15 @@ extension Ecliptix_Proto_Membership_AuthVerificationServicesAsyncProvider {
         wrapping: { try await self.validatePhoneNumber(request: $0, context: $1) }
       )
 
+    case "RecoverySecretKeyPhoneVerification":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Ecliptix_Proto_CipherPayload>(),
+        responseSerializer: ProtobufSerializer<Ecliptix_Proto_CipherPayload>(),
+        interceptors: self.interceptors?.makeRecoverySecretKeyPhoneVerificationInterceptors() ?? [],
+        wrapping: { try await self.recoverySecretKeyPhoneVerification(request: $0, context: $1) }
+      )
+
     default:
       return nil
     }
@@ -465,6 +552,10 @@ internal protocol Ecliptix_Proto_Membership_AuthVerificationServicesServerInterc
   /// - Returns: Interceptors to use when handling 'validatePhoneNumber'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makeValidatePhoneNumberInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
+
+  /// - Returns: Interceptors to use when handling 'recoverySecretKeyPhoneVerification'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeRecoverySecretKeyPhoneVerificationInterceptors() -> [ServerInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>]
 }
 
 internal enum Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata {
@@ -475,6 +566,7 @@ internal enum Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata {
       Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata.Methods.initiateVerification,
       Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata.Methods.verifyOtp,
       Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata.Methods.validatePhoneNumber,
+      Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata.Methods.recoverySecretKeyPhoneVerification,
     ]
   )
 
@@ -494,6 +586,12 @@ internal enum Ecliptix_Proto_Membership_AuthVerificationServicesServerMetadata {
     internal static let validatePhoneNumber = GRPCMethodDescriptor(
       name: "ValidatePhoneNumber",
       path: "/ecliptix.proto.membership.AuthVerificationServices/ValidatePhoneNumber",
+      type: GRPCCallType.unary
+    )
+
+    internal static let recoverySecretKeyPhoneVerification = GRPCMethodDescriptor(
+      name: "RecoverySecretKeyPhoneVerification",
+      path: "/ecliptix.proto.membership.AuthVerificationServices/RecoverySecretKeyPhoneVerification",
       type: GRPCCallType.unary
     )
   }

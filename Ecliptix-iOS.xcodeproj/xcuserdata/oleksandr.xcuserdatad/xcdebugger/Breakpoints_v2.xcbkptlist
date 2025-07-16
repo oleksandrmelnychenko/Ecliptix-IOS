@@ -94,8 +94,8 @@
             filePath = "Ecliptix-iOS/Core/Network/RpcServices/UnaryRpcService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "77"
-            endingLineNumber = "77"
+            startingLineNumber = "79"
+            endingLineNumber = "79"
             landmarkName = "registerDeviceAsync(payload:networkEvents:systemEvents:cancellation:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -142,8 +142,8 @@
             filePath = "Ecliptix-iOS/Core/Network/RpcServices/UnaryRpcService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
+            startingLineNumber = "62"
+            endingLineNumber = "62"
             landmarkName = "invokeRequestAsync(networkEvents:systemEvents:request:token:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -542,8 +542,8 @@
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "149"
-            endingLineNumber = "149"
+            startingLineNumber = "144"
+            endingLineNumber = "144"
             landmarkName = "submitRegistrationPassword()"
             landmarkType = "7">
          </BreakpointContent>
@@ -558,8 +558,8 @@
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
             landmarkName = "submitRegistrationPassword()"
             landmarkType = "7">
          </BreakpointContent>
@@ -574,8 +574,8 @@
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "187"
-            endingLineNumber = "187"
+            startingLineNumber = "182"
+            endingLineNumber = "182"
             landmarkName = "submitRegistrationPassword()"
             landmarkType = "7">
          </BreakpointContent>
@@ -622,8 +622,8 @@
             filePath = "Ecliptix-iOS/Core/Network/RpcServices/UnaryRpcService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "181"
-            endingLineNumber = "181"
+            startingLineNumber = "194"
+            endingLineNumber = "194"
             landmarkName = "executeGrpcCallAsync(networkEvents:systemEvents:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -638,8 +638,8 @@
             filePath = "Ecliptix-iOS/Core/Network/RpcServices/UnaryRpcService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "188"
-            endingLineNumber = "188"
+            startingLineNumber = "201"
+            endingLineNumber = "201"
             landmarkName = "executeGrpcCallAsync(networkEvents:systemEvents:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -830,8 +830,8 @@
             filePath = "Ecliptix-iOS/Views/Authentication/Registration/PhoneNumber/PhoneNumberViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "92"
-            endingLineNumber = "92"
+            startingLineNumber = "98"
+            endingLineNumber = "98"
             landmarkName = "validatePhoneNumber(phoneNumber:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -897,6 +897,22 @@
             startingLineNumber = "497"
             endingLineNumber = "497"
             landmarkName = "submitRecoveryPassword()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FF9DFA52-4156-4AA8-9451-F8BAE468D51E"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Views/Authentication/Registration/PhoneNumber/PhoneNumberViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "150"
+            endingLineNumber = "150"
+            landmarkName = "recoveryPhoneNumber(phoneNumber:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
