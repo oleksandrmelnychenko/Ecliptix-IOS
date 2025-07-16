@@ -10,25 +10,26 @@ import SwiftUI
 struct PhoneNumberView: View {
     @StateObject private var viewModel: PhoneNumberViewModel
     
-    init(navigation: NavigationService) {
-        _viewModel = StateObject(wrappedValue: PhoneNumberViewModel(navigation: navigation))
+    init(navigation: NavigationService, authFlow: AuthFlow) {
+        _viewModel = StateObject(wrappedValue: PhoneNumberViewModel(
+            navigation: navigation,
+            authFlow: authFlow))
     }
 
     var body: some View {
         AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
-                viewTitle: Strings.PhoneNumber.title,
-                viewDescription: Strings.PhoneNumber.description
+                viewTitle: String(localized: "Phone number"),
+                viewDescription: String(localized: "Pleace confirm your country code and phone number")
             )
             
             FieldInput<PhoneValidationError, PhoneInputField>(
-                title: "Phone Number",
+                title: String(localized: "Phone Number"),
                 text: $viewModel.phoneNumber,
-                hintText: "Include country code",
+                hintText: String(localized: "Include country code"),
                 validationErrors: viewModel.validationErrors,
                 content: {
                     PhoneInputField(
-                        phoneCode: $viewModel.phoneCode,
                         phoneNumber: $viewModel.phoneNumber
                     )
                 }
@@ -37,10 +38,14 @@ struct PhoneNumberView: View {
             FormErrorText(error: viewModel.errorMessage)
             
             PrimaryActionButton(
-                title: Strings.PhoneNumber.Buttons.sendCode,
+                title: String(localized: "Continue"),
                 isLoading: viewModel.isLoading,
                 isEnabled: !viewModel.phoneNumber.isEmpty && !viewModel.isLoading,
-                action: viewModel.submitPhone
+                action: {
+                    Task {
+                        await viewModel.submitPhone()
+                    }
+                }
             )
             
             Spacer()
@@ -51,6 +56,6 @@ struct PhoneNumberView: View {
 
 #Preview {
     let navService = NavigationService()
-    return PhoneNumberView(navigation: navService)
+    return PhoneNumberView(navigation: navService, authFlow: .registration)
         .environmentObject(navService)
 }

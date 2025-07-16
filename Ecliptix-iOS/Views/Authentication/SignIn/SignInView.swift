@@ -20,43 +20,53 @@ struct SignInView: View {
     var body: some View {
         AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
-                viewTitle: Strings.SignIn.title,
-                viewDescription: Strings.SignIn.description
+                viewTitle: String(localized: "Sign in into account"),
+                viewDescription: String(localized: "Enter your email and password to sign in")
             )
             
             Group {
                 FieldInput<PhoneValidationError, PhoneInputField>(
-                    title: "Phone Number",
+                    title: String(localized: "Phone Number"),
                     text: $viewModel.phoneNumber,
-                    hintText: "Include country code",
+                    hintText: String(localized: "Include country code"),
                     validationErrors: viewModel.phoneValidationErrors,
                     content: {
                         PhoneInputField(
-                            phoneCode: $viewModel.phoneCode,
                             phoneNumber: $viewModel.phoneNumber)
                     }
                 )
                                     
                 FieldInput<PasswordValidationError, PasswordInputField>(
-                    title: Strings.PasswordSetup.confirmPasswordFieldLabel,
+                    title: String(localized: "Password"),
                     text: $viewModel.password,
-                    hintText: "8 Chars, 1 upper and 1 number",
+                    hintText: String(localized: "8 Chars, 1 upper and 1 number"),
                     validationErrors: viewModel.passwordValidationErrors,
                     content: {
                         PasswordInputField(
-                            placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                            placeholder: String(localized: "Enter password"),
                             text: $viewModel.password,
                         )
                     }
                 ).onChange(of: viewModel.password) { _, newPassword in
-                    viewModel.updatePassword(passwordText: newPassword)
+                    self.viewModel.updatePassword(passwordText: newPassword)
                 }
+                
+                Button(action: {
+                    viewModel.forgotPasswordTapped()
+                }) {
+                    Text("Forgot password?")
+                        .font(.footnote)
+                        .foregroundColor(.blue)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.top, -8)
+                .padding(.bottom, 8)
             }
             
             FormErrorText(error: viewModel.errorMessage)
             
             PrimaryActionButton(
-                title: Strings.PasswordSetup.Buttons.next,
+                title: String(localized: "Next"),
                 isLoading: viewModel.isLoading,
                 isEnabled: viewModel.isFormValid && !viewModel.isLoading,
                 action: {

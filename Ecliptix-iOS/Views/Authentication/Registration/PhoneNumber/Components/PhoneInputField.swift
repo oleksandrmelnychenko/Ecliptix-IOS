@@ -8,60 +8,49 @@
 
 import SwiftUI
 
-public enum PhoneFieldFocus {
-    case code
-    case number
-}
-
 struct PhoneInputField: View {
-    @Binding var phoneCode: String
     @Binding var phoneNumber: String
-    @FocusState private var focusedField: PhoneFieldFocus?
 
     var body: some View {
-        HStack(spacing: 0) {
-            TextField("+", text: $phoneCode)
-                .keyboardType(.phonePad)
-                .frame(width: 70)
-                .padding(.horizontal, 8)
-                .foregroundColor(.black)
-                .focused($focusedField, equals: .code)
-                .onChange(of: phoneCode) { _, newValue in
-                    let digits = newValue.filter { $0.isNumber }
-                    let limitedDigits = String(digits.prefix(3))
-                    phoneCode = "+" + limitedDigits
-
-                    if limitedDigits.count == 3 {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            focusedField = .number
-                        }
-                    }
+        TextField("", text: $phoneNumber)
+            .keyboardType(.phonePad)
+            .textContentType(.telephoneNumber)
+            .autocapitalization(.none)
+            .padding(.horizontal, 8)
+            .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
+            .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
+            .onChange(of: phoneNumber) { _, newValue in
+                let sanitized = sanitizePhoneNumber(newValue)
+                if sanitized != phoneNumber {
+                    phoneNumber = sanitized
                 }
-
-            Divider()
-
-            TextField("", text: $phoneNumber)
-                .keyboardType(.phonePad)
-                .textContentType(.telephoneNumber)
-                .autocapitalization(.none)
-                .padding(.horizontal, 8)
-                .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
-                .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
-                .focused($focusedField, equals: .number)
-                .onChange(of: phoneNumber) { _, newValue in
-                    if newValue.isEmpty {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            focusedField = .code
-                        }
-                    }
+            }
+            .onAppear {
+                if phoneNumber.isEmpty {
+                    phoneNumber = "+"
+                } else {
+                    phoneNumber = sanitizePhoneNumber(phoneNumber)
                 }
+            }
+            .frame(height: 30)
+    }
+
+    private func sanitizePhoneNumber(_ input: String) -> String {
+        var result = input
+
+        // Ensure it starts with +
+        if !result.hasPrefix("+") {
+            result = "+" + result
         }
-        .frame(height: 30)
-        .onAppear {
-            focusedField = .code
-        }
+
+        // Keep only '+' at the start and digits elsewhere
+        let plus = "+"
+        let digits = result.dropFirst().filter { $0.isWholeNumber }
+
+        return plus + digits
     }
 }
+
 
 
 #Preview {
@@ -71,7 +60,7 @@ struct PhoneInputField: View {
 
         var body: some View {
             PhoneInputField(
-                phoneCode: $phoneCode,
+//                phoneCode: $phoneCode,
                 phoneNumber: $phoneNumber
             )
             .padding()

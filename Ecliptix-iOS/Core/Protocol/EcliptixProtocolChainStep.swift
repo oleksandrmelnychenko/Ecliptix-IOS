@@ -218,7 +218,7 @@ final class EcliptixProtocolChainStep {
         return self.dhPrivateKeyHandle
     }
     
-    public func toProtoState() -> Result<Ecliptix_Proto_ChainStepState, EcliptixProtocolFailure> {
+    public func toProtoState() -> Result<Ecliptix_Proto_KeyMaterials_ChainStepState, EcliptixProtocolFailure> {
         guard !self.disposed else {
             return .failure(.objectDisposed(String(describing: EcliptixProtocolChainStep.self)))
         }
@@ -227,7 +227,7 @@ final class EcliptixProtocolChainStep {
             let chainKey = try self.chainKeyHandle.readBytes(length: Constants.x25519KeySize).unwrap()
             let dhPrivKey = try self.dhPrivateKeyHandle?.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
             
-            var proto = Ecliptix_Proto_ChainStepState()
+            var proto = Ecliptix_Proto_KeyMaterials_ChainStepState()
             proto.currentIndex = self.currentIndex
             proto.chainKey = chainKey
             
@@ -244,7 +244,7 @@ final class EcliptixProtocolChainStep {
         }
     }
     
-    public static func fromProtoState(stepType: ChainStepType, proto: Ecliptix_Proto_ChainStepState) -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
+    public static func fromProtoState(stepType: ChainStepType, proto: Ecliptix_Proto_KeyMaterials_ChainStepState) -> Result<EcliptixProtocolChainStep, EcliptixProtocolFailure> {
         
         var chainKeyData = proto.chainKey
         var dhPrivKeyData: Data? = proto.dhPrivateKey

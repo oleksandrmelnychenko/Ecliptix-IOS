@@ -236,6 +236,124 @@ public struct Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse: Sendab
   fileprivate var _message: String? = nil
 }
 
+public struct Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var peerOprf: Data = Data()
+
+  public var membershipIdentifier: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var peerOprf: Data = Data()
+
+  public var result: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse.RecoveryResult = .succeeded
+
+  public var message: String {
+    get {return _message ?? String()}
+    set {_message = newValue}
+  }
+  /// Returns true if `message` has been explicitly set.
+  public var hasMessage: Bool {return self._message != nil}
+  /// Clears the value of `message`. Subsequent reads from it will return its default value.
+  public mutating func clearMessage() {self._message = nil}
+
+  public var membership: Ecliptix_Proto_Membership_Membership {
+    get {return _membership ?? Ecliptix_Proto_Membership_Membership()}
+    set {_membership = newValue}
+  }
+  /// Returns true if `membership` has been explicitly set.
+  public var hasMembership: Bool {return self._membership != nil}
+  /// Clears the value of `membership`. Subsequent reads from it will return its default value.
+  public mutating func clearMembership() {self._membership = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum RecoveryResult: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+    case succeeded // = 0
+    case invalidCredentials // = 1
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .succeeded
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .succeeded
+      case 1: self = .invalidCredentials
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .succeeded: return 0
+      case .invalidCredentials: return 1
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse.RecoveryResult] = [
+      .succeeded,
+      .invalidCredentials,
+    ]
+
+  }
+
+  public init() {}
+
+  fileprivate var _message: String? = nil
+  fileprivate var _membership: Ecliptix_Proto_Membership_Membership? = nil
+}
+
+public struct Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var peerRecoveryRecord: Data = Data()
+
+  public var membershipIdentifier: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var message: String {
+    get {return _message ?? String()}
+    set {_message = newValue}
+  }
+  /// Returns true if `message` has been explicitly set.
+  public var hasMessage: Bool {return self._message != nil}
+  /// Clears the value of `message`. Subsequent reads from it will return its default value.
+  public mutating func clearMessage() {self._message = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _message: String? = nil
+}
+
 public struct Ecliptix_Proto_Membership_OpaqueSignInInitRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -722,6 +840,179 @@ extension Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse: SwiftProto
   }
 
   public static func ==(lhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse, rhs: Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse) -> Bool {
+    if lhs._message != rhs._message {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRecoverySecureKeyInitRequest"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "peer_oprf"),
+    2: .standard(proto: "membership_identifier"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerOprf) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.membershipIdentifier) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.peerOprf.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerOprf, fieldNumber: 1)
+    }
+    if !self.membershipIdentifier.isEmpty {
+      try visitor.visitSingularBytesField(value: self.membershipIdentifier, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest, rhs: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest) -> Bool {
+    if lhs.peerOprf != rhs.peerOprf {return false}
+    if lhs.membershipIdentifier != rhs.membershipIdentifier {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRecoverySecureKeyInitResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "peer_oprf"),
+    2: .same(proto: "result"),
+    3: .same(proto: "message"),
+    4: .same(proto: "membership"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerOprf) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.result) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.peerOprf.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerOprf, fieldNumber: 1)
+    }
+    if self.result != .succeeded {
+      try visitor.visitSingularEnumField(value: self.result, fieldNumber: 2)
+    }
+    try { if let v = self._message {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._membership {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse, rhs: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse) -> Bool {
+    if lhs.peerOprf != rhs.peerOprf {return false}
+    if lhs.result != rhs.result {return false}
+    if lhs._message != rhs._message {return false}
+    if lhs._membership != rhs._membership {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse.RecoveryResult: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SUCCEEDED"),
+    1: .same(proto: "INVALID_CREDENTIALS"),
+  ]
+}
+
+extension Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRecoverySecretKeyCompleteRequest"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "peer_recovery_record"),
+    2: .standard(proto: "membership_identifier"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.peerRecoveryRecord) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.membershipIdentifier) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.peerRecoveryRecord.isEmpty {
+      try visitor.visitSingularBytesField(value: self.peerRecoveryRecord, fieldNumber: 1)
+    }
+    if !self.membershipIdentifier.isEmpty {
+      try visitor.visitSingularBytesField(value: self.membershipIdentifier, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest, rhs: Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest) -> Bool {
+    if lhs.peerRecoveryRecord != rhs.peerRecoveryRecord {return false}
+    if lhs.membershipIdentifier != rhs.membershipIdentifier {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OprfRecoverySecretKeyCompleteResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "message"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self._message) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._message {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse, rhs: Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse) -> Bool {
     if lhs._message != rhs._message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

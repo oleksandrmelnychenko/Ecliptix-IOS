@@ -11,5 +11,6 @@ public enum NetworkFailureType {
     case dataCenterShutdown
     case invalidRequestType
     case ecliptixProtocolFailure
+    case serverErrrorResponse
     case unexpectedError
 }

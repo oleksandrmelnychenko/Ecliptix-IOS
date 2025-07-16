@@ -73,7 +73,7 @@ final class EcliptixProtocolConnection {
     
     private init(
         id: UInt32,
-        proto: Ecliptix_Proto_RatchetState,
+        proto: Ecliptix_Proto_KeyMaterials_RatchetState,
         sendingStep: EcliptixProtocolChainStep,
         receivingStep: EcliptixProtocolChainStep?,
         rootKeyHandle: SodiumSecureMemoryHandle) {
@@ -185,7 +185,7 @@ final class EcliptixProtocolConnection {
         }
     }
     
-    public func toProtoState() -> Result<Ecliptix_Proto_RatchetState, EcliptixProtocolFailure> {
+    public func toProtoState() -> Result<Ecliptix_Proto_KeyMaterials_RatchetState, EcliptixProtocolFailure> {
         lock.lock()
         
         defer {
@@ -207,7 +207,7 @@ final class EcliptixProtocolConnection {
                 return .failure(try rootKeyResult.unwrapErr())
             }
             
-            var proto = Ecliptix_Proto_RatchetState()
+            var proto = Ecliptix_Proto_KeyMaterials_RatchetState()
             proto.isInitiator = self.isInitiator
             proto.createdAt = .fromDate(date: self.createdAt)
             proto.nonceCounter = UInt64(self.nonceCounter.load(ordering: .relaxed))
@@ -231,7 +231,7 @@ final class EcliptixProtocolConnection {
         }
     }
     
-    public static func fromProtoState(connectId: UInt32, proto: Ecliptix_Proto_RatchetState) -> Result<EcliptixProtocolConnection, EcliptixProtocolFailure> {
+    public static func fromProtoState(connectId: UInt32, proto: Ecliptix_Proto_KeyMaterials_RatchetState) -> Result<EcliptixProtocolConnection, EcliptixProtocolFailure> {
         var sendingStep: EcliptixProtocolChainStep? = nil
         var receivingStep: EcliptixProtocolChainStep? = nil
         var rootKeyHandle: SodiumSecureMemoryHandle? = nil

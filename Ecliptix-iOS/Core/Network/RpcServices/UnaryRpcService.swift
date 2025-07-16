@@ -38,7 +38,9 @@ final class UnaryRpcService {
             .verifyOtp: verifyCodeAsync,
             .opaqueRegistrationComplete: opaqueRegistrationCompleteRequestAsync,
             .opaqueSignInInitRequest: opaqueSignInInitRequestAsync,
-            .opaqueSignInCompleteRequest: opaqueSignInCompleteRequestAsync
+            .opaqueSignInCompleteRequest: opaqueSignInCompleteRequestAsync,
+            .opaqueRecoverySecretKeyInitRequest: opaqueRecoverySecretKeyInitRequestAsync,
+            .opaqueRecoverySecretKeyCompleteRequest: opaqueRecoverySecretKeyCompleteRequestAsync
         ]
     }
 
@@ -143,6 +145,28 @@ final class UnaryRpcService {
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
         return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueSignInCompleteRequest(payload)
+        }
+    }
+    
+    private func opaqueRecoverySecretKeyInitRequestAsync(
+        payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        cancellation: CancellationToken
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            try await self.membershipClient.opaqueRecoverySecretKeyInitRequest(payload)
+        }
+    }
+    
+    private func opaqueRecoverySecretKeyCompleteRequestAsync(
+        payload: Ecliptix_Proto_CipherPayload,
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        cancellation: CancellationToken
+    ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
+            try await self.membershipClient.opaqueRecoverySecretKeyCompleteRequest(payload)
         }
     }
     

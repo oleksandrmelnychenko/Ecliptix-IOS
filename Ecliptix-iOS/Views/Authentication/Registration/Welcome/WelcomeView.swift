@@ -37,8 +37,8 @@ struct WelcomeView: View {
 
             // Create new account
             NavigationCardButton(
-                title: Strings.Welcome.NavigationCard_Main.title,
-                subtitle: Strings.Welcome.NavigationCard_Main.subtitle,
+                title: String(localized: "New account"),
+                subtitle: String(localized: "Create new Worldcoin account"),
                 foreground: .white,
                 background: .black,
                 border: false
@@ -47,14 +47,12 @@ struct WelcomeView: View {
                 if viewModel.agreedToTerms {
                     viewModel.continueToPhoneNumber()
                 }
-            }
-            .id(localization.languageChanged)
-            
+            }            
 
             // Sign in
             NavigationCardButton(
-                title: Strings.Welcome.NavigationCard_Alternative.title,
-                subtitle: Strings.Welcome.NavigationCard_Alternative.subtitle,
+                title: String(localized: "Existing account"),
+                subtitle: String(localized: "Restore account from a backup"),
                 foreground: .black,
                 background: .white,
                 border: true
@@ -72,20 +70,26 @@ struct WelcomeView: View {
 
 #Preview {
     let navService = NavigationService()
+    let locService = LocalizationService.shared
     return WelcomeView(navigation: navService)
         .environmentObject(navService)
+        .environmentObject(locService)
 }
 
 #Preview("ContentView Landscape", traits: .landscapeRight, body: {
     let navService = NavigationService()
+    let locService = LocalizationService.shared
     return WelcomeView(navigation: navService)
         .environmentObject(navService)
+        .environmentObject(locService)
 })
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let navService = NavigationService()
+        let locService = LocalizationService.shared
         return WelcomeView(navigation: navService)
             .environmentObject(navService)
+            .environmentObject(locService)
     }
 }

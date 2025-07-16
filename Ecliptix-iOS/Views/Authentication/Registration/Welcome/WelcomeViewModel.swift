@@ -20,7 +20,7 @@ final class WelcomeViewModel: ObservableObject {
 
     func continueToPhoneNumber() {
         guard agreedToTerms else { return }
-        navigation.navigate(to: .phoneNumberVerification)
+        navigation.navigate(to: .phoneNumberVerification(authFlow: .registration))
     }
 
     func continueToSignIn() {

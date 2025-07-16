@@ -109,7 +109,7 @@ final class NetworkProvider: NetworkProviderProtocol {
             let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
             
             if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
-                let state = try Ecliptix_Proto_EcliptixSecrecyChannelState(serializedBytes: data)
+                let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
                 let restoreResult = await restoreSecrecyChannel(
                     ecliptixSecrecyChannelState: state,
                     applicationInstanceSettings: self.applicationInstanceSettings!)
@@ -311,7 +311,7 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
 
     public func restoreSecrecyChannel(
-        ecliptixSecrecyChannelState: Ecliptix_Proto_EcliptixSecrecyChannelState,
+        ecliptixSecrecyChannelState: Ecliptix_Proto_KeyMaterials_EcliptixSessionState,
         applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
     ) async -> Result<Bool, NetworkFailure> {
         if self.applicationInstanceSettings == nil {
@@ -352,7 +352,7 @@ final class NetworkProvider: NetworkProviderProtocol {
     
     public func establishSecrecyChannel(
         connectId: UInt32
-    ) async -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, NetworkFailure> {
+    ) async -> Result<Ecliptix_Proto_KeyMaterials_EcliptixSessionState, NetworkFailure> {
         
         guard let protocolSystem = connections[connectId] else {
             return .failure(.invalidRequestType("Connection not found"))
@@ -383,7 +383,7 @@ final class NetworkProvider: NetworkProviderProtocol {
             let ecliptixSecrecyChannelStateResult = idKeys.toProtoState()
                 .flatMap { identityKeysProto in connection.toProtoState()
                         .map { ratchetStateProto in
-                            var ecliptixSecrecyChannelState = Ecliptix_Proto_EcliptixSecrecyChannelState()
+                            var ecliptixSecrecyChannelState = Ecliptix_Proto_KeyMaterials_EcliptixSessionState()
                             ecliptixSecrecyChannelState.connectID = connectId
                             ecliptixSecrecyChannelState.identityKeys = identityKeysProto
                             ecliptixSecrecyChannelState.peerHandshakeMessage = peerPubKeyExchange
@@ -400,9 +400,9 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
     
     private func syncSecrecyChannel(
-        currentState: Ecliptix_Proto_EcliptixSecrecyChannelState,
+        currentState: Ecliptix_Proto_KeyMaterials_EcliptixSessionState,
         serverResponse: Ecliptix_Proto_RestoreSecrecyChannelResponse
-    ) -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, EcliptixProtocolFailure> {
+    ) -> Result<Ecliptix_Proto_KeyMaterials_EcliptixSessionState, EcliptixProtocolFailure> {
         
         do {
             let systemResult = Self.recreateSystemFromState(state: currentState)
@@ -431,7 +431,7 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
     
     private static func recreateSystemFromState(
-        state: Ecliptix_Proto_EcliptixSecrecyChannelState
+        state: Ecliptix_Proto_KeyMaterials_EcliptixSessionState
     ) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
         do {
             let idKeysResult = EcliptixSystemIdentityKeys.fromProtoState(proto: state.identityKeys)
@@ -452,9 +452,9 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
     
     private static func createStateFromSystem(
-        oldState: Ecliptix_Proto_EcliptixSecrecyChannelState,
+        oldState: Ecliptix_Proto_KeyMaterials_EcliptixSessionState,
         system: EcliptixProtocolSystem
-    ) -> Result<Ecliptix_Proto_EcliptixSecrecyChannelState, EcliptixProtocolFailure> {
+    ) -> Result<Ecliptix_Proto_KeyMaterials_EcliptixSessionState, EcliptixProtocolFailure> {
         
         do {
             return try system.getConnection().toProtoState().map { newRatchetState in

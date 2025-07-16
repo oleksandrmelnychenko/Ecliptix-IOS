@@ -113,7 +113,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 
                 
                 if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
-                    let state = try Ecliptix_Proto_EcliptixSecrecyChannelState(serializedBytes: data)
+                    let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
                     let restoreResult = await self.networkProvider.restoreSecrecyChannel(
                         ecliptixSecrecyChannelState: state,
                         applicationInstanceSettings: settings)

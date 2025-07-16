@@ -13,12 +13,12 @@ struct WelcomeHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // App title
-            Text(Strings.Welcome.title)
+            Text(String(localized: "Welcome to Ecliptix"))
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
             // Subtitle
-            Text(Strings.Welcome.description)
+            Text(String(localized: "The wallet designed to make digital ID and global finance simple for all."))
                 .font(.body)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.leading)

@@ -15,6 +15,9 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     var validationErrors: [ErrorType] = []
     
     let content: () -> Content
+    
+    @State private var showError = false
+    @State private var currentErrorText: String?
 
     init(
         title: String,

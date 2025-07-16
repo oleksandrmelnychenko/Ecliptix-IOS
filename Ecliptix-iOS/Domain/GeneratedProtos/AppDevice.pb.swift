@@ -144,6 +144,8 @@ public struct Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: @unchecked S
 
   public var deviceType: Ecliptix_Proto_AppDevice_AppDevice.DeviceType = .mobile
 
+  public var culture: String = String()
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -265,6 +267,7 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     3: .standard(proto: "server_public_key"),
     4: .standard(proto: "system_device_identifier"),
     5: .standard(proto: "device_type"),
+    6: .same(proto: "culture"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -278,6 +281,7 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
       case 3: try { try decoder.decodeSingularBytesField(value: &self.serverPublicKey) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.systemDeviceIdentifier) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.deviceType) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.culture) }()
       default: break
       }
     }
@@ -299,6 +303,9 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     if self.deviceType != .mobile {
       try visitor.visitSingularEnumField(value: self.deviceType, fieldNumber: 5)
     }
+    if !self.culture.isEmpty {
+      try visitor.visitSingularStringField(value: self.culture, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -308,6 +315,7 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     if lhs.serverPublicKey != rhs.serverPublicKey {return false}
     if lhs.systemDeviceIdentifier != rhs.systemDeviceIdentifier {return false}
     if lhs.deviceType != rhs.deviceType {return false}
+    if lhs.culture != rhs.culture {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -33,7 +33,12 @@ public struct NetworkFailure: Error, FailureBaseProtocol {
         NetworkFailure(failureType: .dataCenterShutdown, message: details, innerError: inner)
     }
     
+    public static func serverErrrorResponse(_ details: String, inner: Error? = nil) -> NetworkFailure {
+        NetworkFailure(failureType: .serverErrrorResponse, message: details, innerError: inner)
+    }
+    
     public static func unexpectedError(_ details: String, inner: Error? = nil) -> NetworkFailure {
         NetworkFailure(failureType: .unexpectedError, message: details, innerError: inner)
     }
+    
 }

@@ -25,9 +25,12 @@ final class PasswordSetupViewModel: ObservableObject {
     
     private let verificationSessionId: Data
     
-    init(navigation: NavigationService, verficationSessionId: Data) {
+    private let authFlow: AuthFlow
+    
+    init(navigation: NavigationService, verficationSessionId: Data, authFlow: AuthFlow) {
         self.navigation = navigation
         self.verificationSessionId = verficationSessionId
+        self.authFlow = authFlow
         
         let passwordManagerResult = PasswordManager.create()
         guard passwordManagerResult.isOk else {
@@ -56,7 +59,13 @@ final class PasswordSetupViewModel: ObservableObject {
     func submitPassword() async {
         guard isFormValid else { return }
 
-        await self.submitRegistrationPassword()
+        switch self.authFlow {
+        case .registration:
+            await self.submitRegistrationPassword()
+        case .recovery:
+            await self.submitRecoveryPassword()
+        }
+        
     }
 
     func updatePassword(passwordText: String?) {
@@ -359,6 +368,135 @@ final class PasswordSetupViewModel: ObservableObject {
                                         if createMembershipResponse.result == .succeeded {
                                             self.navigation.navigate(to: .passPhaseRegistration)
                                         }
+                                            
+                                        return .success(.value)
+                                    } catch {
+                                        await MainActor.run {
+                                            self.isLoading = false
+                                            self.errorMessage = "Failed to parse server response"
+                                        }
+                                        return .failure(.unexpectedError("Deserialization failed", inner: error))
+                                    }
+                                })
+                        }
+                        
+                        return .success(.value)
+                    } catch {
+                        await MainActor.run {
+                            self.isLoading = false
+                            self.errorMessage = "Failed to parse server response"
+                        }
+                        return .failure(.unexpectedError("Deserialization failed", inner: error))
+                    }
+                })
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Submission failed: \(error)"
+            }
+        }
+    }
+    
+    
+    private func submitRecoveryPassword() async {
+        if !isFormValid && securePasswordHandle!.length == 0 {
+            errorMessage = "Submission requirements not met."
+            return
+        }
+        
+        await MainActor.run {
+            self.errorMessage = nil
+            self.isLoading = true
+        }
+        
+        var rentedPasswordBytes: Data?
+        var localSaltForEncryption: Data?
+        var localDataEncryptionKey: Data?
+        
+        defer {
+            if rentedPasswordBytes != nil {
+                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
+                rentedPasswordBytes!.removeAll()
+            }
+            
+            if localSaltForEncryption != nil {
+                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
+                localSaltForEncryption!.removeAll()
+            }
+            
+            if localDataEncryptionKey != nil {
+                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
+                localDataEncryptionKey!.removeAll()
+            }
+            
+            self.isLoading = false
+        }
+//
+        do {
+            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
+            let readResult = rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
+                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
+            }
+            if readResult.isErr {
+                throw try readResult.unwrapErr()
+            }
+            
+            guard let passwordString = String(data: rentedPasswordBytes!, encoding: .utf8) else {
+                errorMessage = "Password contains invalid characters for string conversion."
+                return
+            }
+            
+            let verifierResult = self.passwordManager.hashPassword(passwordString)
+            if verifierResult.isErr {
+                throw try verifierResult.unwrapErr()
+            }
+            
+            let opfrResult = OpaqueProtocolService.createOprfRequest(password: rentedPasswordBytes!)
+            guard opfrResult.isOk else {
+                debugPrint("Failed to create OPRF request: \(try opfrResult.unwrapErr().message)")
+                return
+            }
+            
+            let oprfRequest = try opfrResult.unwrap().oprfRequest
+            let blind = try opfrResult.unwrap().blind
+            
+            var request = Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest()
+            request.membershipIdentifier = self.verificationSessionId
+            request.peerOprf = oprfRequest
+            
+            let pas = rentedPasswordBytes!
+            
+            let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
+            
+            _ = try await networkController.executeServiceAction(
+                connectId: connectId,
+                serviceType: .opaqueRecoverySecretKeyInitRequest,
+                plainBuffer: try request.serializedData(),
+                flowType: .single,
+                onSuccessCallback: { payload in
+                    
+                    do {
+                        let recoverySecretKeyInitResponse = try Helpers.parseFromBytes(
+                            Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse.self,
+                            data: payload)
+                        
+                        if recoverySecretKeyInitResponse.result == .succeeded {
+                            let envelope = OpaqueProtocolService.createRegistrationRecord(password: pas, oprfResponse: recoverySecretKeyInitResponse.peerOprf, blind: blind)
+                            
+                            var r = Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest()
+                            r.membershipIdentifier = recoverySecretKeyInitResponse.membership.uniqueIdentifier
+                            r.peerRecoveryRecord = try envelope.unwrap()
+                            
+                            _ = try await self.networkController.executeServiceAction(
+                                connectId: connectId,
+                                serviceType: .opaqueRecoverySecretKeyCompleteRequest,
+                                plainBuffer: try r.serializedData(),
+                                flowType: .single,
+                                onSuccessCallback: { payloadInner in
+                                    
+                                    do {
+                                        let recoverySecretKeyCompleteResponse = try Helpers.parseFromBytes(
+                                            Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse.self,
+                                            data: payloadInner)
                                             
                                         return .success(.value)
                                     } catch {

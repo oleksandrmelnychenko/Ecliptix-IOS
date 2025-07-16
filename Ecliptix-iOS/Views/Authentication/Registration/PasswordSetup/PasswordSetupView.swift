@@ -10,8 +10,11 @@ import SwiftUI
 struct PasswordSetupView: View {
     @StateObject private var viewModel: PasswordSetupViewModel
     
-    init(navigation: NavigationService, verificationSessionId: Data) {
-        _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(navigation: navigation, verficationSessionId: verificationSessionId))
+    init(navigation: NavigationService, verificationSessionId: Data, authFlow: AuthFlow) {
+        _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(
+            navigation: navigation,
+            verficationSessionId: verificationSessionId,
+            authFlow: authFlow))
     }
 
     var body: some View {
@@ -100,5 +103,8 @@ struct PasswordInputField: View {
 
 #Preview {
     let navService = NavigationService()
-    PasswordSetupView(navigation: navService, verificationSessionId: Data())
+    PasswordSetupView(
+        navigation: navService,
+        verificationSessionId: Data(),
+        authFlow: .registration)
 }

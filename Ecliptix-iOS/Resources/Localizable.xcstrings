@@ -1,0 +1,104 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "© Horizon Dynamics LLC 2025" : {
+
+    },
+    "8 Chars, 1 upper and 1 number" : {
+
+    },
+    "Agree to Terms and Conditions" : {
+
+    },
+    "Checked" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Create new Worldcoin account" : {
+
+    },
+    "Ecliptix" : {
+
+    },
+    "Enter password" : {
+
+    },
+    "Enter your email and password to sign in" : {
+
+    },
+    "Existing account" : {
+
+    },
+    "Forgot password?" : {
+
+    },
+    "Include country code" : {
+
+    },
+    "New account" : {
+
+    },
+    "Next" : {
+
+    },
+    "OK" : {
+
+    },
+    "Password" : {
+
+    },
+    "Phone number" : {
+
+    },
+    "Phone Number" : {
+
+    },
+    "Pleace confirm your country code and phone number" : {
+
+    },
+    "Resend available in %@" : {
+
+    },
+    "Restore account from a backup" : {
+
+    },
+    "Session Error" : {
+
+    },
+    "Sign in into account" : {
+
+    },
+    "The wallet designed to make digital ID and global finance simple for all." : {
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гаманець, розроблений для того, щоб зробити цифрову ідентифікацію та глобальні фінанси простими для всіх."
+          }
+        }
+      }
+    },
+    "Unchecked" : {
+
+    },
+    "Welcome to Ecliptix" : {
+
+    }
+  },
+  "version" : "1.0"
+}

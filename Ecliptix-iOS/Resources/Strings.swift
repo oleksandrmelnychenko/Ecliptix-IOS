@@ -6,20 +6,20 @@
 //
 
 enum Strings {
-    enum Welcome {
-        static var title: String { "Authentication.Registration.Welcome.title".localized }
-        static var description: String { "Authentication.Registration.Welcome.description".localized }
-        
-        enum NavigationCard_Main {
-            static var title: String { "Authentication.Registration.Welcome.MainCard.title".localized }
-            static var subtitle: String { "Authentication.Registration.Welcome.MainCard.subtitle".localized }
-        }
-
-        enum NavigationCard_Alternative {
-            static var title: String { "Authentication.Registration.Welcome.AlternativeCard.title".localized }
-            static var subtitle: String { "Authentication.Registration.Welcome.AlternativeCard.subtitle".localized }
-        }
-    }
+//    enum Welcome {
+//        static var title: String { "Authentication.Registration.Welcome.title".localized }
+//        static var description: String { "Authentication.Registration.Welcome.description".localized }
+//        
+//        enum NavigationCard_Main {
+//            static var title: String { "Authentication.Registration.Welcome.MainCard.title".localized }
+//            static var subtitle: String { "Authentication.Registration.Welcome.MainCard.subtitle".localized }
+//        }
+//
+//        enum NavigationCard_Alternative {
+//            static var title: String { "Authentication.Registration.Welcome.AlternativeCard.title".localized }
+//            static var subtitle: String { "Authentication.Registration.Welcome.AlternativeCard.subtitle".localized }
+//        }
+//    }
     
     enum PhoneNumber {
         static let title = "Authentication.Registration.phoneVerification.title".localized
@@ -85,8 +85,8 @@ enum Strings {
         }
     }
     
-    enum SignIn {
-        static let title = "Sign in into account"
-        static let description = "Enter your email and password to sign in"
-    }
+//    enum SignIn {
+//        static let title = "Sign in into account"
+//        static let description = "Enter your email and password to sign in"
+//    }
 }

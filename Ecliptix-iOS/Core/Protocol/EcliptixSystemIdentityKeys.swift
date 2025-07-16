@@ -58,7 +58,7 @@ final class EcliptixSystemIdentityKeys {
         dispose(disposing: true)
     }
     
-    public func toProtoState() -> Result<Ecliptix_Proto_IdentityKeysState, EcliptixProtocolFailure> {
+    public func toProtoState() -> Result<Ecliptix_Proto_KeyMaterials_IdentityKeysState, EcliptixProtocolFailure> {
         guard !self.disposed else {
             return .failure(.objectDisposed(String(describing: EcliptixSystemIdentityKeys.self)))
         }
@@ -68,19 +68,19 @@ final class EcliptixSystemIdentityKeys {
             let idSk = try self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
             let spSk = try self.signedPreKeySecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
             
-            var opkProtos: [Ecliptix_Proto_OneTimePreKeySecret] = self.oneTimePreKeysInternal.compactMap { opk in
+            var opkProtos: [Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret] = self.oneTimePreKeysInternal.compactMap { opk in
                 guard let opkSkBytes = try? opk.privateKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap() else {
                     return nil
                 }
 
-                var proto = Ecliptix_Proto_OneTimePreKeySecret()
+                var proto = Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret()
                 proto.preKeyID = opk.preKeyId
                 proto.privateKey = opkSkBytes
                 proto.publicKey = opk.publicKey
                 return proto
             }
 
-            var proto = Ecliptix_Proto_IdentityKeysState()
+            var proto = Ecliptix_Proto_KeyMaterials_IdentityKeysState()
             proto.ed25519SecretKey = edSk
             proto.identityX25519SecretKey = idSk
             proto.signedPreKeySecret = spSk
@@ -97,7 +97,7 @@ final class EcliptixSystemIdentityKeys {
         }
     }
     
-    public static func fromProtoState(proto: Ecliptix_Proto_IdentityKeysState) -> Result<EcliptixSystemIdentityKeys, EcliptixProtocolFailure> {
+    public static func fromProtoState(proto: Ecliptix_Proto_KeyMaterials_IdentityKeysState) -> Result<EcliptixSystemIdentityKeys, EcliptixProtocolFailure> {
         var edSkHandle: SodiumSecureMemoryHandle? = nil
         var idXSkHandle: SodiumSecureMemoryHandle? = nil
         var spkSkHandle: SodiumSecureMemoryHandle? = nil

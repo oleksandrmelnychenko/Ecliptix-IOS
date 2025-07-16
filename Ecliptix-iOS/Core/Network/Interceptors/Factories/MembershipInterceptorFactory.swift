@@ -33,4 +33,12 @@ final class MembershipInterceptorFactory: Ecliptix_Proto_Membership_MembershipSe
     func makeOpaqueSignInCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
         [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
     }
+    
+    func makeOpaqueRecoverySecretKeyInitRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
+    }
+    
+    func makeOpaqueRecoverySecretKeyCompleteRequestInterceptors() -> [GRPC.ClientInterceptor<Ecliptix_Proto_CipherPayload, Ecliptix_Proto_CipherPayload>] {
+        [RequestMetadataInterceptor(rpcMetaDataProvider: self.rpcMetaDataProvider)]
+    }
 }

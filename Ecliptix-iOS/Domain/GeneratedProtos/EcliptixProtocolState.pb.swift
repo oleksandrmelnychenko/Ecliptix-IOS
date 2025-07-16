@@ -21,15 +21,15 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct Ecliptix_Proto_EcliptixSecrecyChannelState: Sendable {
+public struct Ecliptix_Proto_KeyMaterials_EcliptixSessionState: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   public var connectID: UInt32 = 0
 
-  public var identityKeys: Ecliptix_Proto_IdentityKeysState {
-    get {return _identityKeys ?? Ecliptix_Proto_IdentityKeysState()}
+  public var identityKeys: Ecliptix_Proto_KeyMaterials_IdentityKeysState {
+    get {return _identityKeys ?? Ecliptix_Proto_KeyMaterials_IdentityKeysState()}
     set {_identityKeys = newValue}
   }
   /// Returns true if `identityKeys` has been explicitly set.
@@ -46,8 +46,8 @@ public struct Ecliptix_Proto_EcliptixSecrecyChannelState: Sendable {
   /// Clears the value of `peerHandshakeMessage`. Subsequent reads from it will return its default value.
   public mutating func clearPeerHandshakeMessage() {self._peerHandshakeMessage = nil}
 
-  public var ratchetState: Ecliptix_Proto_RatchetState {
-    get {return _ratchetState ?? Ecliptix_Proto_RatchetState()}
+  public var ratchetState: Ecliptix_Proto_KeyMaterials_RatchetState {
+    get {return _ratchetState ?? Ecliptix_Proto_KeyMaterials_RatchetState()}
     set {_ratchetState = newValue}
   }
   /// Returns true if `ratchetState` has been explicitly set.
@@ -59,32 +59,38 @@ public struct Ecliptix_Proto_EcliptixSecrecyChannelState: Sendable {
 
   public init() {}
 
-  fileprivate var _identityKeys: Ecliptix_Proto_IdentityKeysState? = nil
+  fileprivate var _identityKeys: Ecliptix_Proto_KeyMaterials_IdentityKeysState? = nil
   fileprivate var _peerHandshakeMessage: Ecliptix_Proto_PubKeyExchange? = nil
-  fileprivate var _ratchetState: Ecliptix_Proto_RatchetState? = nil
+  fileprivate var _ratchetState: Ecliptix_Proto_KeyMaterials_RatchetState? = nil
 }
 
-public struct Ecliptix_Proto_IdentityKeysState: @unchecked Sendable {
+public struct Ecliptix_Proto_KeyMaterials_IdentityKeysState: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// Secret Keys (must be protected)
   public var ed25519SecretKey: Data = Data()
 
   public var identityX25519SecretKey: Data = Data()
 
   public var signedPreKeySecret: Data = Data()
 
-  public var oneTimePreKeys: [Ecliptix_Proto_OneTimePreKeySecret] = []
+  public var oneTimePreKeys: [Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret] = []
 
+  /// Public Keys and IDs (can be public)
   public var ed25519PublicKey: Data = Data()
 
+  /// <-- ADDED
   public var identityX25519PublicKey: Data = Data()
 
+  /// <-- MOVED (was 3)
   public var signedPreKeyID: UInt32 = 0
 
+  /// <-- ADDED
   public var signedPreKeyPublic: Data = Data()
 
+  /// <-- ADDED
   public var signedPreKeySignature: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -92,7 +98,7 @@ public struct Ecliptix_Proto_IdentityKeysState: @unchecked Sendable {
   public init() {}
 }
 
-public struct Ecliptix_Proto_OneTimePreKeySecret: @unchecked Sendable {
+public struct Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -101,6 +107,7 @@ public struct Ecliptix_Proto_OneTimePreKeySecret: @unchecked Sendable {
 
   public var privateKey: Data = Data()
 
+  /// <-- ADDED
   public var publicKey: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -108,7 +115,7 @@ public struct Ecliptix_Proto_OneTimePreKeySecret: @unchecked Sendable {
   public init() {}
 }
 
-public struct Ecliptix_Proto_RatchetState: @unchecked Sendable {
+public struct Ecliptix_Proto_KeyMaterials_RatchetState: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -156,8 +163,8 @@ public struct Ecliptix_Proto_RatchetState: @unchecked Sendable {
     set {_uniqueStorage()._rootKey = newValue}
   }
 
-  public var sendingStep: Ecliptix_Proto_ChainStepState {
-    get {return _storage._sendingStep ?? Ecliptix_Proto_ChainStepState()}
+  public var sendingStep: Ecliptix_Proto_KeyMaterials_ChainStepState {
+    get {return _storage._sendingStep ?? Ecliptix_Proto_KeyMaterials_ChainStepState()}
     set {_uniqueStorage()._sendingStep = newValue}
   }
   /// Returns true if `sendingStep` has been explicitly set.
@@ -165,8 +172,8 @@ public struct Ecliptix_Proto_RatchetState: @unchecked Sendable {
   /// Clears the value of `sendingStep`. Subsequent reads from it will return its default value.
   public mutating func clearSendingStep() {_uniqueStorage()._sendingStep = nil}
 
-  public var receivingStep: Ecliptix_Proto_ChainStepState {
-    get {return _storage._receivingStep ?? Ecliptix_Proto_ChainStepState()}
+  public var receivingStep: Ecliptix_Proto_KeyMaterials_ChainStepState {
+    get {return _storage._receivingStep ?? Ecliptix_Proto_KeyMaterials_ChainStepState()}
     set {_uniqueStorage()._receivingStep = newValue}
   }
   /// Returns true if `receivingStep` has been explicitly set.
@@ -181,7 +188,7 @@ public struct Ecliptix_Proto_RatchetState: @unchecked Sendable {
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-public struct Ecliptix_Proto_ChainStepState: @unchecked Sendable {
+public struct Ecliptix_Proto_KeyMaterials_ChainStepState: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -201,10 +208,10 @@ public struct Ecliptix_Proto_ChainStepState: @unchecked Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "ecliptix.proto"
+fileprivate let _protobuf_package = "ecliptix.proto.key_materials"
 
-extension Ecliptix_Proto_EcliptixSecrecyChannelState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EcliptixSecrecyChannelState"
+extension Ecliptix_Proto_KeyMaterials_EcliptixSessionState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EcliptixSessionState"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "connect_id"),
     2: .standard(proto: "identity_keys"),
@@ -247,7 +254,7 @@ extension Ecliptix_Proto_EcliptixSecrecyChannelState: SwiftProtobuf.Message, Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_EcliptixSecrecyChannelState, rhs: Ecliptix_Proto_EcliptixSecrecyChannelState) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_KeyMaterials_EcliptixSessionState, rhs: Ecliptix_Proto_KeyMaterials_EcliptixSessionState) -> Bool {
     if lhs.connectID != rhs.connectID {return false}
     if lhs._identityKeys != rhs._identityKeys {return false}
     if lhs._peerHandshakeMessage != rhs._peerHandshakeMessage {return false}
@@ -257,7 +264,7 @@ extension Ecliptix_Proto_EcliptixSecrecyChannelState: SwiftProtobuf.Message, Swi
   }
 }
 
-extension Ecliptix_Proto_IdentityKeysState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_KeyMaterials_IdentityKeysState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IdentityKeysState"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "ed25519_secret_key"),
@@ -322,7 +329,7 @@ extension Ecliptix_Proto_IdentityKeysState: SwiftProtobuf.Message, SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_IdentityKeysState, rhs: Ecliptix_Proto_IdentityKeysState) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_KeyMaterials_IdentityKeysState, rhs: Ecliptix_Proto_KeyMaterials_IdentityKeysState) -> Bool {
     if lhs.ed25519SecretKey != rhs.ed25519SecretKey {return false}
     if lhs.identityX25519SecretKey != rhs.identityX25519SecretKey {return false}
     if lhs.signedPreKeySecret != rhs.signedPreKeySecret {return false}
@@ -337,7 +344,7 @@ extension Ecliptix_Proto_IdentityKeysState: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension Ecliptix_Proto_OneTimePreKeySecret: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OneTimePreKeySecret"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "pre_key_id"),
@@ -372,7 +379,7 @@ extension Ecliptix_Proto_OneTimePreKeySecret: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_OneTimePreKeySecret, rhs: Ecliptix_Proto_OneTimePreKeySecret) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret, rhs: Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret) -> Bool {
     if lhs.preKeyID != rhs.preKeyID {return false}
     if lhs.privateKey != rhs.privateKey {return false}
     if lhs.publicKey != rhs.publicKey {return false}
@@ -381,7 +388,7 @@ extension Ecliptix_Proto_OneTimePreKeySecret: SwiftProtobuf.Message, SwiftProtob
   }
 }
 
-extension Ecliptix_Proto_RatchetState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_KeyMaterials_RatchetState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RatchetState"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "is_initiator"),
@@ -403,8 +410,8 @@ extension Ecliptix_Proto_RatchetState: SwiftProtobuf.Message, SwiftProtobuf._Mes
     var _peerDhPublicKey: Data = Data()
     var _isFirstReceivingRatchet: Bool = false
     var _rootKey: Data = Data()
-    var _sendingStep: Ecliptix_Proto_ChainStepState? = nil
-    var _receivingStep: Ecliptix_Proto_ChainStepState? = nil
+    var _sendingStep: Ecliptix_Proto_KeyMaterials_ChainStepState? = nil
+    var _receivingStep: Ecliptix_Proto_KeyMaterials_ChainStepState? = nil
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -494,7 +501,7 @@ extension Ecliptix_Proto_RatchetState: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_RatchetState, rhs: Ecliptix_Proto_RatchetState) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_KeyMaterials_RatchetState, rhs: Ecliptix_Proto_KeyMaterials_RatchetState) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -517,7 +524,7 @@ extension Ecliptix_Proto_RatchetState: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 }
 
-extension Ecliptix_Proto_ChainStepState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Ecliptix_Proto_KeyMaterials_ChainStepState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ChainStepState"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "current_index"),
@@ -557,7 +564,7 @@ extension Ecliptix_Proto_ChainStepState: SwiftProtobuf.Message, SwiftProtobuf._M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Ecliptix_Proto_ChainStepState, rhs: Ecliptix_Proto_ChainStepState) -> Bool {
+  public static func ==(lhs: Ecliptix_Proto_KeyMaterials_ChainStepState, rhs: Ecliptix_Proto_KeyMaterials_ChainStepState) -> Bool {
     if lhs.currentIndex != rhs.currentIndex {return false}
     if lhs.chainKey != rhs.chainKey {return false}
     if lhs.dhPrivateKey != rhs.dhPrivateKey {return false}

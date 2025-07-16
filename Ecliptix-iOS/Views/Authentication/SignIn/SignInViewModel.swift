@@ -52,6 +52,10 @@ final class SignInViewModel: ObservableObject {
         await self.submitRegistrationPassword()
     }
     
+    func forgotPasswordTapped() {
+        self.navigation.navigate(to: .phoneNumberVerification(authFlow: .recovery))
+    }
+    
     func updatePassword(passwordText: String?) {
         securePasswordHandle?.dispose()
         securePasswordHandle = nil
@@ -226,4 +230,5 @@ final class SignInViewModel: ObservableObject {
         }
     }
 
+    
 }

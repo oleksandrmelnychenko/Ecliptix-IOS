@@ -2,7 +2,7 @@
     "Authentication": {
         "Registration": {
             "Welcome": {
-                "title": "Ecliptix",
+                "title": "Welcome to Ecliptix",
                 "description": "The wallet designed to make digital ID and global finance simple for all.",
 
                 "MainCard" : {

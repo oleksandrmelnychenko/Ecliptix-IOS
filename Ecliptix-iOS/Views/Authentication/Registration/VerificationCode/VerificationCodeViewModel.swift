@@ -25,18 +25,27 @@ final class VerificationCodeViewModel: ObservableObject {
     private let navigation: NavigationService
 
     private let networkController: NetworkProvider
-    private var validatePhoneNumberResponce: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse? = nil
+    private var phoneNumberIdentifier: Data
     private var verificationSessionIdentifier: UUID? = nil
     
-    init(phoneNumber: String, navigation: NavigationService) {
+    private let authFlow: AuthFlow
+    
+    init(phoneNumber: String, phoneNumberIdentifier: Data, navigation: NavigationService, authFlow: AuthFlow) {
         self.phoneNumber = phoneNumber
         self.navigation = navigation
-        networkController = ServiceLocator.shared.resolve(NetworkProvider.self)
+        
+        self.phoneNumberIdentifier = phoneNumberIdentifier
+        
+        self.networkController = ServiceLocator.shared.resolve(NetworkProvider.self)
+        
+        self.authFlow = authFlow
     }
     
     func startValidation() {
         Task {
-            await validatePhoneNumber(phoneNumber: phoneNumber)
+            await self.initiateVerification(
+                phoneNumberIdentifier: self.phoneNumberIdentifier,
+                type: .sendOtp)
         }
     }
 
@@ -78,73 +87,6 @@ final class VerificationCodeViewModel: ObservableObject {
             focus = nil
         }
     }
-
-    private func validatePhoneNumber(phoneNumber: String) async {
-        let cancellationToken = CancellationToken()
-
-        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
-            errorMessage = "Invalid device ID"
-            return
-        }
-
-        guard UUID(uuidString: phoneNumber) == nil else {
-            errorMessage = "Phone number must not be a GUID"
-            return
-        }
-        
-        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
-            errorMessage = "Invalid UUID format"
-            return
-        }
-        
-        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
-
-        var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
-        request.phoneNumber = phoneNumber
-        request.appDeviceIdentifier = deviceIdData
-
-        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-
-        do {
-            _ = try await networkController.executeServiceAction(
-                connectId: connectId,
-                serviceType: .validatePhoneNumber,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { [weak self] payload in
-                    guard let self else {
-                        return .failure(.unexpectedError("Self is nil"))
-                    }
-
-                    do {
-                        self.validatePhoneNumberResponce = try Helpers.parseFromBytes(
-                            Ecliptix_Proto_Membership_ValidatePhoneNumberResponse.self,
-                            data: payload
-                        )
-
-                        if self.validatePhoneNumberResponce!.result == .invalidPhone {
-                            self.errorMessage = self.validatePhoneNumberResponce!.message
-                        } else {
-                            await self.initiateVerification(
-                                phoneNumberIdentifier: self.validatePhoneNumberResponce!.phoneNumberIdentifier,
-                                type: .sendOtp
-                            )
-                        }
-
-                        return .success(.value)
-                    } catch {
-                        debugPrint("Validation parsing error: \(error)")
-                        return .failure(.unexpectedError("Failed to parse validation response", inner: error))
-                    }
-                },
-                token: cancellationToken
-            )
-        } catch {
-            debugPrint("Validation execution error: \(error)")
-            errorMessage = "Network error during validation"
-        }
-    }
-
     
     private func initiateVerification(phoneNumberIdentifier: Data, type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum) async {
         let cancellationToken = CancellationToken()
@@ -278,7 +220,9 @@ final class VerificationCodeViewModel: ObservableObject {
                             if verifyCodeResponse.result == .succeeded {
                                 let membership = verifyCodeResponse.membership
                                 
-                                self.navigation.navigate(to: .passwordSetup(membership.uniqueIdentifier))
+                                self.navigation.navigate(to: .passwordSetup(
+                                    verificationSessionId: membership.uniqueIdentifier,
+                                    authFlow: self.authFlow))
                             } else if verifyCodeResponse.result == .invalidOtp {
                                 
                             }
@@ -304,14 +248,9 @@ final class VerificationCodeViewModel: ObservableObject {
     
     func reSendVerificationCode() async {
         codeDigits = Array(repeating: Self.emptySign, count: 6)
-        
-        guard let phoneId = validatePhoneNumberResponce?.phoneNumberIdentifier else {
-            errorMessage = "Phone number identifier is missing"
-            return
-        }
-        
+                
         _ = await self.initiateVerification(
-            phoneNumberIdentifier: phoneId,
+            phoneNumberIdentifier: self.phoneNumberIdentifier,
             type: .resendOtp
         )
     }

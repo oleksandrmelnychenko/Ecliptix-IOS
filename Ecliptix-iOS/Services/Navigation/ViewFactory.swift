@@ -16,14 +16,14 @@ struct ViewFactory {
         case .welcome:
             WelcomeView(navigation: navigation)
 
-        case .phoneNumberVerification:
-            PhoneNumberView(navigation: navigation)
+        case .phoneNumberVerification(let authFlow):
+            PhoneNumberView(navigation: navigation, authFlow: authFlow)
 
-        case .verificationCode(let phoneNumber):
-            VerificationCodeView(navigation: navigation, phoneNumber: phoneNumber)
+        case let .verificationCode(phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow):
+            VerificationCodeView(navigation: navigation, phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
             
-        case .passwordSetup(let verificationSessionId):
-            PasswordSetupView(navigation: navigation, verificationSessionId: verificationSessionId)
+        case let .passwordSetup(verificationSessionId: verificationSessionId, authFlow: authFlow):
+            PasswordSetupView(navigation: navigation, verificationSessionId: verificationSessionId, authFlow: authFlow)
             
         case .passPhaseRegistration:
             PassPhaseRegisterView(navigation: navigation)

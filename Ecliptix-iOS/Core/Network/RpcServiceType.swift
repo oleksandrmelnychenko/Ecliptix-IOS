@@ -16,4 +16,7 @@ public enum RpcServiceType {
     case opaqueRegistrationComplete
     case opaqueSignInInitRequest
     case opaqueSignInCompleteRequest
+    
+    case opaqueRecoverySecretKeyInitRequest
+    case opaqueRecoverySecretKeyCompleteRequest
 }
