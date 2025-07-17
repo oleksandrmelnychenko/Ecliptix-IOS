@@ -14,6 +14,8 @@ final class PasswordSetupViewModel: ObservableObject {
     @Published var confirmPassword: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var showPasswordValidationErrors: Bool = false
+    @Published var showConfirmationPasswordValidationErrors: Bool = false
 
     private let navigation: NavigationService
     private let passwordValidator = PasswordValidator()

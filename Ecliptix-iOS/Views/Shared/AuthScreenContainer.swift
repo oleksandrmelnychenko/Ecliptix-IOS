@@ -23,60 +23,47 @@ struct AuthScreenContainer<Content: View>: View {
     }
     
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-                if showLogo == true {
-                    HStack {
-                        Spacer()
-                        Image("EcliptixLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 60, height: 60)
-                        Text("Ecliptix")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                        Spacer()
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        if showLogo {
+                            HStack {
+                                Spacer()
+                                Image("EcliptixLogo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 100, height: 100)
+                                Spacer()
+                            }
+                            .padding(.top, 15)
+                        }
+
+                        VStack(alignment: .leading, spacing: spacing) {
+                            content
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, showLogo ? 20 : 100)
+
+                        Spacer(minLength: 0)
+
+                        if showLicense {
+                            HStack {
+                                Spacer()
+                                Text("© Horizon Dynamics LLC 2025")
+                                    .font(.footnote)
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                            .padding(.top, 10)
+                            .padding(.bottom, 20)
+                        }
                     }
-                    .padding(.top, 25)
-                }
-                
-                VStack(alignment: .leading, spacing: spacing) {
-                    content
-                }
-                .padding(.horizontal)
-                .padding(.top, showLogo ? 20 : 100)
-                
-                if showLicense == true {
-                    HStack {
-                        Spacer()
-                        Text("© Horizon Dynamics LLC 2025")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                        Spacer()
-                    }
-                    .padding(.top, 10)
+                    .frame(minHeight: geometry.size.height)
                 }
             }
-            
-            
-            // Language Switcher Button
-            Menu {
-                ForEach(SupportedLanguage.allCases, id: \.self) { language in
-                    Button {
-                        localization.load(locale: language.code)
-                    } label: {
-                        Text("\(language.flagEmoji) \(language.code.components(separatedBy: "-").first?.uppercased() ?? "")")
-                    }
-                }
-            } label: {
-                Text("\(localization.currentLanguage.flagEmoji) \(localization.currentLanguage.code.components(separatedBy: "-").first?.uppercased() ?? "")")
-                    .font(.title2)
-                    .padding(8)
-            }
-            .padding(.top, 0)
-            .padding(.trailing, 20)
+            .scrollDismissesKeyboard(.interactively)
+            .ignoresSafeArea(.keyboard)
         }
-        .navigationBarHidden(true)
-        .navigationBarBackButtonHidden(true)
     }
 }

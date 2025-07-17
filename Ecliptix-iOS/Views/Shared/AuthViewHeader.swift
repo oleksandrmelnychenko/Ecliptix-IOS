@@ -17,14 +17,18 @@ struct AuthViewHeader: View {
             
             // Title
             Text(viewTitle)
-                .font(.title)
+                .font(.title2)
             
             // Subtitle
             Text(viewDescription)
-                .font(.body)
-                .foregroundColor(.gray)
+                
+                .font(.title)
                 .multilineTextAlignment(.leading)
                 .padding(.top, 15)
         }
     }
+}
+
+#Preview {
+    AuthViewHeader(viewTitle: "Sign in", viewDescription: "Welcome back! Your personalized experience awaits.")
 }

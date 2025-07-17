@@ -4,20 +4,13 @@
     "" : {
 
     },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
     "© Horizon Dynamics LLC 2025" : {
 
     },
     "8 Chars, 1 upper and 1 number" : {
+
+    },
+    "Account recovery" : {
 
     },
     "Agree to Terms and Conditions" : {
@@ -29,28 +22,16 @@
     "Continue" : {
 
     },
-    "Create new Worldcoin account" : {
-
-    },
-    "Ecliptix" : {
+    "Create account" : {
 
     },
     "Enter password" : {
 
     },
-    "Enter your email and password to sign in" : {
-
-    },
-    "Existing account" : {
-
-    },
-    "Forgot password?" : {
-
-    },
     "Include country code" : {
 
     },
-    "New account" : {
+    "Mobile number" : {
 
     },
     "Next" : {
@@ -74,16 +55,20 @@
     "Resend available in %@" : {
 
     },
-    "Restore account from a backup" : {
+    "Resend code" : {
 
     },
     "Session Error" : {
 
     },
-    "Sign in into account" : {
+    "Sign in" : {
+
+    },
+    "Sign In" : {
 
     },
     "The wallet designed to make digital ID and global finance simple for all." : {
+      "extractionState" : "stale",
       "localizations" : {
         "uk" : {
           "stringUnit" : {
@@ -96,7 +81,10 @@
     "Unchecked" : {
 
     },
-    "Welcome to Ecliptix" : {
+    "Verify" : {
+
+    },
+    "Welcome back! Your personalized experience awaits." : {
 
     }
   },

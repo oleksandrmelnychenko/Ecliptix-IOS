@@ -10,6 +10,7 @@ import SwiftUI
 struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     let title: String
     @Binding var text: String
+    @Binding var showValidationErrors: Bool
     var placeholder: String = ""
     let hintText: String?
     var validationErrors: [ErrorType] = []
@@ -25,10 +26,12 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
         placeholder: String = "",
         hintText: String? = nil,
         validationErrors: [ErrorType] = [],
+        showValidationErrors: Binding<Bool>,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
         self._text = text
+        self._showValidationErrors = showValidationErrors
         self.placeholder = placeholder
         self.hintText = hintText
         self.validationErrors = validationErrors
@@ -37,9 +40,9 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.gray)
+//            Text(title)
+//                .font(.subheadline)
+//                .foregroundColor(.gray)
 
             VStack(spacing: 0) {
                 // fix here
@@ -53,14 +56,12 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
                 if let hint = hintText {
                     HStack(alignment: .bottom) {
                         Image(systemName: "lightbulb.min")
-                            .foregroundColor(.black)
-                            .font(.system(size: 14))
-
                         Text(hint)
-                            .font(.system(size: 14))
-
+                            
                         Spacer()
                     }
+                    .foregroundColor(Color("Tip.Highlight"))
+                    .font(.subheadline)
                     .padding(.horizontal, 8)
                     .padding(.bottom, 5)
                 }
@@ -69,7 +70,7 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
             .cornerRadius(10)
 
             VStack(alignment: .leading, spacing: 4) {
-                if let firstError = validationErrors.first {
+                if showValidationErrors, let firstError = validationErrors.first {
                     ValidationMessageView(text: firstError.rawValue)
                 }
             }

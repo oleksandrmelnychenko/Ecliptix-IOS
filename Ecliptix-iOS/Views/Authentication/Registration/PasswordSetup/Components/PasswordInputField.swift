@@ -9,21 +9,25 @@
 import SwiftUI
 
 struct PasswordInputField: View {
-    @State private var showPassword: Bool = false
     var placeholder: String = ""
+    @Binding var showPassword: Bool
     @Binding var text: String
     
     var body: some View {
         HStack {
-            if showPassword {
-                TextField(placeholder, text: $text)
-                    .textContentType(.newPassword)
-                    .font(.title3)
-            } else {
-                SecureField(placeholder, text: $text)
-                    .textContentType(.newPassword)
-                    .font(.title3)
-            }
+//            if showPassword {
+//                TextField(placeholder, text: $text)
+//                    .textContentType(.newPassword)
+//                    .font(.title3)
+//            } else {
+//                SecureField(placeholder, text: $text)
+//                    .textContentType(.newPassword)
+//                    .font(.title3)
+//            }
+            
+            SecureField(placeholder, text: $text)
+                .textContentType(.newPassword)
+                .font(.title3)
                 
             
             Button(action: {

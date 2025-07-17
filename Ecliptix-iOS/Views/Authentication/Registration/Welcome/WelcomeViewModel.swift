@@ -9,7 +9,11 @@ import Foundation
 
 @MainActor
 final class WelcomeViewModel: ObservableObject {
-    @Published var agreedToTerms: Bool = false
+        
+    @Published var isSignInEnabled: Bool = true
+    @Published var isCreateAccountEnabled: Bool = true
+    @Published var isSignInLoading: Bool = false
+    @Published var isCreateAccountLoading: Bool = false
     
     private let navigation: NavigationService
 
@@ -19,17 +23,18 @@ final class WelcomeViewModel: ObservableObject {
 
 
     func continueToPhoneNumber() {
-        guard agreedToTerms else { return }
-        navigation.navigate(to: .phoneNumberVerification(authFlow: .registration))
+        guard self.isCreateAccountEnabled else { return }
+        
+        self.isCreateAccountLoading = true
+        self.navigation.navigate(to: .phoneNumberVerification(authFlow: .registration))
+        self.isCreateAccountLoading = false
     }
 
     func continueToSignIn() {
-        guard agreedToTerms else { return }
-        navigation.navigate(to: .signIn)
-    }
-    
-    func continueToTestView() {
-        guard agreedToTerms else { return }        
-        navigation.navigate(to: .test)
+        guard self.isSignInEnabled else { return }
+        
+        self.isSignInLoading = true
+        self.navigation.navigate(to: .signIn)
+        self.isSignInLoading = false
     }
 }

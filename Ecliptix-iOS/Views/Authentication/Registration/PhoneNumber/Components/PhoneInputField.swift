@@ -12,42 +12,32 @@ struct PhoneInputField: View {
     @Binding var phoneNumber: String
 
     var body: some View {
-        TextField("", text: $phoneNumber)
-            .keyboardType(.phonePad)
-            .textContentType(.telephoneNumber)
-            .autocapitalization(.none)
-            .padding(.horizontal, 8)
-            .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
-            .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
-            .onChange(of: phoneNumber) { _, newValue in
-                let sanitized = sanitizePhoneNumber(newValue)
-                if sanitized != phoneNumber {
-                    phoneNumber = sanitized
-                }
-            }
-            .onAppear {
-                if phoneNumber.isEmpty {
-                    phoneNumber = "+"
-                } else {
-                    phoneNumber = sanitizePhoneNumber(phoneNumber)
-                }
-            }
-            .frame(height: 30)
+        TextField(
+            "",
+            text: $phoneNumber,
+            prompt: Text("Mobile number")
+        )
+        .keyboardType(.phonePad)
+        .textContentType(.telephoneNumber)
+        .autocapitalization(.none)
+        .font(.title3)
+        .padding(.horizontal, 8)
+        .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
+        .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
+        .onChange(of: phoneNumber) { _, newValue in
+            phoneNumber = sanitizePhoneNumber(newValue)
+        }
+        .frame(height: 30)
     }
 
     private func sanitizePhoneNumber(_ input: String) -> String {
-        var result = input
+        let digits = input.filter { $0.isWholeNumber }
 
-        // Ensure it starts with +
-        if !result.hasPrefix("+") {
-            result = "+" + result
+        if digits.isEmpty {
+            return ""
+        } else {
+            return "+" + digits
         }
-
-        // Keep only '+' at the start and digits elsewhere
-        let plus = "+"
-        let digits = result.dropFirst().filter { $0.isWholeNumber }
-
-        return plus + digits
     }
 }
 

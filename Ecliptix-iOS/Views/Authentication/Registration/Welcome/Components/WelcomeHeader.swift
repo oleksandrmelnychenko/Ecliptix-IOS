@@ -11,18 +11,28 @@ import SwiftUI
 struct WelcomeHeader: View {
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .center, spacing: 0) {
             // App title
-            Text(String(localized: "Welcome to Ecliptix"))
-                .font(.largeTitle)
-                .fontWeight(.bold)
+//            Text(String(localized: "Ecliptix"))
+//                .font(.largeTitle)
+//                .fontWeight(.bold)
             
             // Subtitle
-            Text(String(localized: "The wallet designed to make digital ID and global finance simple for all."))
-                .font(.body)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.leading)
-                .padding(.top, 15)
+//            Text(String(localized: "Master the architecture of your mind"))
+//                .font(.body)
+//                .foregroundColor(.gray)
+//                .multilineTextAlignment(.leading)
+//                .padding(.top, 15)
+            
+            Image("Title")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 250, height: 40)
+                
+            Image("Subtitle")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 350, height: 60)
         }
     }
 }

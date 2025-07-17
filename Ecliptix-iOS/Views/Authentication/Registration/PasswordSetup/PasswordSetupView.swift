@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PasswordSetupView: View {
     @StateObject private var viewModel: PasswordSetupViewModel
+    @State private var showPassword = false
     
     init(navigation: NavigationService, verificationSessionId: Data, authFlow: AuthFlow) {
         _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(
@@ -30,9 +31,11 @@ struct PasswordSetupView: View {
                     text: $viewModel.password,
                     hintText: "8 Chars, 1 upper and 1 number",
                     validationErrors: viewModel.passwordValidationErrors,
+                    showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
+                            showPassword: $showPassword,
                             text: $viewModel.password,
                         )
                     }
@@ -45,9 +48,11 @@ struct PasswordSetupView: View {
                     text: $viewModel.confirmPassword,
                     hintText: "8 Chars, 1 upper and 1 number",
                     validationErrors: viewModel.confirmPasswordValidationErrors,
+                    showValidationErrors: self.$viewModel.showConfirmationPasswordValidationErrors,
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                            showPassword: $showPassword,
                             text: $viewModel.confirmPassword,
                         )
                     }
@@ -58,10 +63,11 @@ struct PasswordSetupView: View {
             
             FormErrorText(error: viewModel.errorMessage)
             
-            PrimaryActionButton(
-                title: Strings.PasswordSetup.Buttons.next,
+            PrimaryButton(
+                title: String(localized: "Next"),
+                isEnabled: (viewModel.isFormValid && !viewModel.isLoading),
                 isLoading: viewModel.isLoading,
-                isEnabled: viewModel.isFormValid && !viewModel.isLoading,
+                style: .dark,
                 action: {
                     Task {
                         await viewModel.submitPassword()
@@ -74,32 +80,7 @@ struct PasswordSetupView: View {
     }
 }
 
-struct PasswordInputField: View {
-    @State private var showPassword: Bool = false
-    var placeholder: String = ""
-    @Binding var text: String
-    
-    var body: some View {
-        HStack {
-            if showPassword {
-                TextField(placeholder, text: $text)
-                    .textContentType(.newPassword)
-                    .font(.system(size: 20))
-            } else {
-                SecureField(placeholder, text: $text)
-                    .textContentType(.newPassword)
-                    .font(.system(size: 20))
-            }
-            
-            Button(action: {
-                showPassword.toggle()
-            }) {
-                Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                    .foregroundColor(.gray)
-            }
-        }
-    }
-}
+
 
 #Preview {
     let navService = NavigationService()

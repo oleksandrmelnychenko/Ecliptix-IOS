@@ -28,6 +28,7 @@ struct PhoneNumberView: View {
                 text: $viewModel.phoneNumber,
                 hintText: String(localized: "Include country code"),
                 validationErrors: viewModel.validationErrors,
+                showValidationErrors: self.$viewModel.showPhoneNumberValidationErrors,
                 content: {
                     PhoneInputField(
                         phoneNumber: $viewModel.phoneNumber
@@ -37,10 +38,11 @@ struct PhoneNumberView: View {
             
             FormErrorText(error: viewModel.errorMessage)
             
-            PrimaryActionButton(
+            PrimaryButton(
                 title: String(localized: "Continue"),
-                isLoading: viewModel.isLoading,
                 isEnabled: !viewModel.phoneNumber.isEmpty && !viewModel.isLoading,
+                isLoading: viewModel.isLoading,
+                style: .dark,
                 action: {
                     Task {
                         await viewModel.submitPhone()

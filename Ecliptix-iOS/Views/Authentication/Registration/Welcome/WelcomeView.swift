@@ -9,7 +9,6 @@ import SwiftUI
 
 struct WelcomeView: View {
     @EnvironmentObject private var navigation: NavigationService
-    @EnvironmentObject private var localization: LocalizationService
     @StateObject private var viewModel: WelcomeViewModel
 
     init(navigation: NavigationService) {
@@ -18,51 +17,50 @@ struct WelcomeView: View {
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 0, showLogo: false, showLicense: false, content:  {
-            Image("EcliptixLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .padding(.horizontal)
+        AuthScreenContainer(spacing: 0, showLogo: true,  showLicense: true,
+            content:  {
 
-            WelcomeHeader()
-                .padding(.horizontal)
-                .padding(.top, 10)
-                .id(localization.languageChanged)
+            HStack {
+                Spacer()
+                
+                WelcomeHeader()
+                    .padding(.top, 10)
+                
+                Spacer()
+            }
 
+
+            HStack {
+                Spacer()
+                Image("BackgroundImage")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 330, height: 370)
+                Spacer()
+            }
+            
             Spacer()
 
-            TermsAndConditions(agreedToTerms: $viewModel.agreedToTerms)
-                .padding(.bottom, 10)
-
-            // Create new account
-            NavigationCardButton(
-                title: String(localized: "New account"),
-                subtitle: String(localized: "Create new Worldcoin account"),
-                foreground: .white,
-                background: .black,
-                border: false
-            )
-            .onTapGesture {
-                if viewModel.agreedToTerms {
-                    viewModel.continueToPhoneNumber()
-                }
-            }            
-
-            // Sign in
-            NavigationCardButton(
-                title: String(localized: "Existing account"),
-                subtitle: String(localized: "Restore account from a backup"),
-                foreground: .black,
-                background: .white,
-                border: true
-            )
-            .padding(.top, 15)
-            .onTapGesture {
-                if viewModel.agreedToTerms {
-                    viewModel.continueToSignIn()
-                }
+            HStack {
+                // Sign in
+                PrimaryButton(
+                    title: String(localized: "Sign In"),
+                    isEnabled: self.viewModel.isSignInEnabled,
+                    isLoading: self.viewModel.isSignInLoading,
+                    style: .light,
+                    action: viewModel.continueToSignIn
+                )
+                
+                // Create new account
+                PrimaryButton(
+                    title: String(localized: "Create account"),
+                    isEnabled: self.viewModel.isCreateAccountEnabled,
+                    isLoading: self.viewModel.isCreateAccountLoading,
+                    style: .dark,
+                    action: viewModel.continueToPhoneNumber
+                )
             }
+            .padding(.bottom, 10)
         })
     }
 }
@@ -70,26 +68,20 @@ struct WelcomeView: View {
 
 #Preview {
     let navService = NavigationService()
-    let locService = LocalizationService.shared
     return WelcomeView(navigation: navService)
         .environmentObject(navService)
-        .environmentObject(locService)
 }
 
 #Preview("ContentView Landscape", traits: .landscapeRight, body: {
     let navService = NavigationService()
-    let locService = LocalizationService.shared
     return WelcomeView(navigation: navService)
         .environmentObject(navService)
-        .environmentObject(locService)
 })
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let navService = NavigationService()
-        let locService = LocalizationService.shared
         return WelcomeView(navigation: navService)
             .environmentObject(navService)
-            .environmentObject(locService)
     }
 }

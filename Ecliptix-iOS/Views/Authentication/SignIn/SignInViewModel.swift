@@ -9,10 +9,12 @@ import Foundation
 
 @MainActor
 final class SignInViewModel: ObservableObject {
-    @Published var phoneNumber: String = "+970177981"
+    @Published var phoneNumber: String = ""
     @Published var password: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var showPasswordValidationErrors: Bool = false
+    @Published var showPhoneNumberErrors: Bool = false
     
     private let navigation: NavigationService
     private let networkController: NetworkProvider

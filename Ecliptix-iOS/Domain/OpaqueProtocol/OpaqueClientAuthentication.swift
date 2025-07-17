@@ -142,9 +142,6 @@ enum OpaqueClientAuthentication {
             return .failure(.invalidInput("Error during create sign in finalization request", inner: error))
         }
     }
-    /// 028811398cee1e1c89ed02318660795523c07f6a3bc7ab91c33bf9515521cc6fd30202a26a80b0c4e97a09137a378dbd566128184bd10e756a7eb5866565c88ce9260323b5f4bd3ec05a15e1029f86c80a2725190c28dbc030a0fcf91379c41c631544
-    ///
-    /// 028811398cee1e1c89ed02318660795523c07f6a3bc7ab91c33bf9515521cc6fd30202a26a80b0c4e97a09137a378dbd566128184bd10e756a7eb5866565c88ce926000000000000000000000000000000000000000000000000000000000000000000
     
     private static func deriveFinalKeys(akeResult: Data, transcriptHash: Data) -> Result<(sessionKey: Data, clientMacKey: Data, serverMacKey: Data), OpaqueFailure> {
         do {

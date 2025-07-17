@@ -27,6 +27,11 @@ struct OneTimeCodeTextField: UIViewRepresentable {
         textField.backgroundColor = .systemGray6
         textField.layer.cornerRadius = 8
         textField.translatesAutoresizingMaskIntoConstraints = false
+        
+        textField.inputAssistantItem.leadingBarButtonGroups = []
+        textField.inputAssistantItem.trailingBarButtonGroups = []
+        
+        
         return textField
     }
 

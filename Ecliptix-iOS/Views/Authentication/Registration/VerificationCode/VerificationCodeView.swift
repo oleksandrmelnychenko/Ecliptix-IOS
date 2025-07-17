@@ -47,18 +47,18 @@ struct VerificationCodeView: View {
                 ZStack {
                     HStack(spacing: 10) {
                         ForEach(0..<6, id: \.self) { index in
-                            OneTimeCodeTextField(
-                                text: $viewModel.codeDigits[index],
-                                isFirstResponder: focusedField == index,
-                                onBackspace: {
-                                    viewModel.handleBackspace(at: index, focus: &focusedField)
-                                },
-                                onInput: { newValue in
-                                    viewModel.handleInput(newValue, at: index, focus: &focusedField)
-                                }
-                            )
-                            .focused($focusedField, equals: index)
-                            .frame(width: 44, height: 55)
+//                            OneTimeCodeTextField(
+//                                text: $viewModel.codeDigits[index],
+//                                isFirstResponder: focusedField == index,
+//                                onBackspace: {
+//                                    viewModel.handleBackspace(at: index, focus: &focusedField)
+//                                },
+//                                onInput: { newValue in
+//                                    viewModel.handleInput(newValue, at: index, focus: &focusedField)
+//                                }
+//                            )
+//                            .focused($focusedField, equals: index)
+//                            .frame(width: 44, height: 55)
                         }
                     }
                     .onAppear {
@@ -81,10 +81,11 @@ struct VerificationCodeView: View {
             
             FormErrorText(error: viewModel.errorMessage)
 
-            PrimaryActionButton(
-                title: Strings.VerificationCode.Buttons.verifyCode,
-                isLoading: viewModel.isLoading,
+            PrimaryButton(
+                title: String(localized: "Verify"),
                 isEnabled: !viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign),
+                isLoading: viewModel.isLoading,
+                style: .dark,
                 action: {
                     Task {
                         await viewModel.verifyCode {
@@ -99,7 +100,7 @@ struct VerificationCodeView: View {
             HStack {
                 Spacer()
                 if viewModel.secondsRemaining <= 0 {
-                    Button(Strings.VerificationCode.Buttons.resendCode) {
+                    Button(String(localized: "Resend code")) {
                         Task {
                             focusedField = 0
                             await viewModel.reSendVerificationCode()

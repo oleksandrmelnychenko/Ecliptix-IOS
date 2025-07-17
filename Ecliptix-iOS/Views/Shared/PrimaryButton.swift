@@ -7,29 +7,48 @@
 
 import SwiftUI
 
-struct PrimaryButton: View {    
+struct PrimaryButton: View {
     let title: String
+    let isEnabled: Bool
+    let isLoading: Bool
     let style: Style
+    let action: () -> Void
 
     var body: some View {
-        HStack {
-            Spacer()
+        Button(action: {
+            if isEnabled && !isLoading {
+                action()
+            }
+        }) {
+            HStack {
+                Spacer()
 
-            Text(title)
-                .font(.headline)
-                .foregroundColor(style.foreground)
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: style.foreground.opacity(isEnabled ? 1 : 0.5)))
+                } else {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(style.foreground.opacity(isEnabled ? 1 : 0.5))
+                }
 
-            Spacer()
+                Spacer()
+            }
+            .font(.subheadline)
+            .padding()
+            .background(style.background.opacity(isEnabled ? 1 : 0.5))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        style.border ? style.foreground.opacity(isEnabled ? 1 : 0.5) : .clear,
+                        lineWidth: style.border ? 1 : 0
+                    )
+            )
         }
-        .padding()
-        .background(style.background)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(style.border ? style.foreground : .clear, lineWidth: style.border ? 1 : 0)
-        )
+        .disabled(!isEnabled || isLoading)
     }
-    
+
     enum Style {
         case light
         case dark
@@ -57,18 +76,40 @@ struct PrimaryButton: View {
     }
 }
 
+
 #Preview {
-    PrimaryButton(
-        title: "Title",
-        style: .dark
-    )
-    .padding()
+    HStack {
+        PrimaryButton(
+            title: "Account recovery",
+            isEnabled: true,
+            isLoading: false,
+            style: .dark,
+            action: {
+                print("Button pressed!")
+            }
+        )
+        .padding()
+        
+        PrimaryButton(
+            title: "Continue",
+            isEnabled: true,
+            isLoading: true,
+            style: .light,
+            action: {
+                print("Button pressed!")
+            }
+        )
+    }
 }
 
 #Preview {
     PrimaryButton(
-        title: "Title",
-        style: .light
+        title: "Continue",
+        isEnabled: true,
+        isLoading: true,
+        style: .light,
+        action: {
+            print("Button pressed!")
+        }
     )
-    .padding()
 }
