@@ -25,7 +25,12 @@ struct SessionProvider {
                 pubKeyExchangeType: .dataCenterEphemeralConnect)
             
             
-            await networkProvider.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
+            await withCheckedContinuation { continuation in
+                Task {
+                    await networkProvider.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
+                    continuation.resume()
+                }
+            }
             let establishResult = await networkProvider.establishSecrecyChannel(connectId: connectId)
             
             guard establishResult.isOk else {
