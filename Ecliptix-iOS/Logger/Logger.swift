@@ -8,8 +8,25 @@
 import Foundation
 
 final class Logger {
+    // MARK: - Shared instance (Singleton)
     static let shared = Logger()
 
+    // MARK: - Static API
+    static func configure(minimumLevel: LogLevel, maxFileSize: UInt64, retainedFileCountLimit: Int) {
+        shared.configure(minimumLevel: minimumLevel, maxFileSize: maxFileSize, retainedFileCountLimit: retainedFileCountLimit)
+    }
+
+    static var overrides: [String: LogLevel] {
+        get { shared.overrides }
+        set { shared.overrides = newValue }
+    }
+
+    static func debug(_ msg: String, category: String? = nil)   { shared.debug(msg, category: category) }
+    static func info(_ msg: String, category: String? = nil)    { shared.info(msg, category: category) }
+    static func warning(_ msg: String, category: String? = nil) { shared.warning(msg, category: category) }
+    static func error(_ msg: String, category: String? = nil)   { shared.error(msg, category: category) }
+
+    // MARK: - Configuration
     private(set) var minimumLevel: LogLevel = .info
     private(set) var retainedFileCountLimit: Int = 7
     private(set) var maxFileSize: UInt64 = 10_000_000
@@ -35,17 +52,19 @@ final class Logger {
         try? FileManager.default.createDirectory(at: logsDir, withIntermediateDirectories: true)
         return logsDir
     }
-    
+
     private init() {
         cleanupOldLogs()
     }
-    
+
     func configure(minimumLevel: LogLevel, maxFileSize: UInt64, retainedFileCountLimit: Int) {
         self.minimumLevel = minimumLevel
         self.maxFileSize = maxFileSize
         self.retainedFileCountLimit = retainedFileCountLimit
         cleanupOldLogs()
     }
+
+    // MARK: - Logging
 
     func log(_ level: LogLevel, _ message: String, category: String? = nil) {
         queue.async {
@@ -69,6 +88,8 @@ final class Logger {
         }
         return level >= minimumLevel
     }
+
+    // MARK: - File I/O
 
     private func write(line: String) {
         let data = Data(line.utf8)

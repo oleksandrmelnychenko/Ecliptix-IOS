@@ -14,16 +14,14 @@ enum AppServiceConfigurator {
         let metaProvider: RpcMetaDataProviderProtocol = RpcMetaDataProvider()
         ServiceLocator.shared.register(RpcMetaDataProviderProtocol.self, service: metaProvider)
         
-        let logger = Logger.shared
-        logger.configure(
-            minimumLevel: .warning,
+        Logger.configure(
+            minimumLevel: .debug,
             maxFileSize: 10_000_000,
-            retainedFileCountLimit: 7
-        )
-        logger.overrides = [
-            "Ecliptix.Core.App": .warning,
+            retainedFileCountLimit: 7)
+        Logger.overrides = [
+            "Networking": .info,
+            "UI": .error
         ]
-        ServiceLocator.shared.register(Logger.self, service: logger)
         
         let aggregator: EventAggregator = EventAggregator()
         ServiceLocator.shared.register(EventAggregatorProtocol.self, service: aggregator)
