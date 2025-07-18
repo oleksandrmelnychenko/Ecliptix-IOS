@@ -45,9 +45,7 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
 //                .foregroundColor(.gray)
 
             VStack(spacing: 0) {
-                HStack {
-                    content()
-                }
+                content()
                 .padding(.horizontal, 8)
                 .padding(.top, 15)
                 .padding(.bottom, 10)

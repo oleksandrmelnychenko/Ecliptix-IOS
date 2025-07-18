@@ -8,23 +8,21 @@
 import SwiftUI
 
 struct AuthScreenContainer<Content: View>: View {
+    @Environment(\.dismiss) private var dismiss
+
     let content: Content
     let spacing: CGFloat
-    let showLogo: Bool
-    let showLicense: Bool
-    
-    @ObservedObject private var localization = ServiceLocator.shared.resolve(LocalizationService.self)
+    let canGoBack: Bool
 
-    init(spacing: CGFloat = 0, showLogo: Bool = true, showLicense: Bool = true, @ViewBuilder content: () -> Content) {
+    init(spacing: CGFloat = 0, canGoBack: Bool = false, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.spacing = spacing
-        self.showLogo = showLogo
-        self.showLicense = showLicense
+        self.canGoBack = canGoBack
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            if showLogo {
+        VStack {
+            ScrollView {
                 HStack {
                     Spacer()
                     Image("EcliptixLogo")
@@ -34,26 +32,43 @@ struct AuthScreenContainer<Content: View>: View {
                     Spacer()
                 }
                 .padding(.top, 15)
-            }
-
-            VStack(alignment: .leading, spacing: spacing) {
-                content
-            }
-            .padding(.horizontal)
-            .padding(.top, showLogo ? 20 : 100)
-
-            Spacer(minLength: 0)
-
-            if showLicense {
-                HStack {
-                    Spacer()
-                    Text("© Horizon Dynamics LLC 2025")
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                    Spacer()
+                
+                VStack(alignment: .leading, spacing: spacing) {
+                    content
                 }
-                .padding(.top, 10)
-                .padding(.bottom, 20)
+                .padding(.horizontal)
+                .padding(.top, 20)
+                
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .ignoresSafeArea(.keyboard)
+            
+            HStack {
+                Spacer()
+                Text("© Horizon Dynamics LLC 2025")
+                    .font(.footnote)
+                    .foregroundColor(.gray)
+                Spacer()
+            }
+            .background(Color.white.ignoresSafeArea(edges: .bottom))
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            if self.canGoBack {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("BackArrow")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .padding(12)
+                            .background(Color("BackButton.Background"))
+                            .clipShape(Circle())
+                        
+                    }
+                }
             }
         }
     }

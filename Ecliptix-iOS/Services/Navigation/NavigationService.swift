@@ -14,6 +14,10 @@ final class NavigationService: ObservableObject {
     func navigate(to route: AppRoute) {
         path.append(route)
     }
+    
+    func canGoBack() -> Bool {
+        return path.count > 0
+    }
 
     func pop() {
         guard !path.isEmpty else { return }

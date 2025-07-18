@@ -50,7 +50,6 @@ struct PhoneInputField: View {
 
         var body: some View {
             PhoneInputField(
-//                phoneCode: $phoneCode,
                 phoneNumber: $phoneNumber
             )
             .padding()

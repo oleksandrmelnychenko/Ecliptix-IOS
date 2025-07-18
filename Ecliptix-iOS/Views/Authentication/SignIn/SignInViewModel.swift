@@ -16,7 +16,7 @@ final class SignInViewModel: ObservableObject {
     @Published var showPasswordValidationErrors: Bool = false
     @Published var showPhoneNumberErrors: Bool = false
     
-    private let navigation: NavigationService
+    public let navigation: NavigationService
     private let networkController: NetworkProvider
     private let phoneValidator = PhoneValidator()
     private let passwordValidator = PasswordValidator()

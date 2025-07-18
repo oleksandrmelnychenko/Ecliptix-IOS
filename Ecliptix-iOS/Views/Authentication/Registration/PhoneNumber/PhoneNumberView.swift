@@ -48,9 +48,7 @@ struct PhoneNumberView: View {
                         await viewModel.submitPhone()
                     }
                 }
-            )
-            
-            Spacer()
+            )            
         })
     }
 }

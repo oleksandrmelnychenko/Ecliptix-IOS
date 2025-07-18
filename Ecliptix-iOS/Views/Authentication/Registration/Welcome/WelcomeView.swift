@@ -17,51 +17,51 @@ struct WelcomeView: View {
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 0, showLogo: true,  showLicense: true,
-            content:  {
+        AuthScreenContainer(spacing: 0) {
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    WelcomeHeader()
+                        .padding(.top, 10)
+                    
+                    Spacer()
+                }
 
-            HStack {
-                Spacer()
+
+                HStack {
+                    Spacer()
+                    Image("BackgroundImage")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 330, height: 370)
+                    Spacer()
+                }
                 
-                WelcomeHeader()
-                    .padding(.top, 10)
-                
                 Spacer()
-            }
 
-
-            HStack {
-                Spacer()
-                Image("BackgroundImage")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 330, height: 370)
-                Spacer()
+                HStack {
+                    // Sign in
+                    PrimaryButton(
+                        title: String(localized: "Sign In"),
+                        isEnabled: self.viewModel.isSignInEnabled,
+                        isLoading: self.viewModel.isSignInLoading,
+                        style: .light,
+                        action: viewModel.continueToSignIn
+                    )
+                    
+                    // Create new account
+                    PrimaryButton(
+                        title: String(localized: "Create account"),
+                        isEnabled: self.viewModel.isCreateAccountEnabled,
+                        isLoading: self.viewModel.isCreateAccountLoading,
+                        style: .dark,
+                        action: viewModel.continueToPhoneNumber
+                    )
+                }
             }
             
-            Spacer()
-
-            HStack {
-                // Sign in
-                PrimaryButton(
-                    title: String(localized: "Sign In"),
-                    isEnabled: self.viewModel.isSignInEnabled,
-                    isLoading: self.viewModel.isSignInLoading,
-                    style: .light,
-                    action: viewModel.continueToSignIn
-                )
-                
-                // Create new account
-                PrimaryButton(
-                    title: String(localized: "Create account"),
-                    isEnabled: self.viewModel.isCreateAccountEnabled,
-                    isLoading: self.viewModel.isCreateAccountLoading,
-                    style: .dark,
-                    action: viewModel.continueToPhoneNumber
-                )
-            }
-            .padding(.bottom, 10)
-        })
+        }
     }
 }
 

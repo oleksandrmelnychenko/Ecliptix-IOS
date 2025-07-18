@@ -35,6 +35,7 @@ struct PasswordSetupView: View {
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
+                            isNewPassword: true,
                             showPassword: $showPassword,
                             text: $viewModel.password,
                         )
@@ -52,6 +53,7 @@ struct PasswordSetupView: View {
                     content: {
                         PasswordInputField(
                             placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                            isNewPassword: true,
                             showPassword: $showPassword,
                             text: $viewModel.confirmPassword,
                         )

@@ -25,6 +25,9 @@
     "Create account" : {
 
     },
+    "Enter password" : {
+
+    },
     "Include country code" : {
 
     },
@@ -35,6 +38,9 @@
 
     },
     "OK" : {
+
+    },
+    "Password" : {
 
     },
     "Phone number" : {
@@ -79,6 +85,9 @@
 
     },
     "Welcome back! Your personalized experience awaits." : {
+
+    },
+    "Назад" : {
 
     }
   },
