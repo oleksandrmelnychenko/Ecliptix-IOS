@@ -45,7 +45,6 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
 //                .foregroundColor(.gray)
 
             VStack(spacing: 0) {
-                // fix here
                 HStack {
                     content()
                 }
@@ -66,7 +65,7 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
                     .padding(.bottom, 5)
                 }
             }
-            .background(Color(.systemGray6))
+            .background(Color("Textbox.Background"))
             .cornerRadius(10)
 
             VStack(alignment: .leading, spacing: 4) {

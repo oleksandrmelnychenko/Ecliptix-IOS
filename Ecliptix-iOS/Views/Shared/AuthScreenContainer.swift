@@ -23,47 +23,38 @@ struct AuthScreenContainer<Content: View>: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 0) {
-                    VStack(spacing: 0) {
-                        if showLogo {
-                            HStack {
-                                Spacer()
-                                Image("EcliptixLogo")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 100, height: 100)
-                                Spacer()
-                            }
-                            .padding(.top, 15)
-                        }
-
-                        VStack(alignment: .leading, spacing: spacing) {
-                            content
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, showLogo ? 20 : 100)
-
-                        Spacer(minLength: 0)
-
-                        if showLicense {
-                            HStack {
-                                Spacer()
-                                Text("© Horizon Dynamics LLC 2025")
-                                    .font(.footnote)
-                                    .foregroundColor(.gray)
-                                Spacer()
-                            }
-                            .padding(.top, 10)
-                            .padding(.bottom, 20)
-                        }
-                    }
-                    .frame(minHeight: geometry.size.height)
+        VStack(spacing: 0) {
+            if showLogo {
+                HStack {
+                    Spacer()
+                    Image("EcliptixLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                    Spacer()
                 }
+                .padding(.top, 15)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .ignoresSafeArea(.keyboard)
+
+            VStack(alignment: .leading, spacing: spacing) {
+                content
+            }
+            .padding(.horizontal)
+            .padding(.top, showLogo ? 20 : 100)
+
+            Spacer(minLength: 0)
+
+            if showLicense {
+                HStack {
+                    Spacer()
+                    Text("© Horizon Dynamics LLC 2025")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                    Spacer()
+                }
+                .padding(.top, 10)
+                .padding(.bottom, 20)
+            }
         }
     }
 }

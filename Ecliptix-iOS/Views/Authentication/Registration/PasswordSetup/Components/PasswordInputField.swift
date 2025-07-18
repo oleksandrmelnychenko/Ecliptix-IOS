@@ -25,11 +25,10 @@ struct PasswordInputField: View {
 //                    .font(.title3)
 //            }
             
-            SecureField(placeholder, text: $text)
+            TextField(placeholder, text: $text)
                 .textContentType(.newPassword)
                 .font(.title3)
                 
-            
             Button(action: {
                 showPassword.toggle()
             }) {
