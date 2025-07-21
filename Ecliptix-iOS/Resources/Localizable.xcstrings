@@ -10,28 +10,16 @@
     "Agree to Terms and Conditions" : {
 
     },
-    "At least %lld characters" : {
+    "At least %lld chars" : {
 
     },
-    "At least 1 digit" : {
+    "Can only contain digits after the country code." : {
 
     },
-    "At least 1 lowercase letter" : {
-
-    },
-    "At least 1 special character from the set: %@" : {
-
-    },
-    "At least 1 uppercase letter" : {
-
-    },
-    "Cannot be empty" : {
+    "Cannot contain app name" : {
 
     },
     "Checked" : {
-
-    },
-    "Contains invalid characters" : {
 
     },
     "Continue" : {
@@ -43,13 +31,38 @@
     "Include country code" : {
 
     },
-    "Invalid phone number format" : {
+    "Max %lld chars" : {
 
     },
     "Mobile number" : {
 
     },
+    "Must be between %lld and %lld digits long." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Must be between %1$lld and %2$lld digits long."
+          }
+        }
+      }
+    },
+    "Must start with a country code (+)." : {
+
+    },
+    "Needs %lld chars (a, A, 1, #)" : {
+
+    },
     "Next" : {
+
+    },
+    "No leading/trailing spaces" : {
+
+    },
+    "No repeating characters" : {
+
+    },
+    "No sequential patterns" : {
 
     },
     "OK" : {
@@ -58,7 +71,28 @@
     "Password" : {
 
     },
-    "Password cannot be empty" : {
+    "Password cannot be empty." : {
+
+    },
+    "Password contains characters that are not allowed. Only alpanumeric characters are permitted." : {
+
+    },
+    "Password contains characters that are not allowed. Only alphanumeric and special characters are permitted." : {
+
+    },
+    "Password must be at least %lld characters long." : {
+
+    },
+    "Password must contain at least one digit." : {
+
+    },
+    "Password must contain at least one lowercase letter." : {
+
+    },
+    "Password must contain at least one special character form the set: %@." : {
+
+    },
+    "Password must contain at least one uppercase lettter." : {
 
     },
     "Passwords do not match" : {
@@ -70,7 +104,13 @@
     "Phone Number" : {
 
     },
+    "Phone number cannot be empty." : {
+
+    },
     "Please confirm your country code and phone number" : {
+
+    },
+    "Required" : {
 
     },
     "Resend available in %@" : {
@@ -107,6 +147,12 @@
           }
         }
       }
+    },
+    "Too common" : {
+
+    },
+    "Too simple; add length or character variety" : {
+
     },
     "Unchecked" : {
 

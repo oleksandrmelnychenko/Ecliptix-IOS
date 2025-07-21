@@ -8,72 +8,110 @@
 import Foundation
 
 struct PasswordValidator: FieldValidating {
-    private static let lowercaseRegex = try! NSRegularExpression(pattern: "[a-z]", options: [])
-    private static let uppercaseRegex = try! NSRegularExpression(pattern: "[A-Z]", options: [])
-    private static let digitRegex = try! NSRegularExpression(pattern: "\\d", options: [])
-    private static let alphanumericOnlyRegex = try! NSRegularExpression(pattern: "^[a-zA-Z0-9]*$", options: [])
+    private static let minLength: Int = 8
+    private static let maxLength: Int = 128
+    private static let minCharClasses: Int = 3
+    private static let minTotalEntropyBits: Double = 50
     
     func validate(_ value: String) -> [PasswordValidationError] {
-        let valueValidationResult = checkPasswordCompliance(value, policy: PasswordPolicy.standard)
-        guard valueValidationResult.isOk else {
-            return []
+        let rules: [(String) -> PasswordValidationError?] = [
+            checkEmpty,
+            checkTooShort,
+            checkTooLong,
+            checkLeadingOrTrailingSpaces,
+            checkTooSimple,
+            checkTooCommon,
+            checkSequentialPattern,
+            checkExcessiveRepeats,
+            checkInsufficientCharacterDiversity,
+            checkContainsAppNameVariant
+        ]
+
+        var errors: [PasswordValidationError] = []
+
+        for rule in rules {
+            if let error = rule(value) {
+                errors.append(error)
+            }
         }
-        
-        return try! valueValidationResult.unwrap()
+
+        return errors
     }
     
-    private func checkPasswordCompliance(_ password: String, policy: PasswordPolicy) -> Result<[PasswordValidationError], EcliptixProtocolFailure> {
-        var validationErrors: [PasswordValidationError] = []
+    // MARK: - Validation Rules
 
-        if password.isEmpty {
-            validationErrors.append(.empty)
-        } else {
-            if password.count < policy.minLength {
-                validationErrors.append(.tooShort(policy.minLength))
-            }
-            
-            let range = NSRange(location: 0, length: password.utf16.count)
-            if policy.requireLowercase && Self.lowercaseRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(.missingLowercase)
-            }
-            
-            if policy.requireUppercase && Self.uppercaseRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(.missingUppercase)
-            }
-            
-            if policy.requireDigit && Self.digitRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(.missingDigit)
-            }
+    private func checkEmpty(_ password: String) -> PasswordValidationError? {
+        return password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .empty : nil
+    }
 
-            if policy.requireSpecialChar && !policy.allowedSpecialChars.isEmpty {
-                let escaped = NSRegularExpression.escapedPattern(for: policy.allowedSpecialChars)
-                let pattern = "[\(escaped)]"
-                
-                if let regex = try? NSRegularExpression(pattern: pattern) {
-                    if regex.firstMatch(in: password, range: range) == nil {
-                        validationErrors.append(.missingSpecialCharacter(policy.allowedSpecialChars))
-                    }
-                }
-            }
+    private func checkTooShort(_ password: String) -> PasswordValidationError? {
+        return password.count < Self.minLength ? .tooShort(Self.minLength) : nil
+    }
 
-            if policy.enforceAllowedCharsOnly {
-                if !policy.allowedSpecialChars.isEmpty {
-                    let escaped = NSRegularExpression.escapedPattern(for: policy.allowedSpecialChars)
-                    let pattern = "^[a-zA-Z0-9\(escaped)]*$"
-                    
-                    if let regex = try? NSRegularExpression(pattern: pattern) {
-                        if regex.firstMatch(in: password, range: range) == nil {
-                            validationErrors.append(.containsDisallowedCharacters)
-                        }
-                    }
-                } else {
-                    if Self.alphanumericOnlyRegex.firstMatch(in: password, range: range) == nil {
-                        validationErrors.append(.containsDisallowedCharacters)
-                    }
-                }
+    private func checkTooLong(_ password: String) -> PasswordValidationError? {
+        return password.count > Self.maxLength ? .tooLong(Self.maxLength) : nil
+    }
+
+    private func checkLeadingOrTrailingSpaces(_ password: String) -> PasswordValidationError? {
+        return password.trimmingCharacters(in: .whitespacesAndNewlines) != password ? .leadingOrTrailingSpaces : nil
+    }
+
+    private func checkTooSimple(_ password: String) -> PasswordValidationError? {
+        return self.calculateTotalShannonEntropy(password) < Self.minTotalEntropyBits ? .tooSimple : nil
+    }
+
+    private func checkTooCommon(_ password: String) -> PasswordValidationError? {
+        return PasswordCommons.commonlyUsedPasswords.contains(password) ? .tooCommon : nil
+    }
+
+    private func checkSequentialPattern(_ password: String) -> PasswordValidationError? {
+        return PasswordPatterns.isSequentialOrKeyboardPattern(password) ? .sequentialPattern : nil
+    }
+
+    private func checkExcessiveRepeats(_ password: String) -> PasswordValidationError? {
+        return self.hasExcessiveRepeats(password) ? .excessiveRepeats : nil
+    }
+
+    private func checkInsufficientCharacterDiversity(_ password: String) -> PasswordValidationError? {
+        return PasswordCharacterDiversity.lacksCharacterDiversity(password, minCharClasses: Self.minCharClasses) ? .insufficientCharacterDiversity(requiredTypes: Self.minCharClasses) : nil
+    }
+
+    private func checkContainsAppNameVariant(_ password: String) -> PasswordValidationError? {
+        return PasswordAppNameCheck.containsAppNameVariant(password) ? .containsAppNameVariant : nil
+    }
+    
+    private func calculateTotalShannonEntropy(_ string: String) -> Double {
+        guard !string.isEmpty else { return 0 }
+
+        let totalLength = Double(string.count)
+        var frequencyMap: [Character: Int] = [:]
+
+        for char in string {
+            frequencyMap[char, default: 0] += 1
+        }
+
+        let entropy = frequencyMap.values
+            .map { count -> Double in
+                let p = Double(count) / totalLength
+                return -p * log2(p)
+            }
+            .reduce(0, +)
+
+        return entropy * totalLength
+    }
+    
+    private func hasExcessiveRepeats(_ s: String) -> Bool {
+        guard s.count >= 4 else { return false }
+
+        let chars = Array(s)
+        for i in 0...(chars.count - 4) {
+            if chars[i] == chars[i + 1],
+               chars[i] == chars[i + 2],
+               chars[i] == chars[i + 3] {
+                return true
             }
         }
-        
-        return .success(validationErrors)
+
+        return false
     }
 }

@@ -19,8 +19,8 @@ final class PasswordSetupViewModel: ObservableObject {
 
     public let navigation: NavigationService
     private let passwordValidator = PasswordValidator()
-    private let passwordManager: PasswordManager
     private let networkController: NetworkProvider
+    private var passwordManager: PasswordManager?
 
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     private var secureConfirmPasswordHandle: SodiumSecureMemoryHandle?
@@ -34,12 +34,6 @@ final class PasswordSetupViewModel: ObservableObject {
         self.verificationSessionId = verficationSessionId
         self.authFlow = authFlow
         
-        let passwordManagerResult = PasswordManager.create()
-        guard passwordManagerResult.isOk else {
-            fatalError("Impossible to create password manager.")
-        }
-        
-        passwordManager = try! passwordManagerResult.unwrap()
         networkController = ServiceLocator.shared.resolve(NetworkProvider.self)
     }
 
@@ -150,15 +144,22 @@ final class PasswordSetupViewModel: ObservableObject {
                 return
             }
             
-            guard String(data: rentedPasswordData!, encoding: .utf8) != nil else {
+            guard let passwordString = String(data: rentedPasswordData!, encoding: .utf8) else {
                 errorMessage = "Password contains invalid characters for string conversion."
                 return
             }
+
+            if self.passwordManager == nil {
+                self.passwordManager = try? PasswordManager.create().unwrap()
+            }
+
+            let complianceResult = self.passwordManager!.checkPasswordCompliance(passwordString, policy: .standard)
                         
             rentedPasswordData!.removeAll()
             rentedPasswordData = nil
             
-            if !passwordValidationErrors.isEmpty {
+            if complianceResult.isErr {
+                self.errorMessage = try complianceResult.unwrapErr().message
                 return
             }
             
@@ -318,7 +319,7 @@ final class PasswordSetupViewModel: ObservableObject {
                 return
             }
             
-            let verifierResult = self.passwordManager.hashPassword(passwordString)
+            let verifierResult = self.passwordManager!.hashPassword(passwordString)
             if verifierResult.isErr {
                 throw try verifierResult.unwrapErr()
             }
@@ -451,7 +452,7 @@ final class PasswordSetupViewModel: ObservableObject {
                 return
             }
             
-            let verifierResult = self.passwordManager.hashPassword(passwordString)
+            let verifierResult = self.passwordManager!.hashPassword(passwordString)
             if verifierResult.isErr {
                 throw try verifierResult.unwrapErr()
             }
