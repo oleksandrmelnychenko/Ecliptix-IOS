@@ -12,19 +12,19 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     @Binding var text: String
     @Binding var showValidationErrors: Bool
     var placeholder: String = ""
-    let hintText: String?
+    let hintText: String
     var validationErrors: [ErrorType] = []
     
     let content: () -> Content
     
     @State private var showError = false
     @State private var currentErrorText: String?
-
+    
     init(
         title: String,
         text: Binding<String>,
         placeholder: String = "",
-        hintText: String? = nil,
+        hintText: String = "",
         validationErrors: [ErrorType] = [],
         showValidationErrors: Binding<Bool>,
         @ViewBuilder content: @escaping () -> Content
@@ -39,40 +39,51 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-//            Text(title)
-//                .font(.subheadline)
-//                .foregroundColor(.gray)
-
-            VStack(spacing: 0) {
-                content()
+        VStack(alignment: .leading, spacing: 0) {
+            content()
                 .padding(.horizontal, 8)
                 .padding(.top, 15)
                 .padding(.bottom, 10)
-
-                if let hint = hintText {
+            
+            VStack(alignment: .leading, spacing: 4) {
+                if self.showValidationErrors, let firstError = validationErrors.first {
+                    HStack(
+                        alignment: .center) {
+                        Image("Validation.Lamp")
+                            .font(.subheadline)
+                        Text(firstError.message)
+                        
+                        Spacer()
+                    }
+                    .foregroundColor(Color("Validation.Error"))
+                }
+                else {
                     HStack(alignment: .bottom) {
-                        Image(systemName: "lightbulb.min")
-                        Text(hint)
-                            
+                        Image("Validation.Lamp")
+                            .font(.subheadline)
+                        Text(self.hintText)
+                        
                         Spacer()
                     }
                     .foregroundColor(Color("Tip.Highlight"))
-                    .font(.subheadline)
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 5)
                 }
             }
-            .background(Color("Textbox.Background"))
-            .cornerRadius(10)
-
-            VStack(alignment: .leading, spacing: 4) {
-                if showValidationErrors, let firstError = validationErrors.first {
-                    ValidationMessageView(text: firstError.rawValue)
-                }
-            }
+            .font(.subheadline)
+            .padding(.horizontal, 8)
+            .padding(.bottom)
             .animation(.easeInOut, value: text)
         }
+        .background(Color("Textbox.Background"))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(
+                    (self.showValidationErrors && !validationErrors.isEmpty)
+                        ? Color("Validation.Error") : .clear,
+                    lineWidth: 1.5
+                )
+                .animation(.easeInOut, value: showValidationErrors)
+        )
     }
 }
 

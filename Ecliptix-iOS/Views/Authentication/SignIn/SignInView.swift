@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct SignInView: View {
-    @EnvironmentObject private var navigation: NavigationService
     @StateObject private var viewModel: SignInViewModel
     @State private var showPassword = false
     
@@ -22,6 +21,7 @@ struct SignInView: View {
         AuthScreenContainer(
             spacing: 24, canGoBack:
                 self.viewModel.navigation.canGoBack()) {
+                    
                 AuthViewHeader(
                     viewTitle: String(localized: "Sign in"),
                     viewDescription: String(localized: "Welcome back! Your personalized experience awaits.")
@@ -31,7 +31,7 @@ struct SignInView: View {
                     FieldInput<PhoneValidationError, PhoneInputField>(
                         title: String(localized: "Phone Number"),
                         text: $viewModel.phoneNumber,
-                        hintText: String(localized: "Include country code"),
+                        hintText: String(localized: "Start with country code."),
                         validationErrors: viewModel.phoneValidationErrors,
                         showValidationErrors: self.$viewModel.showPhoneNumberErrors,
                         content: {
@@ -39,16 +39,21 @@ struct SignInView: View {
                                 phoneNumber: $viewModel.phoneNumber)
                         }
                     )
+                    .onChange(of: viewModel.phoneNumber) { _, _ in
+                        if !self.viewModel.showPhoneNumberErrors {
+                            self.viewModel.showPhoneNumberErrors = true
+                        }
+                    }
                     
                     FieldInput<PasswordValidationError, PasswordInputField>(
                         title: String(localized: "Password"),
                         text: $viewModel.password,
-                        hintText: String(localized: "8 Chars, 1 upper and 1 number"),
+                        hintText: String(localized: "Stored only on your device"),
                         validationErrors: viewModel.passwordValidationErrors,
                         showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                         content: {
                             PasswordInputField(
-                                placeholder: String(localized: "Enter password"),
+                                placeholder: String(localized: "Secret Key"),
                                 showPassword: $showPassword,
                                 text: $viewModel.password
                             )
@@ -65,14 +70,6 @@ struct SignInView: View {
                 
                 VStack {
                     PrimaryButton(
-                        title: String(localized: "Account recovery"),
-                        isEnabled: viewModel.isFormValid && !viewModel.isLoading,
-                        isLoading: viewModel.isLoading,
-                        style: .light,
-                        action: viewModel.forgotPasswordTapped
-                    )
-                    
-                    PrimaryButton(
                         title: String(localized: "Next"),
                         isEnabled: viewModel.isFormValid && !viewModel.isLoading,
                         isLoading: viewModel.isLoading,
@@ -82,6 +79,14 @@ struct SignInView: View {
                                 await viewModel.signInButton()
                             }
                         }
+                    )
+                    
+                    PrimaryButton(
+                        title: String(localized: "Account recovery"),
+                        isEnabled: viewModel.isFormValid && !viewModel.isLoading,
+                        isLoading: viewModel.isLoading,
+                        style: .light,
+                        action: viewModel.forgotPasswordTapped
                     )
                 }
             }

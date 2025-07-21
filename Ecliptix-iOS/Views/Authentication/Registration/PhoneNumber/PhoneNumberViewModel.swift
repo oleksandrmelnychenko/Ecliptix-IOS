@@ -19,7 +19,7 @@ final class PhoneNumberViewModel: ObservableObject {
     @Published var validationErrors: [PhoneValidationError] = []
     @Published var showPhoneNumberValidationErrors: Bool = false
 
-    private let navigation: NavigationService
+    public let navigation: NavigationService
     private let phoneValidator = PhoneValidator()
     private let networkController: NetworkProvider
     

@@ -14,12 +14,13 @@ struct ValidationMessageView: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "xmark.circle.fill")
-                .foregroundColor(.red)
-                .font(.caption)
-            Text(text)
-                .font(.footnote)
-                .foregroundColor(.red)
+            Text(self.text)
+            
+            Spacer()
         }
-        .transition(.opacity.combined(with: .move(edge: .top)))
+        .foregroundColor(Color("Validation.Error"))
+        .font(.subheadline)
+        .padding(.horizontal, 8)
+        .padding(.bottom, 5)
     }
 }

@@ -17,7 +17,7 @@ struct PasswordInputField: View {
     var body: some View {
         HStack {
             Group {
-                if showPassword {
+                if self.showPassword {
                     TextField(placeholder, text: $text)
                 } else {
                     SecureField(placeholder, text: $text)

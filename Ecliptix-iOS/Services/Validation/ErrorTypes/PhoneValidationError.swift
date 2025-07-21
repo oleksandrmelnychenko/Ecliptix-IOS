@@ -5,7 +5,16 @@
 //  Created by Oleksandr Melnechenko on 17.06.2025.
 //
 
-enum PhoneValidationError: String, ValidationError {
-    case invalidFormat = "Invalid phone number format"
-    case empty = "Phone number cannot be empty"
+enum PhoneValidationError: ValidationError {
+    case invalidFormat
+    case empty
+    
+    var message: String {
+        switch self {
+        case .empty:
+            return String(localized: "Cannot be empty")
+        case .invalidFormat:
+            return String(localized: "Invalid phone number format")
+        }
+    }
 }

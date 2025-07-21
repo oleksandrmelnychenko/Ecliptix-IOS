@@ -22,14 +22,14 @@ struct PasswordValidator: FieldValidating {
         return try! valueValidationResult.unwrap()
     }
     
-    func checkPasswordCompliance(_ password: String, policy: PasswordPolicy) -> Result<[PasswordValidationError], EcliptixProtocolFailure> {
+    private func checkPasswordCompliance(_ password: String, policy: PasswordPolicy) -> Result<[PasswordValidationError], EcliptixProtocolFailure> {
         var validationErrors: [PasswordValidationError] = []
 
         if password.isEmpty {
             validationErrors.append(.empty)
         } else {
             if password.count < policy.minLength {
-                validationErrors.append(.tooShort)
+                validationErrors.append(.tooShort(policy.minLength))
             }
             
             let range = NSRange(location: 0, length: password.utf16.count)
@@ -51,7 +51,7 @@ struct PasswordValidator: FieldValidating {
                 
                 if let regex = try? NSRegularExpression(pattern: pattern) {
                     if regex.firstMatch(in: password, range: range) == nil {
-                        validationErrors.append(.missingSpecialCharacter)
+                        validationErrors.append(.missingSpecialCharacter(policy.allowedSpecialChars))
                     }
                 }
             }

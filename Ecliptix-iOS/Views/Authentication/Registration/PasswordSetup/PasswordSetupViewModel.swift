@@ -17,7 +17,7 @@ final class PasswordSetupViewModel: ObservableObject {
     @Published var showPasswordValidationErrors: Bool = false
     @Published var showConfirmationPasswordValidationErrors: Bool = false
 
-    private let navigation: NavigationService
+    public let navigation: NavigationService
     private let passwordValidator = PasswordValidator()
     private let passwordManager: PasswordManager
     private let networkController: NetworkProvider
@@ -73,6 +73,8 @@ final class PasswordSetupViewModel: ObservableObject {
     func updatePassword(passwordText: String?) {
         securePasswordHandle?.dispose()
         securePasswordHandle = nil
+        
+        self.showPasswordValidationErrors = true
 
         do {
             if passwordText != nil && !passwordText!.isEmpty {
@@ -94,6 +96,8 @@ final class PasswordSetupViewModel: ObservableObject {
     func updateConfirmPassword(passwordText: String?) {
         secureConfirmPasswordHandle?.dispose()
         secureConfirmPasswordHandle = nil
+        
+        self.showConfirmationPasswordValidationErrors = true
 
         do {
             if passwordText != nil && !passwordText!.isEmpty {

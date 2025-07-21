@@ -21,7 +21,6 @@ struct AuthViewHeader: View {
             
             // Subtitle
             Text(viewDescription)
-                
                 .font(.title)
                 .multilineTextAlignment(.leading)
                 .padding(.top, 15)

@@ -57,6 +57,8 @@ final class SignInViewModel: ObservableObject {
         securePasswordHandle?.dispose()
         securePasswordHandle = nil
 
+        self.showPasswordValidationErrors = true
+        
         do {
             if passwordText != nil && !passwordText!.isEmpty {
                 let result = Self.convertStringToSodiumHandle(text: passwordText!)

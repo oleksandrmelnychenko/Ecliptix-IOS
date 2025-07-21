@@ -23,6 +23,8 @@ struct AuthScreenContainer<Content: View>: View {
     var body: some View {
         VStack {
             ScrollView {
+                
+                //MARK: Logo
                 HStack {
                     Spacer()
                     Image("EcliptixLogo")
@@ -33,6 +35,7 @@ struct AuthScreenContainer<Content: View>: View {
                 }
                 .padding(.top, 15)
                 
+                //MARK: Main Content
                 VStack(alignment: .leading, spacing: spacing) {
                     content
                 }
@@ -43,17 +46,16 @@ struct AuthScreenContainer<Content: View>: View {
             .scrollDismissesKeyboard(.interactively)
             .ignoresSafeArea(.keyboard)
             
-            HStack {
-                Spacer()
-                Text("© Horizon Dynamics LLC 2025")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-                Spacer()
-            }
-            .background(Color.white.ignoresSafeArea(edges: .bottom))
+//            HStack {
+//                Spacer()
+//                Text("")
+//                    .font(.footnote)
+//                Spacer()
+//            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            // MARK: Back Button
             if self.canGoBack {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {

@@ -17,10 +17,10 @@ struct PhoneNumberView: View {
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 24, content: {
+        AuthScreenContainer(spacing: 24, canGoBack: self.viewModel.navigation.canGoBack()) {
             AuthViewHeader(
                 viewTitle: String(localized: "Phone number"),
-                viewDescription: String(localized: "Pleace confirm your country code and phone number")
+                viewDescription: String(localized: "Please confirm your country code and phone number")
             )
             
             FieldInput<PhoneValidationError, PhoneInputField>(
@@ -35,6 +35,11 @@ struct PhoneNumberView: View {
                     )
                 }
             )
+            .onChange(of: viewModel.phoneNumber) { _, _ in
+                if !self.viewModel.showPhoneNumberValidationErrors {
+                    self.viewModel.showPhoneNumberValidationErrors = true
+                }
+            }
             
             FormErrorText(error: viewModel.errorMessage)
             
@@ -49,7 +54,7 @@ struct PhoneNumberView: View {
                     }
                 }
             )            
-        })
+        }
     }
 }
 
@@ -57,5 +62,4 @@ struct PhoneNumberView: View {
 #Preview {
     let navService = NavigationService()
     return PhoneNumberView(navigation: navService, authFlow: .registration)
-        .environmentObject(navService)
 }

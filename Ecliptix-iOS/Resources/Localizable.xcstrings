@@ -4,19 +4,34 @@
     "" : {
 
     },
-    "© Horizon Dynamics LLC 2025" : {
-
-    },
-    "8 Chars, 1 upper and 1 number" : {
-
-    },
     "Account recovery" : {
 
     },
     "Agree to Terms and Conditions" : {
 
     },
+    "At least %lld characters" : {
+
+    },
+    "At least 1 digit" : {
+
+    },
+    "At least 1 lowercase letter" : {
+
+    },
+    "At least 1 special character from the set: %@" : {
+
+    },
+    "At least 1 uppercase letter" : {
+
+    },
+    "Cannot be empty" : {
+
+    },
     "Checked" : {
+
+    },
+    "Contains invalid characters" : {
 
     },
     "Continue" : {
@@ -25,10 +40,10 @@
     "Create account" : {
 
     },
-    "Enter password" : {
+    "Include country code" : {
 
     },
-    "Include country code" : {
+    "Invalid phone number format" : {
 
     },
     "Mobile number" : {
@@ -43,19 +58,28 @@
     "Password" : {
 
     },
+    "Password cannot be empty" : {
+
+    },
+    "Passwords do not match" : {
+
+    },
     "Phone number" : {
 
     },
     "Phone Number" : {
 
     },
-    "Pleace confirm your country code and phone number" : {
+    "Please confirm your country code and phone number" : {
 
     },
     "Resend available in %@" : {
 
     },
     "Resend code" : {
+
+    },
+    "Secret Key" : {
 
     },
     "Session Error" : {
@@ -65,6 +89,12 @@
 
     },
     "Sign In" : {
+
+    },
+    "Start with country code." : {
+
+    },
+    "Stored only on your device" : {
 
     },
     "The wallet designed to make digital ID and global finance simple for all." : {
