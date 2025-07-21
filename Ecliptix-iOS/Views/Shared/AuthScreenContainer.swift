@@ -8,70 +8,51 @@
 import SwiftUI
 
 struct AuthScreenContainer<Content: View>: View {
-    @Environment(\.dismiss) private var dismiss
-
     let content: Content
     let spacing: CGFloat
     let canGoBack: Bool
 
-    init(spacing: CGFloat = 0, canGoBack: Bool = false, @ViewBuilder content: () -> Content) {
+    init(
+        spacing: CGFloat = 0,
+        canGoBack: Bool = false,
+        @ViewBuilder content: () -> Content
+    ) {
         self.content = content()
         self.spacing = spacing
         self.canGoBack = canGoBack
     }
     
     var body: some View {
-        VStack {
             ScrollView {
-                
-                //MARK: Logo
-                HStack {
-                    Spacer()
-                    Image("EcliptixLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
-                    Spacer()
-                }
-                .padding(.top, 15)
-                
-                //MARK: Main Content
-                VStack(alignment: .leading, spacing: spacing) {
+                VStack(spacing: spacing) {
+                    Logo()
+                        .padding(.top, 15)
+                    
                     content
+
+                    Spacer(minLength: 60)
                 }
                 .padding(.horizontal)
-                .padding(.top, 20)
-                
             }
             .scrollDismissesKeyboard(.interactively)
-            .ignoresSafeArea(.keyboard)
-            
-//            HStack {
-//                Spacer()
-//                Text("")
-//                    .font(.footnote)
-//                Spacer()
-//            }
-        }
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            // MARK: Back Button
-            if self.canGoBack {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image("BackArrow")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
-                            .padding(12)
-                            .background(Color("BackButton.Background"))
-                            .clipShape(Circle())
-                        
+            .gesture(
+                TapGesture()
+                    .onEnded { hideKeyboard() }
+            )
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                if canGoBack {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        BackButton()
                     }
                 }
             }
-        }
+        
+    }
+}
+
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
