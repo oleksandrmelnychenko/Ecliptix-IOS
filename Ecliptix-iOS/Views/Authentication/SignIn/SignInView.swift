@@ -87,7 +87,7 @@ struct SignInView: View {
                 
                 PrimaryButton(
                     title: String(localized: "Account recovery"),
-                    isEnabled: viewModel.isFormValid && !viewModel.isLoading,
+                    isEnabled: !viewModel.isLoading,
                     isLoading: viewModel.isLoading,
                     style: .light,
                     action: viewModel.forgotPasswordTapped
