@@ -30,10 +30,10 @@ struct VerificationCodeView: View {
                 viewDescription: Strings.VerificationCode.description
             )
 
+            // TODO: Refactore this
             VStack(spacing: 8) {
                 Text(Strings.VerificationCode.explanationText)
                     .font(.subheadline)
-                    .foregroundColor(.gray)
 
                 Text(phoneNumber)
                     .font(.subheadline)
@@ -47,18 +47,18 @@ struct VerificationCodeView: View {
                 ZStack {
                     HStack(spacing: 10) {
                         ForEach(0..<6, id: \.self) { index in
-//                            OneTimeCodeTextField(
-//                                text: $viewModel.codeDigits[index],
-//                                isFirstResponder: focusedField == index,
-//                                onBackspace: {
-//                                    viewModel.handleBackspace(at: index, focus: &focusedField)
-//                                },
-//                                onInput: { newValue in
-//                                    viewModel.handleInput(newValue, at: index, focus: &focusedField)
-//                                }
-//                            )
-//                            .focused($focusedField, equals: index)
-//                            .frame(width: 44, height: 55)
+                            OneTimeCodeTextField(
+                                text: $viewModel.codeDigits[index],
+                                isFirstResponder: focusedField == index,
+                                onBackspace: {
+                                    viewModel.handleBackspace(at: index, focus: &focusedField)
+                                },
+                                onInput: { newValue in
+                                    viewModel.handleInput(newValue, at: index, focus: &focusedField)
+                                }
+                            )
+                            .focused($focusedField, equals: index)
+                            .frame(width: 44, height: 55)
                         }
                     }
                     .onAppear {
@@ -73,9 +73,8 @@ struct VerificationCodeView: View {
             }
             
             if viewModel.secondsRemaining > 0 {
-                Text("Resend available in \(viewModel.remainingTime)")
+                Text(String(localized: "Resend available in \(viewModel.remainingTime)"))
                     .font(.footnote)
-                    .foregroundColor(.gray)
             }
             
             
@@ -94,31 +93,22 @@ struct VerificationCodeView: View {
                     }
                 }
             )
-
-            Spacer()
             
-            HStack {
-                Spacer()
-                if viewModel.secondsRemaining <= 0 {
-                    Button(String(localized: "Resend code")) {
+            if viewModel.secondsRemaining <= 0 {
+                PrimaryButton(
+                    title: String(localized: "Resend code"),
+                    isEnabled: viewModel.secondsRemaining <= 0,
+                    isLoading: viewModel.isLoading,
+                    style: .light,
+                    action: {
                         Task {
                             focusedField = 0
                             await viewModel.reSendVerificationCode()
                         }
                     }
-                    .disabled(viewModel.isLoading)
-                    .underline()
-                    Spacer()
-                }
+                )
             }
         })
-        .alert("Session Error", isPresented: $viewModel.showAlert) {
-            Button("OK") {
-                print("Session restart requested")
-            }
-        } message: {
-            Text(viewModel.alertMessage)
-        }
         .onAppear {
             viewModel.startValidation()
         }

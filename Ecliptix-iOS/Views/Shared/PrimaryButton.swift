@@ -55,15 +55,15 @@ struct PrimaryButton: View {
 
         var foreground: Color {
             switch self {
-            case .light: return Color("Button.Dark")
-            case .dark: return Color("Button.Light")
+            case .light: return Color("LightButton.ForegroundColor")
+            case .dark: return Color("DarkButton.ForegroundColor")
             }
         }
 
         var background: Color {
             switch self {
-            case .light: return Color("Button.Light")
-            case .dark: return Color("Button.Dark")
+            case .light: return Color("LightButton.BackgroundColor")
+            case .dark: return Color("DarkButton.BackgroundColor")
             }
         }
 
@@ -78,7 +78,7 @@ struct PrimaryButton: View {
 
 
 #Preview {
-    HStack {
+    VStack {
         PrimaryButton(
             title: "Account recovery",
             isEnabled: true,
@@ -88,18 +88,19 @@ struct PrimaryButton: View {
                 print("Button pressed!")
             }
         )
-        .padding()
+        
         
         PrimaryButton(
             title: "Continue",
             isEnabled: true,
-            isLoading: true,
+            isLoading: false,
             style: .light,
             action: {
                 print("Button pressed!")
             }
         )
     }
+    .padding()
 }
 
 #Preview {

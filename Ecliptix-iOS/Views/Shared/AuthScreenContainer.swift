@@ -33,6 +33,7 @@ struct AuthScreenContainer<Content: View>: View {
                     Spacer(minLength: 60)
                 }
                 .padding(.horizontal)
+                .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
             .gesture(

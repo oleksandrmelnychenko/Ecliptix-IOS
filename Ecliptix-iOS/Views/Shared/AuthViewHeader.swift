@@ -24,10 +24,20 @@ struct AuthViewHeader: View {
                 .font(.title)
                 .multilineTextAlignment(.leading)
                 .padding(.top, 15)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
 #Preview {
-    AuthViewHeader(viewTitle: "Sign in", viewDescription: "Welcome back! Your personalized experience awaits.")
+    AuthViewHeader(
+        viewTitle: "Sign in",
+        viewDescription: "Welcome back! Your personalized experience awaits.")
+        .padding(.horizontal)
+        .padding(.bottom)
+        
+    AuthViewHeader(
+        viewTitle: "Phone number",
+        viewDescription: "Please confirm your country code and phone number")
+    .padding(.horizontal)
 }

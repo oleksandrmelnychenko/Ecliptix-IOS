@@ -24,13 +24,10 @@ struct OneTimeCodeTextField: UIViewRepresentable {
         textField.keyboardType = .numberPad
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 24)
-        textField.backgroundColor = .systemGray6
+        textField.backgroundColor = UIColor(named: "TextBox.BackgroundColor")
+        textField.textColor = UIColor(named: "TextBox.ForegroundColor")
         textField.layer.cornerRadius = 8
         textField.translatesAutoresizingMaskIntoConstraints = false
-        
-        textField.inputAssistantItem.leadingBarButtonGroups = []
-        textField.inputAssistantItem.trailingBarButtonGroups = []
-        
         
         return textField
     }
@@ -84,5 +81,41 @@ struct OneTimeCodeTextField: UIViewRepresentable {
             return false
         }
 
+    }
+}
+
+#Preview {
+    OneTimeCodeTextFieldPreview()
+}
+
+private struct OneTimeCodeTextFieldPreview: View {
+    @State private var code: [String] = Array(repeating: "", count: 6)
+    @FocusState private var focusedField: Int?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<6, id: \.self) { index in
+                OneTimeCodeTextField(
+                    text: $code[index],
+                    isFirstResponder: focusedField == index,
+                    onBackspace: {
+                        if index > 0 {
+                            focusedField = index - 1
+                        }
+                    },
+                    onInput: { newValue in
+                        code[index] = newValue
+                        if index < 5 {
+                            focusedField = index + 1
+                        }
+                    }
+                )
+                .focused($focusedField, equals: index)
+                .frame(width: 44, height: 55)
+            }
+        }
+        .onAppear {
+            focusedField = 0
+        }
     }
 }

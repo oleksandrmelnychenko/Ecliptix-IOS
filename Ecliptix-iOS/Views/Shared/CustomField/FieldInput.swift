@@ -65,7 +65,7 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
                         
                         Spacer()
                     }
-                    .foregroundColor(Color("Tip.Highlight"))
+                    .foregroundColor(Color("Tips.Color"))
                 }
             }
             .font(.subheadline)
@@ -73,7 +73,8 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
             .padding(.bottom)
             .animation(.easeInOut, value: text)
         }
-        .background(Color("Textbox.Background"))
+        .background(Color("TextBox.BackgroundColor"))
+        .foregroundStyle(Color("TextBox.ForegroundColor"))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
