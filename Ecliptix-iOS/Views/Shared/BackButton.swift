@@ -17,7 +17,7 @@ struct BackButton: View {
                 .scaledToFit()
                 .frame(width: 16, height: 16)
                 .padding(12)
-                .background(Color("BackButton.Background"))
+                .background(Color("BackButton.BackgroundColor"))
                 .clipShape(Circle())
         }
     }

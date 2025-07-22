@@ -24,7 +24,10 @@ struct VerificationCodeView: View {
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 24, content: {
+        AuthScreenContainer(
+            spacing: 24,
+            canGoBack: self.viewModel.navigation.canGoBack(),
+            content: {
             AuthViewHeader(
                 viewTitle: Strings.VerificationCode.title,
                 viewDescription: Strings.VerificationCode.description
@@ -46,7 +49,7 @@ struct VerificationCodeView: View {
                 Spacer()
                 ZStack {
                     HStack(spacing: 10) {
-                        ForEach(0..<6, id: \.self) { index in
+                        ForEach(0..<VerificationCodeViewModel.otpLength, id: \.self) { index in
                             OneTimeCodeTextField(
                                 text: $viewModel.codeDigits[index],
                                 isFirstResponder: focusedField == index,
@@ -67,7 +70,15 @@ struct VerificationCodeView: View {
                     
                     Color.white.opacity(0.01)
                         .frame(height: 55)
-                        .allowsHitTesting(true)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                           
+                            if let firstEmpty = viewModel.codeDigits.firstIndex(where: { $0 == VerificationCodeViewModel.emptySign }) {
+                                focusedField = firstEmpty
+                            } else {
+                                focusedField = VerificationCodeViewModel.otpLength - 1
+                            }
+                        }
                 }
                 Spacer()
             }
@@ -79,20 +90,6 @@ struct VerificationCodeView: View {
             
             
             FormErrorText(error: viewModel.errorMessage)
-
-            PrimaryButton(
-                title: String(localized: "Verify"),
-                isEnabled: !viewModel.combinedCode.contains(VerificationCodeViewModel.emptySign),
-                isLoading: viewModel.isLoading,
-                style: .dark,
-                action: {
-                    Task {
-                        await viewModel.verifyCode {
-                            focusedField = 0
-                        }
-                    }
-                }
-            )
             
             if viewModel.secondsRemaining <= 0 {
                 PrimaryButton(
@@ -111,6 +108,16 @@ struct VerificationCodeView: View {
         })
         .onAppear {
             viewModel.startValidation()
+        }
+        .onChange(of: viewModel.combinedCode) {_, newValue in
+            let isComplete = !newValue.contains(VerificationCodeViewModel.emptySign)
+            if isComplete && !viewModel.isLoading {
+                Task {
+                    await viewModel.verifyCode {
+                        focusedField = 0
+                    }
+                }
+            }
         }
     }
 }

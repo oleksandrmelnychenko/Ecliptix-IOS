@@ -11,8 +11,9 @@ import GRPC
 @MainActor
 final class VerificationCodeViewModel: ObservableObject {
     public static let emptySign = "\u{200B}"
+    public static let otpLength: Int = 4
     
-    @Published var codeDigits: [String] = Array(repeating: emptySign, count: 6)
+    @Published var codeDigits: [String] = Array(repeating: emptySign, count: otpLength)
     @Published var errorMessage: String?
     @Published var isLoading = false
     @Published var secondsRemaining: Int = 0
@@ -22,7 +23,7 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var alertMessage: String = ""
 
     private let phoneNumber: String
-    private let navigation: NavigationService
+    public let navigation: NavigationService
 
     private let networkController: NetworkProvider
     private var phoneNumberIdentifier: Data
@@ -56,7 +57,7 @@ final class VerificationCodeViewModel: ObservableObject {
     func verifyCode(onFailure: @escaping () -> Void) async {
         let code = combinedCode.replacingOccurrences(of: Self.emptySign, with: "")
         
-        guard code.count == 6 else {
+        guard code.count == Self.otpLength else {
             await MainActor.run {
                 self.errorMessage = Strings.VerificationCode.Errors.invalidCode
             }
@@ -247,7 +248,7 @@ final class VerificationCodeViewModel: ObservableObject {
     }
     
     func reSendVerificationCode() async {
-        codeDigits = Array(repeating: Self.emptySign, count: 6)
+        codeDigits = Array(repeating: Self.emptySign, count: Self.otpLength)
                 
         _ = await self.initiateVerification(
             phoneNumberIdentifier: self.phoneNumberIdentifier,

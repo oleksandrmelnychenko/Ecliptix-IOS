@@ -22,6 +22,7 @@
 		11B82C642DF990FD002393C3 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C632DF990FD002393C3 /* OrderedCollections */; };
 		11B82C662DF990FD002393C3 /* _RopeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 11B82C652DF990FD002393C3 /* _RopeModule */; };
 		11D769022E0E92B000EA5DD3 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 11D769012E0E92B000EA5DD3 /* OpenSSL */; };
+		11E614C92E2FA13500C6E790 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 11E614C82E2FA13500C6E790 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,6 +40,7 @@
 		11AB141C2DFAD497002FCCDC /* Ecliptix-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Ecliptix-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		11D996EF2E0DA6F700D9E746 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../../../../opt/homebrew/Cellar/openssl@3/3.5.0/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
 		11D996F02E0DA6F700D9E746 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../../../../opt/homebrew/Cellar/openssl@3/3.5.0/lib/libssl.3.dylib"; sourceTree = "<group>"; };
+		11E614C82E2FA13500C6E790 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +92,7 @@
 		1104AAF22DF6F13A00337328 = {
 			isa = PBXGroup;
 			children = (
+				11E614C82E2FA13500C6E790 /* Launch Screen.storyboard */,
 				1104AAFD2DF6F13A00337328 /* Ecliptix-iOS */,
 				11AB141D2DFAD497002FCCDC /* Ecliptix-iOSTests */,
 				1104ABE22DF6F5A900337328 /* Frameworks */,
@@ -230,6 +233,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11E614C92E2FA13500C6E790 /* Launch Screen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +410,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
@@ -439,6 +444,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
