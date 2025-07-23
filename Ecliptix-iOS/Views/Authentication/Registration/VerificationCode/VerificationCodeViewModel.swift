@@ -11,7 +11,7 @@ import GRPC
 @MainActor
 final class VerificationCodeViewModel: ObservableObject {
     public static let emptySign = "\u{200B}"
-    public static let otpLength: Int = 4
+    public static let otpLength: Int = 6
     
     @Published var codeDigits: [String] = Array(repeating: emptySign, count: otpLength)
     @Published var errorMessage: String?

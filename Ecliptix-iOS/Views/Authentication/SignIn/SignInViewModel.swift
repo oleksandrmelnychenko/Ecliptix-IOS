@@ -219,7 +219,7 @@ final class SignInViewModel: ObservableObject {
                 })
 
             if overrallResult.isErr {
-                self.errorMessage = "Sign-in network request failed: \(try overrallResult.unwrapErr().message)"
+                self.errorMessage = try overrallResult.unwrapErr().message
                 self.isLoading = false
             }
 

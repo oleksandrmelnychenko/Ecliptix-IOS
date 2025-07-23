@@ -62,4 +62,32 @@ final class ReceiveStreamRpcService {
 
         return .success(RpcFlow.InboundStream(stream: stream))
     }
+    
+    private static func executeGrpcCallAsync(
+        networkEvents: NetworkEventsProtocol,
+        systemEvents: SystemEventsProtocol,
+        _ grpcCallFactory: @escaping () async throws -> Ecliptix_Proto_CipherPayload
+    ) async -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
+        
+        return await Result<Ecliptix_Proto_CipherPayload, NetworkFailure>.TryAsync {
+            let response = try await GrpcResiliencePolicies.getSecrecyChannelRetryPolicy(networkEvents: networkEvents) {
+                try await grpcCallFactory()
+            }
+            
+            networkEvents.initiateChangeState(.new(.dataCenterDisconnected))
+            
+            return response
+        } errorMapper: { error in
+            systemEvents.publish(.new(.dataCenterShutdown))
+
+            let message: String
+            if let grpcStatus = error as? GRPCStatus {
+                message = grpcStatus.message ?? grpcStatus.description
+            } else {
+                message = error.localizedDescription
+            }
+
+            return .dataCenterShutdown(message, inner: error)
+        }
+    }
 }
