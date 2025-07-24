@@ -19,13 +19,13 @@ struct Ecliptix_iOSApp: App {
     init() {
         ApplicationBootstrap.configure()
                 
-        let locService = ServiceLocator.shared.resolve(LocalizationService.self)
+        let locService = try! ServiceLocator.shared.resolve(LocalizationService.self)
         _localizationService = StateObject(wrappedValue: locService)
         
         establishConnectionExecutor = ApplicationInitializer(
-            networkProvider: ServiceLocator.shared.resolve(NetworkProvider.self),
-            secureStorageProvider: ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
-            systemEvents: ServiceLocator.shared.resolve(SystemEventsProtocol.self))
+            networkProvider: try! ServiceLocator.shared.resolve(NetworkProvider.self),
+            secureStorageProvider: try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
+            systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
     }
     
     var body: some Scene {

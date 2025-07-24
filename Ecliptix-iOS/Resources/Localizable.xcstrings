@@ -28,6 +28,15 @@
     "Create account" : {
 
     },
+    "Device ID could not be retrieved." : {
+
+    },
+    "Device ID is not a valid UUID." : {
+
+    },
+    "Failed to unwrap SignInComplete request" : {
+
+    },
     "Include country code" : {
 
     },
@@ -102,6 +111,9 @@
 
     },
     "Phone number cannot be empty." : {
+
+    },
+    "Phone number must not be a GUID." : {
 
     },
     "Please confirm your country code and phone number" : {

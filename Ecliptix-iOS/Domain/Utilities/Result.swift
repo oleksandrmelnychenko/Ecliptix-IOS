@@ -30,9 +30,9 @@ extension Result {
     static func fromValue(_ value: Success?, _ errorWhenNull: Failure) -> Result<Success, Failure> {
         return switch value {
             case .some(let val):
-                    .success(val)
+                .success(val)
             case .none:
-                    .failure(errorWhenNull)
+                .failure(errorWhenNull)
         }
     }
     
@@ -93,6 +93,29 @@ extension Result {
             return try onFailure(error)
         }
     }
+    
+    func MatchAsync<T>(
+        onSuccessAsync: @escaping (Success) async -> T,
+        onFailureAsync: @escaping (Failure) async -> T
+    ) async -> T {
+        switch self {
+        case .success(let value):
+            return await onSuccessAsync(value)
+        case .failure(let error):
+            return await onFailureAsync(error)
+        }
+    }
+    
+    func flatMapAsync<T>(
+        _ transform: (Success) async -> Result<T, Failure>
+    ) async -> Result<T, Failure> {
+        switch self {
+        case .success(let value):
+            return await transform(value)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
 
     var isOk: Bool {
         if case .success = self { return true }
@@ -103,3 +126,5 @@ extension Result {
         return !isOk
     }
 }
+
+

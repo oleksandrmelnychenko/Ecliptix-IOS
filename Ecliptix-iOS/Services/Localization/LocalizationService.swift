@@ -58,7 +58,7 @@ final class LocalizationService: ObservableObject {
 
 extension String {
     var localized: String {
-        let localizationService = ServiceLocator.shared.resolve(LocalizationService.self)
+        let localizationService = try! ServiceLocator.shared.resolve(LocalizationService.self)
         return localizationService.localizedString(forKey: self)
     }
 }

@@ -6,22 +6,16 @@
 //
 
 import Security
+import Foundation
 
-enum InternalServiceApiFailureType {
-    case secureStoreNotFound
-    case secureStoreKeyNotFound
-    case secureStoreAccessDenied
-    case secureStoreUnknown
-}
-
-struct InternalServiceApiFailure: Error, CustomStringConvertible {
+struct InternalServiceApiFailure: Error, CustomStringConvertible, FailureBaseProtocol {
     let type: InternalServiceApiFailureType
     let message: String
-    let error: Error?
+    let innerError: Error?
     
     var description: String {
         var desc = "[\(type)] \(message)"
-        if let error = error {
+        if let error = innerError {
             desc += " | inner: \(error)"
         }
         return desc
@@ -30,7 +24,7 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
     private init(type: InternalServiceApiFailureType, message: String, error: Error?) {
         self.type = type
         self.message = message
-        self.error = error
+        self.innerError = error
     }
     
     static func fromOSStatus(_ status: OSStatus, context: String) -> InternalServiceApiFailure {
@@ -46,6 +40,15 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
         }
     }
     
+    func toStructuredLog() -> Any {
+        return [
+            "protocolFailureType": String(describing: type),
+            "message": message,
+            "innerError": innerError?.localizedDescription ?? "nil",
+            "timestamp": ISO8601DateFormatter().string(from: Date())
+        ]
+    }
+        
     static func secureStoreNotFound(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
         return InternalServiceApiFailure(
             type: .secureStoreNotFound,
@@ -75,5 +78,38 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible {
             message: details,
             error: inner
         )
+    }
+    
+    static func dependencyResolution(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+        return InternalServiceApiFailure(
+            type: .dependencyResolution,
+            message: details,
+            error: inner
+        )
+    }
+    
+    static func deserialization(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+        return InternalServiceApiFailure(
+            type: .deserialization,
+            message: details,
+            error: inner
+        )
+    }
+    
+    func toInternalValidationFailure() -> InternalValidationFailure {
+        switch self.type {
+        case .secureStoreNotFound:
+            .secureStoreError(self.message, inner: self.innerError)
+        case .secureStoreKeyNotFound:
+            .secureStoreError(self.message, inner: self.innerError)
+        case .secureStoreAccessDenied:
+            .secureStoreError(self.message, inner: self.innerError)
+        case .secureStoreUnknown:
+            .secureStoreError(self.message, inner: self.innerError)
+        case .dependencyResolution:
+            .internalServiceApi(self.message, inner: self.innerError)
+        case .deserialization:
+            .internalServiceApi(self.message, inner: self.innerError)
+        }
     }
 }

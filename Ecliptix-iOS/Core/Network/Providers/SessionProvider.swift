@@ -121,6 +121,7 @@ struct SessionProvider {
                     }
                 },
                 token: nil)
+                .map {_ in Unit.value}
             
             settings = newSettings
             

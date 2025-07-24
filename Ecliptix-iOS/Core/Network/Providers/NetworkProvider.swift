@@ -157,7 +157,7 @@ final class NetworkProvider: NetworkProviderProtocol {
         flowType: ServiceFlowType,
         onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         token: CancellationToken? = CancellationToken()
-    ) async throws -> Result<Unit, NetworkFailure> {
+    ) async -> Result<Data, NetworkFailure> {
         
         return await RetryExecutor.executeResult(
                 maxRetryCount: nil,
@@ -243,7 +243,7 @@ final class NetworkProvider: NetworkProviderProtocol {
         protocolSystem: EcliptixProtocolSystem,
         onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         _ request: ServiceRequest
-    ) async -> Result<Unit, NetworkFailure> {
+    ) async -> Result<Data, NetworkFailure> {
         do {
             let invokeResult = await rpcServiceManager.invokeServiceRequestAsync(request: request, token: CancellationToken())
 
@@ -263,10 +263,7 @@ final class NetworkProvider: NetworkProviderProtocol {
 
                         let inboundPayload = try callResult.unwrap()
                         let decryptedData = try protocolSystem.processInboundMessage(cipherPayloadProto: inboundPayload)
-                        let callbackOutcome = await onSuccessCallback(try decryptedData.unwrap())
-                        if callbackOutcome.isErr {
-                            return callbackOutcome
-                        }
+                        return .success(try decryptedData.unwrap())
                     } catch {
                         return .failure(.unexpectedError("Failed to process single call response", inner: error))
                     }
@@ -302,8 +299,8 @@ final class NetworkProvider: NetworkProviderProtocol {
                 default:
                     return .failure(.invalidRequestType("Unsupported stream type"))
             }
-
-            return .success(.value)
+            
+            return .success(Data())
         } catch {
             return .failure(.unexpectedError("Unhandled error", inner: error))
         }

@@ -200,7 +200,7 @@ public class EcliptixProtocolSystem {
     }
     
     static func createFrom(keys: EcliptixSystemIdentityKeys, connection: EcliptixProtocolConnection) -> Result<EcliptixProtocolSystem, EcliptixProtocolFailure> {
-        var system = EcliptixProtocolSystem(ecliptixSystemIdentityKeys: keys)
+        let system = EcliptixProtocolSystem(ecliptixSystemIdentityKeys: keys)
         system.protocolConnection = connection
         
         return .success(system)

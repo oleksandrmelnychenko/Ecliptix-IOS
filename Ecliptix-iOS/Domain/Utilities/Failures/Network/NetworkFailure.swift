@@ -41,4 +41,20 @@ public struct NetworkFailure: Error, FailureBaseProtocol {
         NetworkFailure(failureType: .unexpectedError, message: details, innerError: inner)
     }
     
+    func toInternalValidationFailure() -> InternalValidationFailure {
+        switch self.failureType {
+        case .dataCenterNotResponding:
+            .networkError(self.message, inner: self.innerError)
+        case .dataCenterShutdown:
+            .networkError(self.message, inner: self.innerError)
+        case .invalidRequestType:
+            .networkError(self.message, inner: self.innerError)
+        case .ecliptixProtocolFailure:
+            .networkError(self.message, inner: self.innerError)
+        case .serverErrrorResponse:
+            .networkError(self.message, inner: self.innerError)
+        case .unexpectedError:
+            .unknown(self.message, inner: self.innerError)
+        }
+    }
 }

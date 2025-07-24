@@ -6,6 +6,28 @@
 //
 
 import Foundation
+import SwiftProtobuf
+
+extension Result where Success: Message, Failure == InternalValidationFailure {
+    func prepareSerializedRequest(
+        pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType = .dataCenterEphemeralConnect
+    ) -> Result<(Data, UInt32), InternalValidationFailure> {
+        return self
+            .flatMap { request in
+                ViewModelBase
+                    .computeConnectId(pubKeyExchangeType: pubKeyExchangeType)
+                    .mapInternalServiceApiFailure()
+                    .map { connectId in (request, connectId) }
+            }
+            .flatMap { (request, connectId) in
+                Result<(Data, UInt32), InternalValidationFailure>.Try({
+                    (try request.serializedData(), connectId)
+                }, errorMapper: { error in
+                    .internalServiceApi("Failed to serialize request", inner: error)
+                })
+            }
+    }
+}
 
 extension Result where Failure == SodiumFailure {
     func mapSodiumFailure() -> Result<Success, EcliptixProtocolFailure> {
@@ -25,6 +47,28 @@ extension Result where Failure == EcliptixProtocolFailure {
             return .success(value)
         case .failure(let ecliptixProtocolFailure):
             return .failure(ecliptixProtocolFailure.toNetworkFailure())
+        }
+    }
+}
+
+extension Result where Failure == InternalServiceApiFailure {
+    func mapInternalServiceApiFailure() -> Result<Success, InternalValidationFailure> {
+        switch self {
+        case .success(let value):
+            .success(value)
+        case .failure(let internalServiceApiFailure):
+            .failure(internalServiceApiFailure.toInternalValidationFailure())
+        }
+    }
+}
+
+extension Result where Failure == NetworkFailure {
+    func mapNetworkFailure() -> Result<Success, InternalValidationFailure> {
+        switch self {
+        case .success(let value):
+            return .success(value)
+        case .failure(let networkFailure):
+            return .failure(networkFailure.toInternalValidationFailure())
         }
     }
 }

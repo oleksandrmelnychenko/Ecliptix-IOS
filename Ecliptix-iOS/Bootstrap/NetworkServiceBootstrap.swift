@@ -24,19 +24,19 @@ enum NetworkServiceBootstrap {
             unaryRpcService: unaryRpcService,
             receiveStreamExecutor: receiveStreamExecutor,
             secrecyChannelRpcService: keyExchangeExecutor,
-            networkEvents: ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
-            systemEvents: ServiceLocator.shared.resolve(SystemEventsProtocol.self))
+            networkEvents: try! ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
+            systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
 
         
         
-        let secureStoreProvider = ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
-        let rpcMetaDataProvider = ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
+        let secureStoreProvider = try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
+        let rpcMetaDataProvider = try! ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
         let controller = NetworkProvider(
             secureStorageProvider: secureStoreProvider,
             rpcMetaDataProvider: rpcMetaDataProvider,
             rpcServiceManager: manager,
-            networkEvents: ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
-            systemEvents: ServiceLocator.shared.resolve(SystemEventsProtocol.self))
+            networkEvents: try! ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
+            systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
         ServiceLocator.shared.register(NetworkProviderProtocol.self, service: controller)
         ServiceLocator.shared.register(NetworkProvider.self, service: controller)
     }

@@ -20,7 +20,7 @@ struct GrpcClientFactory {
         auth: Ecliptix_Proto_Membership_AuthVerificationServicesAsyncClient,
         appDevice: Ecliptix_Proto_AppDevice_AppDeviceServiceActionsAsyncClient
     ) {
-        let rpcMetaDataProvider = ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
+        let rpcMetaDataProvider = try! ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
         
         let membershipClient = Ecliptix_Proto_Membership_MembershipServicesAsyncClient(
             channel: channel,

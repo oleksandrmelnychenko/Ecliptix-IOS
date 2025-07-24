@@ -34,7 +34,7 @@ final class PasswordSetupViewModel: ObservableObject {
         self.verificationSessionId = verficationSessionId
         self.authFlow = authFlow
         
-        networkController = ServiceLocator.shared.resolve(NetworkProvider.self)
+        networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
     }
 
     var passwordValidationErrors: [PasswordValidationError] {
@@ -272,263 +272,185 @@ final class PasswordSetupViewModel: ObservableObject {
     }
     
     private func submitRegistrationPassword() async {
-        if !isFormValid && securePasswordHandle!.length == 0 {
-            errorMessage = "Submission requirements not met."
+        guard let securePasswordHandle = self.securePasswordHandle, securePasswordHandle.length > 0 else {
+            self.errorMessage = "Password is required."
+            return
+        }
+
+        guard isFormValid else {
+            self.errorMessage = "Submission requirements not met."
             return
         }
         
-        await MainActor.run {
-            self.errorMessage = nil
-            self.isLoading = true
-        }
-        
-        var rentedPasswordBytes: Data?
-        var localSaltForEncryption: Data?
-        var localDataEncryptionKey: Data?
-        
-        defer {
-            if rentedPasswordBytes != nil {
-                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
-                rentedPasswordBytes!.removeAll()
-            }
-            
-            if localSaltForEncryption != nil {
-                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
-                localSaltForEncryption!.removeAll()
-            }
-            
-            if localDataEncryptionKey != nil {
-                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
-                localDataEncryptionKey!.removeAll()
-            }
-            
-            self.isLoading = false
-        }
-//        
         do {
-            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
-            let readResult = rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
-                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
-            }
-            if readResult.isErr {
-                throw try readResult.unwrapErr()
-            }
-            
-            guard let passwordString = String(data: rentedPasswordBytes!, encoding: .utf8) else {
-                errorMessage = "Password contains invalid characters for string conversion."
-                return
-            }
-            
-            let verifierResult = self.passwordManager!.hashPassword(passwordString)
-            if verifierResult.isErr {
-                throw try verifierResult.unwrapErr()
-            }
-            
-            let opfrResult = OpaqueProtocolService.createOprfRequest(password: rentedPasswordBytes!)
-            guard opfrResult.isOk else {
-                debugPrint("Failed to create OPRF request: \(try opfrResult.unwrapErr().message)")
-                return
-            }
-            
-            let oprfRequest = try opfrResult.unwrap().oprfRequest
-            let blind = try opfrResult.unwrap().blind
-            
-            var request = Ecliptix_Proto_Membership_OprfRegistrationInitRequest()
-            request.membershipIdentifier = self.verificationSessionId
-            request.peerOprf = oprfRequest
-            
-            let pas = rentedPasswordBytes!
-            
-            let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-            
-            _ = try await networkController.executeServiceAction(
-                connectId: connectId,
-                serviceType: .opaqueRegistrationInit,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { payload in
-                    
-                    do {
-                        let createMembershipResponse = try Helpers.parseFromBytes(
-                            Ecliptix_Proto_Membership_OprfRegistrationInitResponse.self,
-                            data: payload)
-                        
-                        if createMembershipResponse.result == .succeeded {
-                            let envelope = OpaqueProtocolService.createRegistrationRecord(password: pas, oprfResponse: createMembershipResponse.peerOprf, blind: blind)
-                            
-                            var r = Ecliptix_Proto_Membership_OprfRegistrationCompleteRequest()
-                            r.membershipIdentifier = createMembershipResponse.membership.uniqueIdentifier
-                            r.peerRegistrationRecord = try envelope.unwrap()
-                            
-                            _ = try await self.networkController.executeServiceAction(
-                                connectId: connectId,
-                                serviceType: .opaqueRegistrationComplete,
-                                plainBuffer: try r.serializedData(),
-                                flowType: .single,
-                                onSuccessCallback: { payloadInner in
-                                    
-                                    do {
-                                        let createMembershipResponseInner = try Helpers.parseFromBytes(
-                                            Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse.self,
-                                            data: payloadInner)
-                                        
-                                        if createMembershipResponse.result == .succeeded {
-                                            self.navigation.navigate(to: .passPhaseRegistration)
-                                        }
-                                            
-                                        return .success(.value)
-                                    } catch {
-                                        await MainActor.run {
-                                            self.isLoading = false
-                                            self.errorMessage = "Failed to parse server response"
-                                        }
-                                        return .failure(.unexpectedError("Deserialization failed", inner: error))
-                                    }
-                                })
-                        }
-                        
-                        return .success(.value)
-                    } catch {
-                        await MainActor.run {
-                            self.isLoading = false
-                            self.errorMessage = "Failed to parse server response"
-                        }
-                        return .failure(.unexpectedError("Deserialization failed", inner: error))
-                    }
-                })
-        } catch {
-            await MainActor.run {
-                self.errorMessage = "Submission failed: \(error)"
-            }
+            self.passwordManager = self.passwordManager == nil
+                ? try PasswordManager.create().unwrap()
+                : self.passwordManager!
         }
+        catch {
+            // Log this error
+            errorMessage = "Failed to create password manager."
+            return
+        }
+                
+        let result = getPasswordData(securePasswordHandle: self.securePasswordHandle!)
+            .flatMap { passwordData in
+                OpaqueProtocolService.createOprfRequest(password: passwordData)
+                    .mapError { .internalServiceApi("Failed to create OPRF request", inner: $0) }
+                    .map { oprfData in (passwordData, oprfData) }
+            }
+        
+        await result.MatchAsync(
+            onSuccessAsync: { (passwordData, oprfData) in
+                _ = await RequestPipeline.runAsync(
+                    requestResult: RequestBuilder.buildRegistrationInitRequest(
+                        passwordData: passwordData,
+                        oprfRequest: oprfData.oprfRequest,
+                        passwordManager: self.passwordManager!,
+                        verificationSessionId: self.verificationSessionId),
+                    pubKeyExchangeType: .dataCenterEphemeralConnect,
+                    serviceType: .opaqueRegistrationInit,
+                    flowType: .single,
+                    cancellationToken: CancellationToken(),
+                    networkProvider: self.networkController,
+                    parseAndValidate: { (response: Ecliptix_Proto_Membership_OprfRegistrationInitResponse) in
+                        guard response.result == .succeeded else {
+                            return .failure(InternalValidationFailure.networkError(response.message))
+                        }
+                                        
+                        return .success(response)
+                    })
+                    .MatchAsync(
+                        onSuccessAsync: { response in
+                            await RequestPipeline.run(
+                                requestResult: RequestBuilder.buildRegistrationCompleteRequest(
+                                    passwordData: passwordData,
+                                    blind: oprfData.blind,
+                                    response: response),
+                                pubKeyExchangeType: .dataCenterEphemeralConnect,
+                                serviceType: .opaqueRegistrationComplete,
+                                flowType: .single,
+                                cancellationToken: CancellationToken(),
+                                networkProvider: self.networkController,
+                                parseAndValidate: { (response: Ecliptix_Proto_Membership_OprfRegistrationCompleteResponse) in
+                                    
+                                    
+                                    return .success(response)
+                                })
+                            .Match(onSuccess: { _ in
+                                self.navigation.navigate(to: .passPhaseRegistration)
+                            }, onFailure: { error in
+                                self.errorMessage = error.message
+                            })
+                        },
+                        onFailureAsync: { error in
+                            self.errorMessage = error.message
+                        }
+                    )
+        },
+            onFailureAsync: { error in
+                self.errorMessage = error.message
+        })
+        
     }
     
     
     private func submitRecoveryPassword() async {
-        if !isFormValid && securePasswordHandle!.length == 0 {
-            errorMessage = "Submission requirements not met."
-            return
-        }
-        
-        await MainActor.run {
-            self.errorMessage = nil
-            self.isLoading = true
-        }
-        
-        var rentedPasswordBytes: Data?
-        var localSaltForEncryption: Data?
-        var localDataEncryptionKey: Data?
-        
+//        if !isFormValid && securePasswordHandle!.length == 0 {
+//            errorMessage = "Submission requirements not met."
+//            return
+//        }
+//        
+//        guard let securePasswordHandle = self.securePasswordHandle else {
+//            errorMessage = "Failed to obtain secure password handle."
+//            return
+//        }
+//        
+//        do {
+//            self.passwordManager = self.passwordManager == nil
+//                ? try PasswordManager.create().unwrap()
+//                : self.passwordManager!
+//        }
+//        catch {
+//            // Log this error
+//            errorMessage = "Failed to create password manager."
+//            return
+//        }
+//                
+//        _ = await RequestPipeline.runAsync(
+//            requestResult: RequestBuilder.buildRecoverySecureKeyInitRequest(
+//                securePasswordHandle: securePasswordHandle,
+//                passwordManager: self.passwordManager!,
+//                verificationSessionId: self.verificationSessionId),
+//            pubKeyExchangeType: .dataCenterEphemeralConnect,
+//            serviceType: .opaqueRecoverySecretKeyInitRequest,
+//            flowType: .single,
+//            cancellationToken: CancellationToken(),
+//            networkProvider: self.networkController,
+//            parseAndValidate: { (response: Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse) in
+//                guard response.result == .succeeded else {
+//                    return .failure(InternalValidationFailure.networkError(response.message))
+//                }
+//                                
+//                return .success(response)
+//            })
+//            .MatchAsync(
+//                onSuccessAsync: { response in
+//                    await RequestPipeline.run(
+//                        requestResult: RequestBuilder.buildRecoverySecureKeyCompleteRequest(
+//                            securePasswordHandle: securePasswordHandle,
+//                            response: response),
+//                        pubKeyExchangeType: .dataCenterEphemeralConnect,
+//                        serviceType: .opaqueRecoverySecretKeyCompleteRequest,
+//                        flowType: .single,
+//                        cancellationToken: CancellationToken(),
+//                        networkProvider: self.networkController,
+//                        parseAndValidate: { (response: Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse) in
+//                            
+//                            
+//                            return .success(response)
+//                        })
+//                    .Match(onSuccess: { _ in
+//                        self.navigation.navigate(to: .passPhaseRegistration)
+//                    }, onFailure: { error in
+//                        self.errorMessage = error.message
+//                    })
+//                },
+//                onFailureAsync: { error in
+//                    self.errorMessage = error.message
+//                }
+//            )
+    }
+    
+    private func getPasswordData(
+        securePasswordHandle: SodiumSecureMemoryHandle
+    ) -> Result<Data, InternalValidationFailure> {
+        var rentedPasswordBytes: Data? = Data(count: securePasswordHandle.length)
+
         defer {
-            if rentedPasswordBytes != nil {
-                rentedPasswordBytes!.resetBytes(in: 0..<rentedPasswordBytes!.count)
-                rentedPasswordBytes!.removeAll()
-            }
-            
-            if localSaltForEncryption != nil {
-                localSaltForEncryption!.resetBytes(in: 0..<localSaltForEncryption!.count)
-                localSaltForEncryption!.removeAll()
-            }
-            
-            if localDataEncryptionKey != nil {
-                localDataEncryptionKey!.resetBytes(in: 0..<localDataEncryptionKey!.count)
-                localDataEncryptionKey!.removeAll()
-            }
-            
-            self.isLoading = false
-        }
-//
-        do {
-            rentedPasswordBytes = Data(count: self.securePasswordHandle!.length)
-            let readResult = rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
-                self.securePasswordHandle!.read(into: destPtr).mapSodiumFailure()
-            }
-            if readResult.isErr {
-                throw try readResult.unwrapErr()
-            }
-            
-            guard let passwordString = String(data: rentedPasswordBytes!, encoding: .utf8) else {
-                errorMessage = "Password contains invalid characters for string conversion."
-                return
-            }
-            
-            let verifierResult = self.passwordManager!.hashPassword(passwordString)
-            if verifierResult.isErr {
-                throw try verifierResult.unwrapErr()
-            }
-            
-            let opfrResult = OpaqueProtocolService.createOprfRequest(password: rentedPasswordBytes!)
-            guard opfrResult.isOk else {
-                debugPrint("Failed to create OPRF request: \(try opfrResult.unwrapErr().message)")
-                return
-            }
-            
-            let oprfRequest = try opfrResult.unwrap().oprfRequest
-            let blind = try opfrResult.unwrap().blind
-            
-            var request = Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest()
-            request.membershipIdentifier = self.verificationSessionId
-            request.peerOprf = oprfRequest
-            
-            let pas = rentedPasswordBytes!
-            
-            let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-            
-            _ = try await networkController.executeServiceAction(
-                connectId: connectId,
-                serviceType: .opaqueRecoverySecretKeyInitRequest,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { payload in
-                    
-                    do {
-                        let recoverySecretKeyInitResponse = try Helpers.parseFromBytes(
-                            Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitResponse.self,
-                            data: payload)
-                        
-                        if recoverySecretKeyInitResponse.result == .succeeded {
-                            let envelope = OpaqueProtocolService.createRegistrationRecord(password: pas, oprfResponse: recoverySecretKeyInitResponse.peerOprf, blind: blind)
-                            
-                            var r = Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest()
-                            r.membershipIdentifier = recoverySecretKeyInitResponse.membership.uniqueIdentifier
-                            r.peerRecoveryRecord = try envelope.unwrap()
-                            
-                            _ = try await self.networkController.executeServiceAction(
-                                connectId: connectId,
-                                serviceType: .opaqueRecoverySecretKeyCompleteRequest,
-                                plainBuffer: try r.serializedData(),
-                                flowType: .single,
-                                onSuccessCallback: { payloadInner in
-                                    
-                                    do {
-                                        let recoverySecretKeyCompleteResponse = try Helpers.parseFromBytes(
-                                            Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteResponse.self,
-                                            data: payloadInner)
-                                            
-                                        return .success(.value)
-                                    } catch {
-                                        await MainActor.run {
-                                            self.isLoading = false
-                                            self.errorMessage = "Failed to parse server response"
-                                        }
-                                        return .failure(.unexpectedError("Deserialization failed", inner: error))
-                                    }
-                                })
-                        }
-                        
-                        return .success(.value)
-                    } catch {
-                        await MainActor.run {
-                            self.isLoading = false
-                            self.errorMessage = "Failed to parse server response"
-                        }
-                        return .failure(.unexpectedError("Deserialization failed", inner: error))
-                    }
-                })
-        } catch {
-            await MainActor.run {
-                self.errorMessage = "Submission failed: \(error)"
+            if var bytes = rentedPasswordBytes {
+                bytes.resetBytes(in: 0..<bytes.count)
+                bytes.removeAll()
+                rentedPasswordBytes = nil
             }
         }
+        
+        return Result<Data, InternalValidationFailure>.Try({
+            _ = try rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
+                try securePasswordHandle
+                    .read(into: destPtr)
+                    .mapSodiumFailure()
+                    .mapEcliptixProtocolFailure()
+                    .mapNetworkFailure()
+                    .unwrap()
+            }
+            return rentedPasswordBytes!
+        }, errorMapper: { error in
+            if let mapped = error as? InternalValidationFailure {
+                return mapped
+            } else {
+                return .internalServiceApi("Failed to read password from secure memory", inner: error)
+            }
+        })
     }
 }

@@ -36,7 +36,7 @@ final class PhoneNumberViewModel: ObservableObject {
     init(navigation: NavigationService, authFlow: AuthFlow) {
         self.navigation = navigation
         
-        self.networkController = ServiceLocator.shared.resolve(NetworkProvider.self)
+        self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
         
         self.authFlow = authFlow
     }
@@ -59,134 +59,63 @@ final class PhoneNumberViewModel: ObservableObject {
     }
     
     private func validatePhoneNumber(phoneNumber: String) async {
-        let cancellationToken = CancellationToken()
-
-        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
-            errorMessage = "Invalid device ID"
-            return
-        }
-
-        guard UUID(uuidString: phoneNumber) == nil else {
-            errorMessage = "Phone number must not be a GUID"
-            return
-        }
-        
-        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
-            errorMessage = "Invalid UUID format"
-            return
-        }
-        
-        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
-
-        var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
-        request.phoneNumber = phoneNumber
-        request.appDeviceIdentifier = deviceIdData
-
-        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-
-        do {
-            let validatePhoneNumberResult = try await self.networkController.executeServiceAction(
-                connectId: connectId,
-                serviceType: .validatePhoneNumber,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { [weak self] payload in
-                    guard let self else {
-                        return .failure(.unexpectedError("Self is nil"))
-                    }
-
-                    do {
-                        self.validatePhoneNumberResponce = try Helpers.parseFromBytes(
-                            Ecliptix_Proto_Membership_ValidatePhoneNumberResponse.self,
-                            data: payload
-                        )
-
-                        if self.validatePhoneNumberResponce!.result == .invalidPhone {
-                            return .failure(.serverErrrorResponse(self.validatePhoneNumberResponce!.message))
-                        }
-                        
-                        return .success(.value)
-                    } catch {
-                        return .failure(.unexpectedError("Failed to parse validation response", inner: error))
-                    }
-                },
-                token: cancellationToken
-            )
-            
-            
-            if validatePhoneNumberResult.isErr {
-                self.errorMessage = try validatePhoneNumberResult.unwrapErr().message
-            } else {
-                self.navigation.navigate(to: .verificationCode(phoneNumber: self.phoneNumber, phoneNumberIdentifier: self.validatePhoneNumberResponce!.phoneNumberIdentifier, authFlow: self.authFlow))
+        _ = await RequestPipeline.run(
+            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(phoneNumber: phoneNumber),
+            pubKeyExchangeType: .dataCenterEphemeralConnect,
+            serviceType: .validatePhoneNumber,
+            flowType: .single,
+            cancellationToken: CancellationToken(),
+            networkProvider: self.networkController,
+            parseAndValidate: { (response: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse) in
+                                
+                guard response.result == .succeeded else {
+                    return .failure(.networkError(response.message))
+                }
+                
+                return .success(response)
             }
-        } catch {
-            self.errorMessage = "Network error during validation"
-        }
+        )
+        .Match(
+            onSuccess: { response in
+                self.navigation.navigate(to: .verificationCode(
+                    phoneNumber: self.phoneNumber,
+                    phoneNumberIdentifier: response.phoneNumberIdentifier,
+                    authFlow: self.authFlow
+                ))
+        }, onFailure: { error in
+            self.errorMessage = error.message
+
+        })
     }
+
     
     private func recoveryPhoneNumber(phoneNumber: String) async {
-        let cancellationToken = CancellationToken()
-
-        guard let systemDeviceIdentifier = ViewModelBase.systemDeviceIdentifier() else {
-            errorMessage = "Invalid device ID"
-            return
-        }
-
-        guard UUID(uuidString: phoneNumber) == nil else {
-            errorMessage = "Phone number must not be a GUID"
-            return
-        }
-        
-        guard let uuid = UUID(uuidString: systemDeviceIdentifier) else {
-            errorMessage = "Invalid UUID format"
-            return
-        }
-        
-        let deviceIdData = withUnsafeBytes(of: uuid.uuid) { Data($0) }
-
-        var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
-        request.phoneNumber = phoneNumber
-        request.appDeviceIdentifier = deviceIdData
-
-        let connectId = ViewModelBase.computeConnectId(pubKeyExchangeType: .dataCenterEphemeralConnect)
-
-        do {
-            let validatePhoneNumberResult = try await self.networkController.executeServiceAction(
-                connectId: connectId,
-                serviceType: .recoverySecretKeyPhoneVerification,
-                plainBuffer: try request.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { [weak self] payload in
-                    guard let self else {
-                        return .failure(.unexpectedError("Self is nil"))
-                    }
-
-                    do {
-                        self.validatePhoneNumberResponce = try Helpers.parseFromBytes(
-                            Ecliptix_Proto_Membership_ValidatePhoneNumberResponse.self,
-                            data: payload
-                        )
-
-                        if self.validatePhoneNumberResponce!.result == .invalidPhone {
-                            return .failure(.serverErrrorResponse(self.validatePhoneNumberResponce!.message))
-                        }
-                        
-                        return .success(.value)
-                    } catch {
-                        return .failure(.unexpectedError("Failed to parse validation response", inner: error))
-                    }
-                },
-                token: cancellationToken
-            )
-            
-            
-            if validatePhoneNumberResult.isErr {
-                self.errorMessage = try validatePhoneNumberResult.unwrapErr().message
-            } else {
-                self.navigation.navigate(to: .verificationCode(phoneNumber: self.phoneNumber, phoneNumberIdentifier: self.validatePhoneNumberResponce!.phoneNumberIdentifier, authFlow: self.authFlow))
+        _ = await RequestPipeline.run(
+            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(phoneNumber: phoneNumber),
+            pubKeyExchangeType: .dataCenterEphemeralConnect,
+            serviceType: .recoverySecretKeyPhoneVerification,
+            flowType: .single,
+            cancellationToken: CancellationToken(),
+            networkProvider: self.networkController,
+            parseAndValidate: { (response: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse) in
+                                
+                guard response.result == .succeeded else {
+                    return .failure(.networkError(response.message))
+                }
+                
+                return .success(response)
             }
-        } catch {
-            self.errorMessage = "Network error during validation"
-        }
+        )
+        .Match(
+            onSuccess: { response in
+                self.navigation.navigate(to: .verificationCode(
+                    phoneNumber: self.phoneNumber,
+                    phoneNumberIdentifier: response.phoneNumberIdentifier,
+                    authFlow: self.authFlow
+                ))
+        }, onFailure: { error in
+            self.errorMessage = error.message
+
+        })
     }
 }

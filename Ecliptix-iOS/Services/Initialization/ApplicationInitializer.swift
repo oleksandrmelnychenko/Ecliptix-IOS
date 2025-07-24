@@ -183,6 +183,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                     }
                 },
                 token: nil)
+                .map { _ in Unit.value }
             
             settings = newSettings
             
