@@ -465,26 +465,36 @@ final class EcliptixProtocolChainStep {
             { EcliptixProtocolChainStep.validateDhPrivateKeySize(privateKey: privateCopy) },
             { EcliptixProtocolChainStep.validateDhPublicKeySize(publicKey: publicCopy) }
         ).flatMap { _ in
-            let handleResult = ensureDhPrivateKeyHandle()
-            if handleResult.isErr {
-                return handleResult.mapError { err in
-                    return err
+            do {
+                let newHandleResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize)
+                    .mapSodiumFailure()
+                    .flatMap { handle in
+                        privateCopy!.withUnsafeBytes { bufferPointer in
+                            handle.write(data: bufferPointer).mapSodiumFailure()
+                        }
+                        .map { _ in handle }
+                        .mapError { err in
+                            handle.dispose()
+                            return err
+                        }
+                    }
+                            
+                if newHandleResult.isErr {
+                    return .failure(try newHandleResult.unwrapErr())
                 }
-            }
+                
+                let newPrivateKeyHandle = try newHandleResult.unwrap()
 
-            let writeResult = privateCopy!.withUnsafeBytes { bufferPointer in
-                self.dhPrivateKeyHandle!.write(data: bufferPointer).mapSodiumFailure()
-            }
-            if writeResult.isErr {
-                return writeResult.mapError { err in
-                    return err
-                }
-            }
+                self.dhPrivateKeyHandle?.dispose()
+                self.dhPrivateKeyHandle = newPrivateKeyHandle
 
-            _ = Self.wipeIfNotNil(&self.dhPublicKey)
-            self.dhPublicKey = publicCopy!
+                _ = Self.wipeIfNotNil(&self.dhPublicKey)
+                self.dhPublicKey = publicCopy!
 
-            return Self.okResult
+                return Self.okResult
+            } catch { 
+                return .failure(.unexpectedError("Unexpected error during handling DH key update", inner: error))
+            }
         }
     }
     
@@ -496,23 +506,23 @@ final class EcliptixProtocolChainStep {
         }
     }
     
-    private func ensureDhPrivateKeyHandle() -> Result<Unit, EcliptixProtocolFailure> {
-        if dhPrivateKeyHandle != nil {
-            return EcliptixProtocolChainStep.okResult
-        }
-
-        do {
-            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
-            if allocResult.isErr {
-                return .failure(try allocResult.unwrapErr())
-            }
-            
-            dhPrivateKeyHandle = try allocResult.unwrap()
-            return Self.okResult
-        } catch {
-            return .failure(.generic("Failed to allocate memory for DH private key.", inner: error))
-        }
-    }
+//    private func ensureDhPrivateKeyHandle() -> Result<Unit, EcliptixProtocolFailure> {
+//        if dhPrivateKeyHandle != nil {
+//            return EcliptixProtocolChainStep.okResult
+//        }
+//
+//        do {
+//            let allocResult = SodiumSecureMemoryHandle.allocate(length: Constants.x25519PrivateKeySize).mapSodiumFailure()
+//            if allocResult.isErr {
+//                return .failure(try allocResult.unwrapErr())
+//            }
+//            
+//            dhPrivateKeyHandle = try allocResult.unwrap()
+//            return Self.okResult
+//        } catch {
+//            return .failure(.generic("Failed to allocate memory for DH private key.", inner: error))
+//        }
+//    }
     
     private func dispose(disposing: Bool) {
         guard !disposed else { return }
