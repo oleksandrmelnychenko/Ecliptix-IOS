@@ -12,6 +12,8 @@ struct AuthScreenContainer<Content: View>: View {
     let spacing: CGFloat
     let canGoBack: Bool
 
+    @StateObject private var networkMonitor = NetworkMonitor()
+    
     init(
         spacing: CGFloat = 0,
         canGoBack: Bool = false,
@@ -23,6 +25,7 @@ struct AuthScreenContainer<Content: View>: View {
     }
     
     var body: some View {
+        ZStack(alignment: .top) {
             ScrollView {
                 VStack(spacing: spacing) {
                     Logo()
@@ -48,7 +51,24 @@ struct AuthScreenContainer<Content: View>: View {
                     }
                 }
             }
-        
+            .zIndex(0)
+            
+            if !networkMonitor.isConnected {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black.opacity(0.001))
+                    .allowsHitTesting(true)
+                    .transition(.opacity)
+                    .zIndex(1)
+
+                InternetConnectionView()
+                    .padding(.top, 60)
+                    .transition(.move(edge: .top))
+                    .zIndex(2)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
     }
 }
 
