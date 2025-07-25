@@ -20,19 +20,20 @@ struct PhoneNumberView: View {
     var body: some View {
         AuthScreenContainer(spacing: 24, canGoBack: self.navigation.canGoBack()) {
             AuthViewHeader(
-                viewTitle: String(localized: "Phone number"),
-                viewDescription: String(localized: "Please confirm your country code and phone number")
+                viewTitle: Strings.Authentication.SignUp.PhoneVerification.title,
+                viewDescription: Strings.Authentication.SignUp.PhoneVerification.description
             )
             
             FieldInput<PhoneValidationError, PhoneInputField>(
                 title: String(localized: "Phone Number"),
                 text: $viewModel.phoneNumber,
-                hintText: String(localized: "Include country code"),
+                hintText: Strings.Authentication.SignUp.PhoneVerification.mobileHint,
                 validationErrors: viewModel.validationErrors,
                 showValidationErrors: self.$viewModel.showPhoneNumberValidationErrors,
                 content: {
                     PhoneInputField(
-                        phoneNumber: $viewModel.phoneNumber
+                        phoneNumber: $viewModel.phoneNumber, 
+                        placeholder: Strings.Authentication.SignUp.PhoneVerification.mobilePlaceholder
                     )
                 }
             )
@@ -45,7 +46,7 @@ struct PhoneNumberView: View {
             FormErrorText(error: viewModel.errorMessage)
             
             PrimaryButton(
-                title: String(localized: "Continue"),
+                title: Strings.Authentication.SignUp.PhoneVerification.continueButton,
                 isEnabled: !viewModel.phoneNumber.isEmpty && !viewModel.isLoading,
                 isLoading: viewModel.isLoading,
                 style: .dark,
@@ -60,7 +61,6 @@ struct PhoneNumberView: View {
             if shouldNavigate,
                let identifier = viewModel.phoneNumberIdentifier {
                 navigation.navigate(to: .verificationCode(
-                    phoneNumber: viewModel.phoneNumber,
                     phoneNumberIdentifier: identifier,
                     authFlow: viewModel.authFlow
                 ))

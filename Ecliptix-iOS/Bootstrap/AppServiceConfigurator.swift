@@ -6,9 +6,12 @@
 //
 
 enum AppServiceConfigurator {
-    static func registerCoreServices() {
+    @MainActor static func registerCoreServices() {
         ServiceLocator.shared.register(AppSettings.self, service: AppSettings())
         ServiceLocator.shared.register(SecureStorageProviderProtocol.self, service: KeychainStorageProvider(ttlDays: 90))
+        
+        ServiceLocator.shared.register(NavigationService.self, service: NavigationService())
+        ServiceLocator.shared.register(LocalizationService.self, service: LocalizationService.shared)
         
         let metaProvider: RpcMetaDataProviderProtocol = RpcMetaDataProvider()
         ServiceLocator.shared.register(RpcMetaDataProviderProtocol.self, service: metaProvider)

@@ -1,68 +1,88 @@
 {
-    "Authentication": {
-        "Registration": {
-
-            "Welcome": {
-                "title": "Ecliptix",
-                "description": "Гаманець, розроблений для того, щоб зробити цифрову ідентифікацію та глобальні фінанси простими для всіх.",
-
-                "MainCard" : {
-                    "title": "Новий акаунт",
-                    "subtitle": "Create new Worldcoin account"
-                },
-
-                "AlternativeCard": {
-                    "title": "Existing account",
-                    "subtitle": "Restore account from a backup"
-                }
-            },
-          
-            "PhoneVerification": {
-                "title": "Перевірка мобільного номера",
-                "description": "Ми надішлемо SMS на ваш мобільний",
-                "hint": "Включіть код країни",
-                "button": "Надіслати код підтвердження",
-                
-                "error": {
-                    "invalidFormat": "Невірний формат. Використовуйте +код країни, а потім номер (наприклад, +380970177443)."
-                }
-            },
-            
-            "VerificationCodeEntry": {
-                "title": "Введіть 6-значний код підтвердження",
-                "hint": "Введіть код підтвердження",
-                "expiration": "Код закінчується через: {time}",
-                
-                "verifyButton": "Підтвердити",
-                "resendButton": "Повторно надіслати код",
-                
-                "error": {
-                    "invalidCode": "Невірний код"
-                },
-            },
-          
-            "PasswordConfirmation": {
-                "title": "Введіть ваш пароль",
-                "description": "Переконайтесь, що ви його перевірили",
-                "passwordHint": "Введіть ваш пароль",
-                "verifyPasswordHint": "Повторно введіть ваш пароль",
-                
-                "button": "Підтвердити пароль",
-                
-                "error": {
-                    "passwordMismatch": "Паролі не співпадають"
-                }
-            },
-
-
-            "PassPhase": {
-                "title": "Введіть ваш пін-код",
-                "description": "Надайте пін-код для безпечної автентифікації.",
-                "hint": "Введіть ваш пін-код",
-                "watermark": "####",
-                
-                "button": "Підтвердити пін-код"
-            }
+  "Authentication": {
+    "SignUp": {
+      "PhoneVerification": {
+        "Title": "Створення нового акаунта",
+        "Description": "Підтвердьте ваш номер телефону. Ми надішлемо вам код підтвердження через SMS",
+        "Hint": "Включіть код країни",
+        "Watermark": "Мобільний номер",
+        "Button": "Продовжити",
+        "Error": {
+          "InvalidFormat": "Невірний формат. Використовуйте +код країни, а потім номер"
         }
+      },
+      "VerificationCodeEntry": {
+        "Title": "Підтвердьте ваш номер",
+        "Description": "Ми надіслали код на ваш телефон для підтвердження вашої особи",
+        "Hint": "Введіть код підтвердження",
+        "Expiration": "Код діє: {0}",
+        "Error": {
+          "InvalidCode": "Невірний код"
+        },
+        "Button": {
+          "Verify": "Підтвердити",
+          "Resend": "Надіслати ще"
+        }
+      },
+      "NicknameInput": {
+        "Title": "Введіть ваш нікнейм",
+        "Description": "Цей нікнейм буде видимий для інших користувачів",
+        "Hint": "Введіть ваш нікнейм",
+        "Watermark": "Нікнейм",
+        "Button": "Підтвердити нікнейм"
+      },
+      "PasswordConfirmation": {
+        "Title": "Введіть ваш пароль",
+        "Description": "Переконайтесь, що ви його перевірили",
+        "PasswordHint": "Введіть ваш пароль",
+        "VerifyPasswordHint": "Повторно введіть ваш пароль",
+        "Error": {
+          "PasswordMismatch": "Паролі не співпадають"
+        },
+        "Button": "Підтвердити пароль"
+      },
+      "PassPhase": {
+        "Title": "Введіть ваш пін-код",
+        "Description": "Надайте пін-код для безпечної автентифікації",
+        "Hint": "Введіть ваш пін-код",
+        "Watermark": "####",
+        "Button": "Підтвердити пін-код"
+      }
+    },
+    "SignIn": {
+      "Title": "Вхід",
+      "Welcome": "Ласкаво просимо назад! Ваш персоналізований досвід чекає",
+      "MobilePlaceholder": "Мобільний номер",
+      "MobileHint": "Почніть з коду країни.",
+      "PasswordPlaceholder": "Захищений ключ",
+      "PasswordHint": "Зберігається тільки на вашому пристрої",
+      "AccountRecovery": "Відновлення акаунту",
+      "Continue": "Продовжити"
     }
+  },
+  "Welcome": {
+    "SignInButton": "Увійти",
+    "CreateAccountButton": "Створити акаунт"
+  },
+  "Footer": {
+    "PrivacyPolicy": "Політика конфіденційності",
+    "TermsOfService": "Умови використання",
+    "Support": "Підтримка",
+    "AgreementText": "Продовжуючи, ви погоджуєтесь з нашими Умовами та Політикою конфіденційності",
+    "Copyright": "© Horizon Dynamics 2025. Всі права захищені"
+  },
+  "Navigation": {
+    "Back": "Назад",
+    "Close": "Закрити",
+    "Minimize": "Згорнути",
+    "Maximize": "Розгорнути"
+  },
+  "Common": {
+    "Loading": "Завантаження...",
+    "LoadingView": "Завантаження вигляду...",
+    "Error": "Помилка",
+    "Success": "Успіх",
+    "Cancel": "Скасувати",
+    "Ok": "ОК"
+  }
 }

@@ -24,20 +24,21 @@ struct SignInView: View {
             canGoBack: self.navigation.canGoBack()) {
                 
             AuthViewHeader(
-                viewTitle: String(localized: "Sign in"),
-                viewDescription: String(localized: "Welcome back! Your personalized experience awaits.")
+                viewTitle: Strings.Authentication.SignIn.title,
+                viewDescription: Strings.Authentication.SignIn.description
             )
             
             Group {
                 FieldInput<PhoneValidationError, PhoneInputField>(
                     title: String(localized: "Phone Number"),
                     text: $viewModel.phoneNumber,
-                    hintText: String(localized: "Start with country code."),
+                    hintText: Strings.Authentication.SignIn.mobileHint,
                     validationErrors: viewModel.phoneValidationErrors,
                     showValidationErrors: self.$viewModel.showPhoneNumberErrors,
                     content: {
                         PhoneInputField(
-                            phoneNumber: $viewModel.phoneNumber)
+                            phoneNumber: $viewModel.phoneNumber,
+                            placeholder: Strings.Authentication.SignIn.mobilePlaceholder)
                     }
                 )
                 .onChange(of: viewModel.phoneNumber) { _, _ in
@@ -49,12 +50,12 @@ struct SignInView: View {
                 FieldInput<PasswordValidationError, PasswordInputField>(
                     title: String(localized: "Password"),
                     text: $viewModel.password,
-                    hintText: String(localized: "Stored only on your device"),
+                    hintText: Strings.Authentication.SignIn.passwordHint,
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     content: {
                         PasswordInputField(
-                            placeholder: String(localized: "Secret Key"),
+                            placeholder: Strings.Authentication.SignIn.passwordPlaceholder,
                             showPassword: $showPassword,
                             text: $viewModel.password
                         )
@@ -73,7 +74,7 @@ struct SignInView: View {
             
             VStack {
                 PrimaryButton(
-                    title: String(localized: "Next"),
+                    title: Strings.Authentication.SignIn.continueButton,
                     isEnabled: viewModel.isFormValid && !viewModel.isLoading,
                     isLoading: viewModel.isLoading,
                     style: .dark,
@@ -85,7 +86,7 @@ struct SignInView: View {
                 )
                 
                 PrimaryButton(
-                    title: String(localized: "Account recovery"),
+                    title: Strings.Authentication.SignIn.accountRecovery,
                     isEnabled: !viewModel.isLoading,
                     isLoading: viewModel.isLoading,
                     style: .light,

@@ -23,20 +23,20 @@ struct PasswordSetupView: View {
     var body: some View {
         AuthScreenContainer(spacing: 24) {
             AuthViewHeader(
-                viewTitle: String(localized: "Create a Password"),
-                viewDescription: String(localized: "Make sure it’s secure and something you’ll remember.")
+                viewTitle: Strings.Authentication.SignUp.PasswordConfirmation.title,
+                viewDescription: Strings.Authentication.SignUp.PasswordConfirmation.description
             )
             
             Group {
                 FieldInput<PasswordValidationError, PasswordInputField>(
                     title: String(localized: "Password"),
                     text: $viewModel.password,
-                    hintText: "8 Chars, 1 upper and 1 number",
+                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.passwordHint,
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     content: {
                         PasswordInputField(
-                            placeholder: String(localized: "Secret Key"),
+                            placeholder: String(localized: "Enter Secret Key"),
                             isNewPassword: true,
                             showPassword: $showPassword,
                             text: $viewModel.password,
@@ -49,7 +49,7 @@ struct PasswordSetupView: View {
                 FieldInput<PasswordValidationError, PasswordInputField>(
                     title: String(localized: "Confirm Password"),
                     text: $viewModel.confirmPassword,
-                    hintText: "8 Chars, 1 upper and 1 number",
+                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.verifyPasswordHint,
                     validationErrors: viewModel.confirmPasswordValidationErrors,
                     showValidationErrors: self.$viewModel.showConfirmationPasswordValidationErrors,
                     content: {
@@ -68,7 +68,7 @@ struct PasswordSetupView: View {
             FormErrorText(error: viewModel.errorMessage)
             
             PrimaryButton(
-                title: String(localized: "Next"),
+                title: Strings.Authentication.SignUp.PasswordConfirmation.confirmButton,
                 isEnabled: (viewModel.isFormValid && !viewModel.isLoading),
                 isLoading: viewModel.isLoading,
                 style: .dark,

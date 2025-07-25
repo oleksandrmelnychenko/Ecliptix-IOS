@@ -27,14 +27,12 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var uniqueIdentifier: Data?
     @Published var authFlow: AuthFlow
 
-    private let phoneNumber: String
 
     private let networkController: NetworkProvider
     private var phoneNumberIdentifier: Data
     private var verificationSessionIdentifier: UUID? = nil
     
-    init(phoneNumber: String, phoneNumberIdentifier: Data, authFlow: AuthFlow) {
-        self.phoneNumber = phoneNumber
+    init(phoneNumberIdentifier: Data, authFlow: AuthFlow) {
         self.phoneNumberIdentifier = phoneNumberIdentifier
         
         self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)

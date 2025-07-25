@@ -4,9 +4,6 @@
     "" : {
 
     },
-    "Account recovery" : {
-
-    },
     "Agree to Terms and Conditions" : {
 
     },
@@ -28,9 +25,6 @@
     "Confirm Secret Key" : {
 
     },
-    "Continue" : {
-
-    },
     "Create a Pass phase" : {
 
     },
@@ -43,13 +37,7 @@
     "Device ID is not a valid UUID." : {
 
     },
-    "Enter the 6-digit code sent to" : {
-
-    },
     "Failed to unwrap SignInComplete request" : {
-
-    },
-    "Include country code" : {
 
     },
     "Internet connection" : {
@@ -62,9 +50,6 @@
 
     },
     "Max %lld chars" : {
-
-    },
-    "Mobile number" : {
 
     },
     "Must be between %lld and %lld digits long." : {
@@ -128,9 +113,6 @@
     "Passwords do not match" : {
 
     },
-    "Phone number" : {
-
-    },
     "Phone Number" : {
 
     },
@@ -140,28 +122,10 @@
     "Phone number must not be a GUID." : {
 
     },
-    "Please confirm your country code and phone number" : {
-
-    },
     "Required" : {
 
     },
-    "Resend available in %@" : {
-
-    },
-    "Resend code" : {
-
-    },
     "Secret Key" : {
-
-    },
-    "Sign in" : {
-
-    },
-    "Start with country code." : {
-
-    },
-    "Stored only on your device" : {
 
     },
     "The wallet designed to make digital ID and global finance simple for all." : {
@@ -182,15 +146,6 @@
 
     },
     "Unchecked" : {
-
-    },
-    "Verify your number" : {
-
-    },
-    "We have sent a code to your phone to verify your identity." : {
-
-    },
-    "Welcome back! Your personalized experience awaits." : {
 
     },
     "Назад" : {

@@ -10,7 +10,7 @@ import Foundation
 final class LocalizationService: ObservableObject {
     static let shared = LocalizationService()
 
-    @Published private(set) var currentLanguage: SupportedLanguage = .en
+    @Published private(set) var currentLanguage: SupportedLanguage = .uk
     private var localizedData: [String: Any] = [:]
 
     private init() {
@@ -61,5 +61,12 @@ final class LocalizationService: ObservableObject {
         }
 
         return currentLevel as? String ?? key
+    }
+}
+
+extension String {
+    var localized: String {
+        let localizationService = try! ServiceLocator.shared.resolve(LocalizationService.self)
+        return localizationService.localizedString(forKey: self)
     }
 }

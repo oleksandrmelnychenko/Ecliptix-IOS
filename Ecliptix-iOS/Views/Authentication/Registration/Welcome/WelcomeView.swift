@@ -44,7 +44,7 @@ struct WelcomeView: View {
                 HStack {
                     // Sign in
                     PrimaryButton(
-                        title: self.localization.localizedString(forKey: "Authentication.Registration.Welcome.AlternativeCard.title"),
+                        title: Strings.Welcome.signInButton,
                         isEnabled: self.viewModel.isSignInEnabled,
                         isLoading: self.viewModel.isSignInLoading,
                         style: .light,
@@ -53,7 +53,7 @@ struct WelcomeView: View {
                     
                     // Create new account
                     PrimaryButton(
-                        title: self.localization.localizedString(forKey: "Authentication.Registration.Welcome.MainCard.title"),
+                        title: Strings.Welcome.createAccountButton,
                         isEnabled: self.viewModel.isCreateAccountEnabled,
                         isLoading: self.viewModel.isCreateAccountLoading,
                         style: .dark,

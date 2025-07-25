@@ -11,13 +11,19 @@ import SwiftUI
 struct Ecliptix_iOSApp: App {
     @State private var didInitialize = false
     
-    @StateObject private var navigationService = NavigationService()
-    @StateObject private var localizationService = LocalizationService.shared
+    @StateObject private var navigationService: NavigationService
+    @StateObject private var localizationService: LocalizationService
     
     private let establishConnectionExecutor: ApplicationInitializer
     
     init() {
         ApplicationBootstrap.configure()
+        
+        let navService = try! ServiceLocator.shared.resolve(NavigationService.self)
+        let localService = try! ServiceLocator.shared.resolve(LocalizationService.self)
+        
+        _navigationService = StateObject(wrappedValue: navService)
+        _localizationService = StateObject(wrappedValue: localService)
                 
         establishConnectionExecutor = ApplicationInitializer(
             networkProvider: try! ServiceLocator.shared.resolve(NetworkProvider.self),

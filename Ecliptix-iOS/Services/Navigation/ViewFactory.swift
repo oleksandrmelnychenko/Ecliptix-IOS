@@ -18,8 +18,8 @@ struct ViewFactory {
         case .phoneNumberVerification(let authFlow):
             PhoneNumberView(authFlow: authFlow)
 
-        case let .verificationCode(phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow):
-            VerificationCodeView(phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
+        case let .verificationCode(phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow):
+            VerificationCodeView(phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
             
         case let .passwordSetup(verificationSessionId: verificationSessionId, authFlow: authFlow):
             PasswordSetupView(verificationSessionId: verificationSessionId, authFlow: authFlow)

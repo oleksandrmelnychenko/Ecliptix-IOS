@@ -10,12 +10,13 @@ import SwiftUI
 
 struct PhoneInputField: View {
     @Binding var phoneNumber: String
+    let placeholder: String
 
     var body: some View {
         TextField(
             "",
             text: $phoneNumber,
-            prompt: Text("Mobile number")
+            prompt: Text(placeholder)
         )
         .keyboardType(.phonePad)
         .textContentType(.telephoneNumber)
@@ -48,7 +49,8 @@ struct PhoneInputField: View {
 
         var body: some View {
             PhoneInputField(
-                phoneNumber: $phoneNumber
+                phoneNumber: $phoneNumber,
+                placeholder: "Mobile Phone"
             )
             .padding()
         }

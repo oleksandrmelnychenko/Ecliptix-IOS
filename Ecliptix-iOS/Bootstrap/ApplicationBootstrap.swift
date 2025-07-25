@@ -6,7 +6,7 @@
 //
 
 enum ApplicationBootstrap {
-    static func configure() {
+    @MainActor static func configure() {
         AppServiceConfigurator.registerCoreServices()
         
         let channel = GrpcClientFactory.createChannel()

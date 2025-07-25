@@ -1,62 +1,88 @@
 {
-    "Authentication": {
-        "Registration": {
-            "Welcome": {
-                "title": "Welcome to Ecliptix",
-                "description": "The wallet designed to make digital ID and global finance simple for all.",
-
-                "MainCard" : {
-                    "title": "New account",
-                    "subtitle": "Create new Worldcoin account"
-                },
-
-                "AlternativeCard": {
-                    "title": "Existing account",
-                    "subtitle": "Restore account from a backup"
-                }
-            },
-            "PhoneVerification": {
-                "title": "Mobile number verification",
-                "description": "We will send an SMS to your mobile",
-                "hint": "Include country code",
-                "button": "Send verification code",
-
-                "Errors": {
-                    "invalidFormat": "Invalid format. Use +countrycode followed by number (e.g., +12025550123)."
-                }
-            },
-            "VerificationCodeEntry": {
-                "title": "Enter the 6-digit verification code",
-                "hint": "Enter verification code",
-                "expiration": "Code expires in: {time}",
-
-                "verifyButton": "Verify",
-                "resendButton": "Resend code",
-
-                "Errors": {
-                    "invalidCode": "Invalid code"
-                }
-            },
-            "PasswordConfirmation": {
-                "title": "Enter your password",
-                "description": "Make sure you have verified it",
-                "passwordHint": "Enter your password",
-                "verifyPasswordHint": "Re-enter your password",
-
-                "button": "Confirm Password",
-                
-                "Errors": {
-                    "passwordMismatch": "Passwords do not match"
-                }
-            },
-            "PassPhase": {
-                "title": "Enter your passphrase",
-                "description": "Please provide a secure pin code for authentication.",
-                "hint": "Enter your pin code",
-                "watermark": "####",
-
-                "button": "Accept pin code"
-            }
+  "Authentication": {
+    "SignUp": {
+      "PhoneVerification": {
+        "Title": "Creating new account",
+        "Description": "Confirm your phone number. We'll send you a verification code via SMS",
+        "Hint": "Start with country code",
+        "Watermark": "Mobile Number",
+        "Button": "Continue",
+        "Error": {
+          "InvalidFormat": "Invalid format. Use +countrycode followed by number"
         }
+      },
+      "VerificationCodeEntry": {
+        "Title": "Verify your number",
+        "Description": "We have sent a code to your phone to verify your identity",
+        "Hint": "Enter verification code",
+        "Expiration": "Code valid: {0}",
+        "Error": {
+          "InvalidCode": "Invalid code"
+        },
+        "Button": {
+          "Verify": "Verify",
+          "Resend": "Resend"
+        }
+      },
+      "NicknameInput": {
+        "Title": "Enter your nickname",
+        "Description": "This nickname will be visible to other users",
+        "Hint": "Enter your nickname",
+        "Watermark": "Nickname",
+        "Button": "Confirm nickname"
+      },
+      "PasswordConfirmation": {
+        "Title": "Enter your password",
+        "Description": "Make sure you have verified it",
+        "PasswordHint": "Enter your password",
+        "VerifyPasswordHint": "Re-enter your password",
+        "Error": {
+          "PasswordMismatch": "Passwords do not match"
+        },
+        "Button": "Confirm password"
+      },
+      "PassPhase": {
+        "Title": "Enter your PIN code",
+        "Description": "Provide a PIN code for secure authentication",
+        "Hint": "Enter your PIN code",
+        "Watermark": "####",
+        "Button": "Confirm PIN code"
+      }
+    },
+    "SignIn": {
+      "Title": "Sign in",
+      "Welcome": "Welcome back! Your personalized experience awaits",
+      "MobilePlaceholder": "Mobile Number",
+      "MobileHint": "Start with country code.",
+      "PasswordPlaceholder": "Secure Key",
+      "PasswordHint": "Stored only on your device",
+      "AccountRecovery": "Account recovery",
+      "Continue": "Continue"
     }
+  },
+  "Welcome": {
+    "SignInButton": "Sign in",
+    "CreateAccountButton": "Create account"
+  },
+  "Footer": {
+    "PrivacyPolicy": "Privacy Policy",
+    "TermsOfService": "Terms of Service",
+    "Support": "Support",
+    "AgreementText": "By continuing, you agree to our Terms and Privacy Policy",
+    "Copyright": "© Horizon Dynamics 2025. All rights reserved."
+  },
+  "Navigation": {
+    "Back": "Back",
+    "Close": "Close",
+    "Minimize": "Minimize",
+    "Maximize": "Maximize"
+  },
+  "Common": {
+    "Loading": "Loading...",
+    "LoadingView": "Loading View...",
+    "Error": "Error",
+    "Success": "Success",
+    "Cancel": "Cancel",
+    "Ok": "OK"
+  }
 }

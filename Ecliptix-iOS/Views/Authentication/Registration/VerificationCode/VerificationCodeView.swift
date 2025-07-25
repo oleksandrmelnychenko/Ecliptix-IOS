@@ -14,13 +14,9 @@ struct VerificationCodeView: View {
     @StateObject private var viewModel: VerificationCodeViewModel
     
     @FocusState private var focusedField: Int?
-    
-    let phoneNumber: String
-    
-    init(phoneNumber: String, phoneNumberIdentifier: Data, authFlow: AuthFlow) {
-        self.phoneNumber = phoneNumber
+        
+    init(phoneNumberIdentifier: Data, authFlow: AuthFlow) {
         _viewModel = StateObject(wrappedValue: VerificationCodeViewModel(
-            phoneNumber: phoneNumber,
             phoneNumberIdentifier: phoneNumberIdentifier,
             authFlow: authFlow
         ))
@@ -32,21 +28,9 @@ struct VerificationCodeView: View {
             canGoBack: self.navigation.canGoBack(),
             content: {
             AuthViewHeader(
-                viewTitle: String(localized: "Verify your number"),
-                viewDescription: String(localized: "We have sent a code to your phone to verify your identity.")
+                viewTitle: Strings.Authentication.SignUp.VerificationCodeEntry.title,
+                viewDescription: Strings.Authentication.SignUp.VerificationCodeEntry.description
             )
-                
-            // TODO: Refactore this
-            VStack(spacing: 8) {
-                Text(String(localized: "Enter the 6-digit code sent to"))
-                    .font(.subheadline)
-
-                Text(phoneNumber)
-                    .font(.subheadline)
-                    .bold()
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom)
 
             HStack {
                 Spacer()
@@ -87,7 +71,7 @@ struct VerificationCodeView: View {
             }
             
             if viewModel.secondsRemaining > 0 {
-                Text(String(localized: "Resend available in \(viewModel.remainingTime)"))
+                Text(viewModel.remainingTime)
                     .font(.footnote)
             }
             
@@ -96,7 +80,7 @@ struct VerificationCodeView: View {
             
             if viewModel.secondsRemaining <= 0 {
                 PrimaryButton(
-                    title: String(localized: "Resend code"),
+                    title: Strings.Authentication.SignUp.VerificationCodeEntry.Button.resend,
                     isEnabled: viewModel.secondsRemaining <= 0,
                     isLoading: viewModel.isLoading,
                     style: .light,
@@ -142,7 +126,6 @@ struct VerificationCodeView: View {
     let navService = NavigationService()
     let localService = LocalizationService.shared
     VerificationCodeView(
-        phoneNumber: "+380123123123",
         phoneNumberIdentifier: Data(),
         authFlow: .registration)
     .environmentObject(navService)
