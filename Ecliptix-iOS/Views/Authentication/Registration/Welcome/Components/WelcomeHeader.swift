@@ -11,19 +11,7 @@ import SwiftUI
 struct WelcomeHeader: View {
     
     var body: some View {
-        VStack(alignment: .center, spacing: 0) {
-            // App title
-//            Text(String(localized: "Ecliptix"))
-//                .font(.largeTitle)
-//                .fontWeight(.bold)
-            
-            // Subtitle
-//            Text(String(localized: "Master the architecture of your mind"))
-//                .font(.body)
-//                .foregroundColor(.gray)
-//                .multilineTextAlignment(.leading)
-//                .padding(.top, 15)
-            
+        VStack(alignment: .center, spacing: 0) {            
             Image("Title")
                 .resizable()
                 .scaledToFit()

@@ -8,33 +8,35 @@
 import SwiftUI
 
 struct PasswordSetupView: View {
+    @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @StateObject private var viewModel: PasswordSetupViewModel
     @State private var showPassword = false
     
-    init(navigation: NavigationService, verificationSessionId: Data, authFlow: AuthFlow) {
+    init(verificationSessionId: Data, authFlow: AuthFlow) {
         _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(
-            navigation: navigation,
             verficationSessionId: verificationSessionId,
             authFlow: authFlow))
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 24, content: {
+        AuthScreenContainer(spacing: 24) {
             AuthViewHeader(
-                viewTitle: Strings.PasswordSetup.title,
-                viewDescription: Strings.PasswordSetup.description
+                viewTitle: String(localized: "Create a Password"),
+                viewDescription: String(localized: "Make sure it’s secure and something you’ll remember.")
             )
             
             Group {
                 FieldInput<PasswordValidationError, PasswordInputField>(
-                    title: Strings.PasswordSetup.passwordFieldLabel,
+                    title: String(localized: "Password"),
                     text: $viewModel.password,
                     hintText: "8 Chars, 1 upper and 1 number",
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     content: {
                         PasswordInputField(
-                            placeholder: Strings.PasswordSetup.passwordFieldPlaceholder,
+                            placeholder: String(localized: "Secret Key"),
                             isNewPassword: true,
                             showPassword: $showPassword,
                             text: $viewModel.password,
@@ -45,14 +47,14 @@ struct PasswordSetupView: View {
                 }
                                     
                 FieldInput<PasswordValidationError, PasswordInputField>(
-                    title: Strings.PasswordSetup.confirmPasswordFieldLabel,
+                    title: String(localized: "Confirm Password"),
                     text: $viewModel.confirmPassword,
                     hintText: "8 Chars, 1 upper and 1 number",
                     validationErrors: viewModel.confirmPasswordValidationErrors,
                     showValidationErrors: self.$viewModel.showConfirmationPasswordValidationErrors,
                     content: {
                         PasswordInputField(
-                            placeholder: Strings.PasswordSetup.confirmPasswordFieldPlaceholder,
+                            placeholder: String(localized: "Confirm Secret Key"),
                             isNewPassword: true,
                             showPassword: $showPassword,
                             text: $viewModel.confirmPassword,
@@ -78,16 +80,26 @@ struct PasswordSetupView: View {
             )
             
             Spacer()
-        })
+        }
+        .onChange(of: viewModel.shouldNavigateToPassPhase) { _, shouldNavigate in
+            if shouldNavigate {
+                navigation.navigate(to: .passPhaseRegistration)
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToPassPhase = false
+                }
+            }
+        }
     }
 }
 
-
-
 #Preview {
     let navService = NavigationService()
+    let localService = LocalizationService.shared
+    
     PasswordSetupView(
-        navigation: navService,
         verificationSessionId: Data(),
         authFlow: .registration)
+    .environmentObject(navService)
+    .environmentObject(localService)
 }

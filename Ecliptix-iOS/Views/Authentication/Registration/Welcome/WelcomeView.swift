@@ -9,10 +9,11 @@ import SwiftUI
 
 struct WelcomeView: View {
     @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
     @StateObject private var viewModel: WelcomeViewModel
 
-    init(navigation: NavigationService) {
-        _viewModel = StateObject(wrappedValue: WelcomeViewModel(navigation: navigation))
+    init() {
+        _viewModel = StateObject(wrappedValue: WelcomeViewModel())
         
     }
 
@@ -43,7 +44,7 @@ struct WelcomeView: View {
                 HStack {
                     // Sign in
                     PrimaryButton(
-                        title: String(localized: "Sign In"),
+                        title: self.localization.localizedString(forKey: "Authentication.Registration.Welcome.AlternativeCard.title"),
                         isEnabled: self.viewModel.isSignInEnabled,
                         isLoading: self.viewModel.isSignInLoading,
                         style: .light,
@@ -52,7 +53,7 @@ struct WelcomeView: View {
                     
                     // Create new account
                     PrimaryButton(
-                        title: String(localized: "Create account"),
+                        title: self.localization.localizedString(forKey: "Authentication.Registration.Welcome.MainCard.title"),
                         isEnabled: self.viewModel.isCreateAccountEnabled,
                         isLoading: self.viewModel.isCreateAccountLoading,
                         style: .dark,
@@ -60,7 +61,24 @@ struct WelcomeView: View {
                     )
                 }
             }
-            
+        }
+        .onChange(of: viewModel.shouldNavigateToSignIn) { _, shouldNavigate in
+            if shouldNavigate {
+                navigation.navigate(to: .signIn)
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToSignIn = false
+                }
+            }
+        }
+        .onChange(of: viewModel.shouldNavigateToSignUp) { _, shouldNavigate in
+            if shouldNavigate {
+                navigation.navigate(to: .phoneNumberVerification(authFlow: .registration))
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToSignUp = false
+                }
+            }
         }
     }
 }
@@ -68,20 +86,26 @@ struct WelcomeView: View {
 
 #Preview {
     let navService = NavigationService()
-    return WelcomeView(navigation: navService)
+    let locService = LocalizationService.shared
+    return WelcomeView()
         .environmentObject(navService)
+        .environmentObject(locService)
 }
 
 #Preview("ContentView Landscape", traits: .landscapeRight, body: {
     let navService = NavigationService()
-    return WelcomeView(navigation: navService)
+    let locService = LocalizationService.shared
+    return WelcomeView()
         .environmentObject(navService)
+        .environmentObject(locService)
 })
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let navService = NavigationService()
-        return WelcomeView(navigation: navService)
+        let locService = LocalizationService.shared
+        return WelcomeView()
             .environmentObject(navService)
+            .environmentObject(locService)
     }
 }

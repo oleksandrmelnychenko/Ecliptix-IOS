@@ -22,8 +22,6 @@ struct PhoneInputField: View {
         .autocapitalization(.none)
         .font(.title3)
         .padding(.horizontal, 8)
-        .accessibilityLabel(Strings.PhoneNumber.phoneFieldLabel)
-        .accessibilityHint(Strings.PhoneNumber.phoneFieldHint)
         .onChange(of: phoneNumber) { _, newValue in
             phoneNumber = sanitizePhoneNumber(newValue)
         }

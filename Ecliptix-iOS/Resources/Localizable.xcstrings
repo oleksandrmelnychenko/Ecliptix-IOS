@@ -22,10 +22,19 @@
     "Checked" : {
 
     },
+    "Confirm Password" : {
+
+    },
+    "Confirm Secret Key" : {
+
+    },
     "Continue" : {
 
     },
-    "Create account" : {
+    "Create a Pass phase" : {
+
+    },
+    "Create a Password" : {
 
     },
     "Device ID could not be retrieved." : {
@@ -34,10 +43,22 @@
     "Device ID is not a valid UUID." : {
 
     },
+    "Enter the 6-digit code sent to" : {
+
+    },
     "Failed to unwrap SignInComplete request" : {
 
     },
     "Include country code" : {
+
+    },
+    "Internet connection" : {
+
+    },
+    "Make sure it’s secure and something you’ll remember." : {
+
+    },
+    "Make sure it’s something you’ll remember." : {
 
     },
     "Max %lld chars" : {
@@ -137,9 +158,6 @@
     "Sign in" : {
 
     },
-    "Sign In" : {
-
-    },
     "Start with country code." : {
 
     },
@@ -164,6 +182,12 @@
 
     },
     "Unchecked" : {
+
+    },
+    "Verify your number" : {
+
+    },
+    "We have sent a code to your phone to verify your identity." : {
 
     },
     "Welcome back! Your personalized experience awaits." : {

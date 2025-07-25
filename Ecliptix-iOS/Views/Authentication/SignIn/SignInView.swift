@@ -8,21 +8,20 @@
 import SwiftUI
 
 struct SignInView: View {
+    @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @StateObject private var viewModel: SignInViewModel
     @State private var showPassword = false
-    
-    @Environment(\.dismiss) private var dismiss
-    
-    init(navigation: NavigationService) {
-        _viewModel = StateObject(wrappedValue: SignInViewModel(
-            navigation: navigation
-        ))
+        
+    init() {
+        _viewModel = StateObject(wrappedValue: SignInViewModel())
     }
     
     var body: some View {
         AuthScreenContainer(
             spacing: 24,
-            canGoBack: self.viewModel.navigation.canGoBack()) {
+            canGoBack: self.navigation.canGoBack()) {
                 
             AuthViewHeader(
                 viewTitle: String(localized: "Sign in"),
@@ -94,10 +93,31 @@ struct SignInView: View {
                 )
             }
         }
+        .onChange(of: viewModel.shouldNavigateToRecoveryPassword) { _, shouldNavigate in
+            if shouldNavigate {
+                navigation.navigate(to: .phoneNumberVerification(authFlow: .recovery))
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToRecoveryPassword = false
+                }
+            }
+        }
+        .onChange(of: viewModel.shouldNavigateToMainApp) { _, shouldNavigate in
+            if shouldNavigate {
+                navigation.navigate(to: .passPhaseLogin)
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToMainApp = false
+                }
+            }
+        }
     }
 }
 
 #Preview {
     let navService = NavigationService()
-    SignInView(navigation: navService)
+    let localService = LocalizationService.shared
+    SignInView()
+        .environmentObject(navService)
+        .environmentObject(localService)
 }

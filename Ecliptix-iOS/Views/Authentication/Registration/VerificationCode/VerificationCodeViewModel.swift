@@ -7,6 +7,7 @@
 
 import Foundation
 import GRPC
+import SwiftUI
 
 @MainActor
 final class VerificationCodeViewModel: ObservableObject {
@@ -21,25 +22,22 @@ final class VerificationCodeViewModel: ObservableObject {
     
     @Published var showAlert: Bool = false
     @Published var alertMessage: String = ""
+    
+    @Published var shouldNavigateToPasswordSetUp: Bool = false
+    @Published var uniqueIdentifier: Data?
+    @Published var authFlow: AuthFlow
 
     private let phoneNumber: String
-    private var membership: Ecliptix_Proto_Membership_Membership?
-    public let navigation: NavigationService
 
     private let networkController: NetworkProvider
     private var phoneNumberIdentifier: Data
     private var verificationSessionIdentifier: UUID? = nil
     
-    private let authFlow: AuthFlow
-    
-    init(phoneNumber: String, phoneNumberIdentifier: Data, navigation: NavigationService, authFlow: AuthFlow) {
+    init(phoneNumber: String, phoneNumberIdentifier: Data, authFlow: AuthFlow) {
         self.phoneNumber = phoneNumber
-        self.navigation = navigation
-        
         self.phoneNumberIdentifier = phoneNumberIdentifier
         
         self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
-        
         self.authFlow = authFlow
     }
     
@@ -60,7 +58,7 @@ final class VerificationCodeViewModel: ObservableObject {
         
         guard code.count == Self.otpLength else {
             await MainActor.run {
-                self.errorMessage = Strings.VerificationCode.Errors.invalidCode
+                self.errorMessage = "invalid code"
             }
             return
         }
@@ -180,10 +178,8 @@ final class VerificationCodeViewModel: ObservableObject {
         )
         .Match(
             onSuccess: { response in
-                self.navigation.navigate(to: .passwordSetup(
-                    verificationSessionId: response.membership.uniqueIdentifier,
-                    authFlow: self.authFlow,
-                ))
+                self.uniqueIdentifier = response.membership.uniqueIdentifier
+                self.shouldNavigateToPasswordSetUp = true
         }, onFailure: { error in
             self.errorMessage = error.message
         })

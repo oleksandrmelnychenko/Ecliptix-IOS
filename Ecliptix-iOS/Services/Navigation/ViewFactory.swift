@@ -5,31 +5,30 @@
 //  Created by Oleksandr Melnechenko on 13.06.2025.
 //
 
-import SwiftUICore
-
-
+import SwiftUI
 
 struct ViewFactory {
+    
     @ViewBuilder
-    static func view(for route: AppRoute, with navigation: NavigationService) -> some View {
+    static func view(for route: AppRoute) -> some View {
         switch route {
         case .welcome:
-            WelcomeView(navigation: navigation)
+            WelcomeView()
 
         case .phoneNumberVerification(let authFlow):
-            PhoneNumberView(navigation: navigation, authFlow: authFlow)
+            PhoneNumberView(authFlow: authFlow)
 
         case let .verificationCode(phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow):
-            VerificationCodeView(navigation: navigation, phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
+            VerificationCodeView(phoneNumber: phoneNumber, phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
             
         case let .passwordSetup(verificationSessionId: verificationSessionId, authFlow: authFlow):
-            PasswordSetupView(navigation: navigation, verificationSessionId: verificationSessionId, authFlow: authFlow)
+            PasswordSetupView(verificationSessionId: verificationSessionId, authFlow: authFlow)
             
         case .passPhaseRegistration:
-            PassPhaseRegisterView(navigation: navigation)
+            PassPhaseRegisterView()
             
         case .signIn:
-            SignInView(navigation: navigation)
+            SignInView()
             
         case .passPhaseLogin:
             TestView()

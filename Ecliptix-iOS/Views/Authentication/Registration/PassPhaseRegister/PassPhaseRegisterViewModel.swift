@@ -15,14 +15,9 @@ final class PassPhaseRegisterViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     private let maxDigits = 4
-    private let navigation: NavigationService
     
     var passPhrase: String { pin.joined() }
     var isReady: Bool { pin.count == maxDigits }
-    
-    init(navigation: NavigationService) {
-        self.navigation = navigation
-    }
     
     func append(_ digit: String) {
         guard pin.count < maxDigits else { return }
@@ -50,10 +45,8 @@ final class PassPhaseRegisterViewModel: ObservableObject {
                 self.isLoading = false
                 
                 if passPhrase == "1234" {
-                    self.navigation.navigate(to: .test)
                 }
                 else {
-                    self.errorMessage = Strings.PassPhaseRegister.Errors.invalidPassPhase
                 }
             }
         }

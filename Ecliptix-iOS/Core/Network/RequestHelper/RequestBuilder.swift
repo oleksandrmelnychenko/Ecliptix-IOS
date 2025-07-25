@@ -10,6 +10,18 @@ import CryptoKit
 import OpenSSL
 
 struct RequestBuilder {
+    static func buildRegisterAppDeviceRequest(
+        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
+    ) -> Result<Ecliptix_Proto_AppDevice_AppDevice, InternalValidationFailure> {
+        var request = Ecliptix_Proto_AppDevice_AppDevice()
+        
+        request.appInstanceID = settings.appInstanceID
+        request.deviceID = settings.deviceID
+        request.deviceType = .mobile
+        
+        return .success(request)
+    }
+    
     static func buildValidationPhoneNumberRequest(
         phoneNumber: String
     ) -> Result<Ecliptix_Proto_Membership_ValidatePhoneNumberRequest, InternalValidationFailure> {

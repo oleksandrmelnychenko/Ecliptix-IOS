@@ -18,8 +18,11 @@ final class PhoneNumberViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var validationErrors: [PhoneValidationError] = []
     @Published var showPhoneNumberValidationErrors: Bool = false
-
-    public let navigation: NavigationService
+    
+    @Published var shouldNavigateToCodeVerification: Bool = false
+    @Published var phoneNumberIdentifier: Data?
+    @Published var authFlow: AuthFlow
+    
     private let phoneValidator = PhoneValidator()
     private let networkController: NetworkProvider
     
@@ -31,11 +34,7 @@ final class PhoneNumberViewModel: ObservableObject {
         }
     }
     
-    private let authFlow: AuthFlow
-    
-    init(navigation: NavigationService, authFlow: AuthFlow) {
-        self.navigation = navigation
-        
+    init(authFlow: AuthFlow) {
         self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
         
         self.authFlow = authFlow
@@ -77,11 +76,8 @@ final class PhoneNumberViewModel: ObservableObject {
         )
         .Match(
             onSuccess: { response in
-                self.navigation.navigate(to: .verificationCode(
-                    phoneNumber: self.phoneNumber,
-                    phoneNumberIdentifier: response.phoneNumberIdentifier,
-                    authFlow: self.authFlow
-                ))
+                self.shouldNavigateToCodeVerification = true
+                self.phoneNumberIdentifier = response.phoneNumberIdentifier
         }, onFailure: { error in
             self.errorMessage = error.message
 
@@ -108,11 +104,8 @@ final class PhoneNumberViewModel: ObservableObject {
         )
         .Match(
             onSuccess: { response in
-                self.navigation.navigate(to: .verificationCode(
-                    phoneNumber: self.phoneNumber,
-                    phoneNumberIdentifier: response.phoneNumberIdentifier,
-                    authFlow: self.authFlow
-                ))
+                self.shouldNavigateToCodeVerification = true
+                self.phoneNumberIdentifier = response.phoneNumberIdentifier
         }, onFailure: { error in
             self.errorMessage = error.message
 

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 @MainActor
 final class SignInViewModel: ObservableObject {
@@ -16,7 +17,9 @@ final class SignInViewModel: ObservableObject {
     @Published var showPasswordValidationErrors: Bool = false
     @Published var showPhoneNumberErrors: Bool = false
     
-    public let navigation: NavigationService
+    @Published var shouldNavigateToMainApp: Bool = false
+    @Published var shouldNavigateToRecoveryPassword: Bool = false
+    
     private let networkController: NetworkProvider
     private let phoneValidator = PhoneValidator()
     private let passwordValidator = PasswordValidator()
@@ -38,8 +41,7 @@ final class SignInViewModel: ObservableObject {
         !phoneNumber.isEmpty
     }
     
-    init(navigation: NavigationService) {
-        self.navigation = navigation
+    init() {
         self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
     }
     
@@ -50,7 +52,7 @@ final class SignInViewModel: ObservableObject {
     }
     
     func forgotPasswordTapped() {
-        self.navigation.navigate(to: .phoneNumberVerification(authFlow: .recovery))
+        self.shouldNavigateToRecoveryPassword = true
     }
     
     func updatePassword(passwordText: String?) {
@@ -107,17 +109,17 @@ final class SignInViewModel: ObservableObject {
     }
     
     private func submitRegistrationPassword() async {
-        if self.securePasswordHandle == nil || self.securePasswordHandle!.isInvalid {
-            errorMessage = "Password is required."
-            return
-        }
-        
         guard let securePasswordHandle = self.securePasswordHandle else {
             errorMessage = "Failed to obtain secure password handle."
             return
         }
         
-        let result = getPasswordData(securePasswordHandle: self.securePasswordHandle!)
+        guard securePasswordHandle.isInvalid else {
+            errorMessage = "Password is required."
+            return
+        }
+        
+        let result = getPasswordData(securePasswordHandle: securePasswordHandle)
             .flatMap { passwordData in
                 OpaqueProtocolService.createOprfRequest(password: passwordData)
                     .mapError { .internalServiceApi("Failed to create OPRF request", inner: $0) }
@@ -192,7 +194,7 @@ final class SignInViewModel: ObservableObject {
 
                                         switch verificationResult {
                                         case .success:
-                                            self.navigation.navigate(to: .passPhaseLogin)
+                                            self.shouldNavigateToMainApp = true
                                         case .failure(let failure):
                                             self.errorMessage = failure.message
                                         }

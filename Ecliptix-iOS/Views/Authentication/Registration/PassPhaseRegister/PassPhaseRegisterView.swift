@@ -8,10 +8,13 @@
 import SwiftUI
 
 struct PassPhaseRegisterView: View {
+    @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @StateObject private var viewModel: PassPhaseRegisterViewModel
 
-    init(navigation: NavigationService) {
-        _viewModel = StateObject(wrappedValue: PassPhaseRegisterViewModel(navigation: navigation))
+    init() {
+        _viewModel = StateObject(wrappedValue: PassPhaseRegisterViewModel())
     }
 
     private let columns = Array(repeating: GridItem(.flexible()), count: 3)
@@ -19,8 +22,8 @@ struct PassPhaseRegisterView: View {
     var body: some View {
         AuthScreenContainer(spacing: 24, content: {
             AuthViewHeader(
-                viewTitle: Strings.PassPhaseRegister.title,
-                viewDescription: Strings.PassPhaseRegister.description
+                viewTitle: String(localized: "Create a Pass phase"),
+                viewDescription: String(localized: "Make sure it’s something you’ll remember.")
             )
 
             // MARK: – PIN dots
@@ -61,6 +64,8 @@ struct PassPhaseRegisterView: View {
 
 #Preview {
     let navService = NavigationService()
-    return PassPhaseRegisterView(navigation: navService)
+    let localService = LocalizationService.shared
+    return PassPhaseRegisterView()
         .environmentObject(navService)
+        .environmentObject(localService)
 }

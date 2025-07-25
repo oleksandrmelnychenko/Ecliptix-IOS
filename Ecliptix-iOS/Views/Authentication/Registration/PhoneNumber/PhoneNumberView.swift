@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct PhoneNumberView: View {
+    @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @StateObject private var viewModel: PhoneNumberViewModel
     
-    init(navigation: NavigationService, authFlow: AuthFlow) {
-        _viewModel = StateObject(wrappedValue: PhoneNumberViewModel(
-            navigation: navigation,
-            authFlow: authFlow))
+    init(authFlow: AuthFlow) {
+        _viewModel = StateObject(wrappedValue: PhoneNumberViewModel(authFlow: authFlow))
     }
 
     var body: some View {
-        AuthScreenContainer(spacing: 24, canGoBack: self.viewModel.navigation.canGoBack()) {
+        AuthScreenContainer(spacing: 24, canGoBack: self.navigation.canGoBack()) {
             AuthViewHeader(
                 viewTitle: String(localized: "Phone number"),
                 viewDescription: String(localized: "Please confirm your country code and phone number")
@@ -53,7 +54,21 @@ struct PhoneNumberView: View {
                         await viewModel.submitPhone()
                     }
                 }
-            )            
+            )
+        }
+        .onChange(of: viewModel.shouldNavigateToCodeVerification) { _, shouldNavigate in
+            if shouldNavigate,
+               let identifier = viewModel.phoneNumberIdentifier {
+                navigation.navigate(to: .verificationCode(
+                    phoneNumber: viewModel.phoneNumber,
+                    phoneNumberIdentifier: identifier,
+                    authFlow: viewModel.authFlow
+                ))
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToCodeVerification = false
+                }
+            }
         }
     }
 }
@@ -61,5 +76,8 @@ struct PhoneNumberView: View {
 
 #Preview {
     let navService = NavigationService()
-    return PhoneNumberView(navigation: navService, authFlow: .registration)
+    let localService = LocalizationService.shared
+    PhoneNumberView(authFlow: .registration)
+        .environmentObject(navService)
+        .environmentObject(localService)
 }

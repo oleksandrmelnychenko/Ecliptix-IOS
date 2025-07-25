@@ -8,17 +8,20 @@
 import SwiftUI
 
 struct VerificationCodeView: View {
-    let phoneNumber: String
     @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @StateObject private var viewModel: VerificationCodeViewModel
+    
     @FocusState private var focusedField: Int?
     
-    init(navigation: NavigationService, phoneNumber: String, phoneNumberIdentifier: Data, authFlow: AuthFlow) {
+    let phoneNumber: String
+    
+    init(phoneNumber: String, phoneNumberIdentifier: Data, authFlow: AuthFlow) {
         self.phoneNumber = phoneNumber
         _viewModel = StateObject(wrappedValue: VerificationCodeViewModel(
             phoneNumber: phoneNumber,
             phoneNumberIdentifier: phoneNumberIdentifier,
-            navigation: navigation,
             authFlow: authFlow
         ))
     }
@@ -26,16 +29,16 @@ struct VerificationCodeView: View {
     var body: some View {
         AuthScreenContainer(
             spacing: 24,
-            canGoBack: self.viewModel.navigation.canGoBack(),
+            canGoBack: self.navigation.canGoBack(),
             content: {
             AuthViewHeader(
-                viewTitle: Strings.VerificationCode.title,
-                viewDescription: Strings.VerificationCode.description
+                viewTitle: String(localized: "Verify your number"),
+                viewDescription: String(localized: "We have sent a code to your phone to verify your identity.")
             )
-
+                
             // TODO: Refactore this
             VStack(spacing: 8) {
-                Text(Strings.VerificationCode.explanationText)
+                Text(String(localized: "Enter the 6-digit code sent to"))
                     .font(.subheadline)
 
                 Text(phoneNumber)
@@ -119,14 +122,29 @@ struct VerificationCodeView: View {
                 }
             }
         }
+        .onChange(of: viewModel.shouldNavigateToPasswordSetUp) { _, shouldNavigate in
+            if shouldNavigate,
+               let identifier = viewModel.uniqueIdentifier {
+                navigation.navigate(to: .passwordSetup(
+                    verificationSessionId: identifier,
+                    authFlow: viewModel.authFlow
+                ))
+                
+                DispatchQueue.main.async {
+                    viewModel.shouldNavigateToPasswordSetUp = false
+                }
+            }
+        }
     }
 }
 
 #Preview {
     let navService = NavigationService()
+    let localService = LocalizationService.shared
     VerificationCodeView(
-        navigation: navService,
         phoneNumber: "+380123123123",
         phoneNumberIdentifier: Data(),
         authFlow: .registration)
+    .environmentObject(navService)
+    .environmentObject(localService)
 }

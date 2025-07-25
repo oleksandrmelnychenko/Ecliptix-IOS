@@ -9,15 +9,22 @@ enum SupportedLanguage: String, CaseIterable {
     case en = "en-US"
     case uk = "uk-UA"
     
-    var flagEmoji: String {
+    var flagImageName: String {
         switch self {
-        case .en: return "🇬🇧"
-        case .uk: return "🇺🇦"
+        case .en: return "usa_flag"
+        case .uk: return "ukraine_flag"
         }
     }
     
     var code: String {
         self.rawValue
+    }
+    
+    var displayName: String {
+        switch self {
+        case .en: return "EN"
+        case .uk: return "UK"
+        }
     }
 
     var next: SupportedLanguage {

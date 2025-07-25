@@ -9,17 +9,15 @@ import Foundation
 
 final class LocalizationService: ObservableObject {
     static let shared = LocalizationService()
-    
-    @Published private(set) var languageChanged = UUID()
-    
+
+    @Published private(set) var currentLanguage: SupportedLanguage = .en
     private var localizedData: [String: Any] = [:]
-    private(set) var currentLanguage: SupportedLanguage = .en
 
     private init() {
         load(locale: currentLanguage.code)
     }
-    
-    func load(locale: String) {
+
+    private func load(locale: String) {
         guard let lang = SupportedLanguage(rawValue: locale) else { return }
         guard
             let url = Bundle.main.url(forResource: locale, withExtension: "json"),
@@ -29,21 +27,31 @@ final class LocalizationService: ObservableObject {
             print("Failed to load localization for locale: \(locale)")
             return
         }
-        
+
         self.localizedData = json
         self.currentLanguage = lang
-        self.languageChanged = UUID()
+
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
     }
-    
+
     func toggleLanguage() {
         let next = currentLanguage.next
         load(locale: next.code)
+    }
+    
+    func setLanguage(_ language: SupportedLanguage) {
+        load(locale: language.code)
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
     }
 
     func localizedString(forKey key: String) -> String {
         let keys = key.components(separatedBy: ".")
         var currentLevel: Any? = localizedData
-        
+
         for part in keys {
             if let dict = currentLevel as? [String: Any] {
                 currentLevel = dict[part]
@@ -53,12 +61,5 @@ final class LocalizationService: ObservableObject {
         }
 
         return currentLevel as? String ?? key
-    }
-}
-
-extension String {
-    var localized: String {
-        let localizationService = try! ServiceLocator.shared.resolve(LocalizationService.self)
-        return localizationService.localizedString(forKey: self)
     }
 }

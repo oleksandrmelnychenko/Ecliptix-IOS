@@ -8,6 +8,8 @@
 import Foundation
 
 final class ApplicationInitializer: ApplicationInitializerProtocol {
+    private static let settingsKey = "ApplicationInstanceSettings"
+    
     private let networkProvider: NetworkProvider
     private let secureStorageProvider: SecureStorageProviderProtocol
     private let systemEvents: SystemEventsProtocol
@@ -48,10 +50,16 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             
             let registrationResult = await self.registerDeviceAsync(connectId: connectId, settings: &settings)
             guard registrationResult.isOk else {
-                Logger.error("Device registration failed: \(try! registrationResult.unwrapErr())", category: "AppInit")
+                Logger.error("Device registration failed: \(try registrationResult.unwrapErr())", category: "AppInit")
                 return false
             }
 
+            let storedNewSettingsResult = self.secureStorageProvider.store(key: Self.settingsKey, data: try settings.serializedData())
+            guard storedNewSettingsResult.isOk else {
+                Logger.error("Failed to store application instance settings securely: \(try storedNewSettingsResult.unwrapErr())", category: "AppInit")
+                return false
+            }
+            
             Logger.info("Application initialized successfully", category: "AppInit")
             
             self.systemEvents.publish(.new(.running))
@@ -64,10 +72,10 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
     }
     
     private func getOrCreateInstanceSettingsAsync() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
-        let settingsKey = "ApplicationInstanceSettings"
-                
         do {
-            let getResult = self.secureStorageProvider.tryGetByKey(key: settingsKey)
+            self.secureStorageProvider.delete(key: Self.settingsKey)
+            
+            let getResult = self.secureStorageProvider.tryGetByKey(key: Self.settingsKey)
             guard getResult.isOk else {
                 return .failure(try getResult.unwrapErr())
             }
@@ -80,11 +88,11 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             }
             
             var newSettings = Ecliptix_Proto_AppDevice_ApplicationInstanceSettings()
-            newSettings.appInstanceID = Helpers.guidToData(UUID(uuidString: "c9d02c08-09dc-4c43-a63a-a977d1275d67")!)
-            newSettings.deviceID = Helpers.guidToData(UUID(uuidString: "732ba091-cb23-4933-b19f-afabd04695aa")!)
+            newSettings.appInstanceID = Helpers.guidToData(UUID())
+            newSettings.deviceID = Helpers.guidToData(UUID())
 //            newSettings.culture = "en-US"
             
-            let storeResult = secureStorageProvider.store(key: settingsKey, data: try newSettings.serializedData())
+            let storeResult = secureStorageProvider.store(key: Self.settingsKey, data: try newSettings.serializedData())
             
             switch storeResult {
             case .success:
@@ -150,48 +158,40 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
     private func registerDeviceAsync(
         connectId: UInt32,
         settings: inout Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
-    ) async -> Result<Unit, NetworkFailure> {
-        
-        var newSettings = settings
-        
-        var appDevice = Ecliptix_Proto_AppDevice_AppDevice()
-        appDevice.appInstanceID = settings.appInstanceID
-        appDevice.deviceID = settings.deviceID
-        appDevice.deviceType = .mobile
-        
-        do {
-            let result = try await self.networkProvider.executeServiceAction(
-                connectId: connectId,
-                serviceType: .registerAppDevice,
-                plainBuffer: appDevice.serializedData(),
-                flowType: .single,
-                onSuccessCallback: { decryptedPayload in
-                    do {
-                        let reply = try Helpers.parseFromBytes(Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply.self, data: decryptedPayload)
-                        
-                        let appServerInstanceId = try Helpers.fromDataToGuid(reply.uniqueID)
-                        
-                        
-                        newSettings.systemDeviceIdentifier = appServerInstanceId.uuidString
-                        newSettings.serverPublicKey = reply.serverPublicKey
-                        
-                        Logger.info("Device successfully registered with server ID: \(appServerInstanceId)", category: "AppInit")
-                        
-                        return .success(.value)
-                    } catch {
-                        return .failure(.unexpectedError("Failed to parse reply", inner: error))
-                    }
-                },
-                token: nil)
-                .map { _ in Unit.value }
-            
-            settings = newSettings
-            
-            _ = self.secureStorageProvider.store(key: "ApplicationInstanceSettings", data: try settings.serializedData())
-            
-            return result
-        } catch {
-            return .failure(.unexpectedError("An unexpected error occurred during device registration", inner: error))
-        }
+    ) async -> Result<Unit, InternalValidationFailure> {
+        return await RequestPipeline.run(
+            requestResult: RequestBuilder.buildRegisterAppDeviceRequest(settings: settings),
+            pubKeyExchangeType: .dataCenterEphemeralConnect,
+            serviceType: .registerAppDevice,
+            flowType: .single,
+            cancellationToken: CancellationToken(),
+            networkProvider: self.networkProvider,
+            parseAndValidate: { (response: Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply) in
+                                
+                guard response.status == .successAlreadyExists || response.status == .successNewRegistration else {
+                    return .failure(.networkError("Error during registration Device: \(response.status)"))
+                }
+                
+                return .success(response)
+            }
+        )
+        .Match(
+            onSuccess: { response in
+                do {
+                    let appServerInstanceId = try Helpers.fromDataToGuid(response.uniqueID)
+                    
+                    
+                    settings.systemDeviceIdentifier = appServerInstanceId.uuidString
+                    settings.serverPublicKey = response.serverPublicKey
+                    
+                    Logger.info("Device successfully registered with server ID: \(appServerInstanceId)", category: "AppInit")
+                    
+                    return .success(.value)
+                } catch {
+                    return .failure(.internalServiceApi("Failed to parse reply", inner: error))
+                }
+            },
+            onFailure: { error in .failure(error) }
+        )
     }
 }

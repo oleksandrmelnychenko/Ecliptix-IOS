@@ -12,16 +12,13 @@ struct Ecliptix_iOSApp: App {
     @State private var didInitialize = false
     
     @StateObject private var navigationService = NavigationService()
-    @StateObject private var localizationService: LocalizationService
+    @StateObject private var localizationService = LocalizationService.shared
     
     private let establishConnectionExecutor: ApplicationInitializer
     
     init() {
         ApplicationBootstrap.configure()
                 
-        let locService = try! ServiceLocator.shared.resolve(LocalizationService.self)
-        _localizationService = StateObject(wrappedValue: locService)
-        
         establishConnectionExecutor = ApplicationInitializer(
             networkProvider: try! ServiceLocator.shared.resolve(NetworkProvider.self),
             secureStorageProvider: try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
@@ -31,13 +28,13 @@ struct Ecliptix_iOSApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack(path: $navigationService.path) {
-                WelcomeView(navigation: navigationService)
-                    .environmentObject(navigationService)
+                WelcomeView()
                     .navigationDestination(for: AppRoute.self) { route in
-                        ViewFactory.view(for: route, with: navigationService)
+                        ViewFactory.view(for: route)
                     }
-                    .environmentObject(localizationService)
             }
+            .environmentObject(navigationService)
+            .environmentObject(localizationService)
             .task {
                 guard !didInitialize else { return }
                 didInitialize = true

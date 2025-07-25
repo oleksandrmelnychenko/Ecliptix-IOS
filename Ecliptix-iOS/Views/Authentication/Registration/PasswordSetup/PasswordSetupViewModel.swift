@@ -10,6 +10,9 @@ import SwiftUI
 
 @MainActor
 final class PasswordSetupViewModel: ObservableObject {
+    @EnvironmentObject private var navigation: NavigationService
+    @EnvironmentObject private var localization: LocalizationService
+    
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
     @Published var isLoading = false
@@ -17,7 +20,8 @@ final class PasswordSetupViewModel: ObservableObject {
     @Published var showPasswordValidationErrors: Bool = false
     @Published var showConfirmationPasswordValidationErrors: Bool = false
 
-    public let navigation: NavigationService
+    @Published var shouldNavigateToPassPhase: Bool = false
+    
     private let passwordValidator = PasswordValidator()
     private let networkController: NetworkProvider
     private var passwordManager: PasswordManager?
@@ -29,8 +33,7 @@ final class PasswordSetupViewModel: ObservableObject {
     
     private let authFlow: AuthFlow
     
-    init(navigation: NavigationService, verficationSessionId: Data, authFlow: AuthFlow) {
-        self.navigation = navigation
+    init(verficationSessionId: Data, authFlow: AuthFlow) {
         self.verificationSessionId = verficationSessionId
         self.authFlow = authFlow
         
@@ -338,7 +341,7 @@ final class PasswordSetupViewModel: ObservableObject {
                                     return .success(response)
                                 })
                             .Match(onSuccess: { _ in
-                                self.navigation.navigate(to: .passPhaseRegistration)
+                                self.shouldNavigateToPassPhase = true
                             }, onFailure: { error in
                                 self.errorMessage = error.message
                             })
