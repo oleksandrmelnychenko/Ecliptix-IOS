@@ -28,10 +28,9 @@ final class LocalizationService: ObservableObject {
             return
         }
 
-        self.localizedData = json
-        self.currentLanguage = lang
-
         DispatchQueue.main.async {
+            self.localizedData = json
+            self.currentLanguage = lang
             self.objectWillChange.send()
         }
     }

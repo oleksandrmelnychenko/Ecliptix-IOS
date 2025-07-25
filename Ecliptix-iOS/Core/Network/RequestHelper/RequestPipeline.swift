@@ -18,7 +18,7 @@ struct RequestPipeline {
         parseAndValidate: @escaping (Res) throws -> Result<Res, InternalValidationFailure>
     ) async -> Result<Res, InternalValidationFailure> {
         return await requestResult
-            .prepareSerializedRequest(pubKeyExchangeType: pubKeyExchangeType)
+            .prepareSerializedRequest(networkProvider: networkProvider, pubKeyExchangeType: pubKeyExchangeType)
             .flatMapAsync { (requestData, connectId) in
                 await networkProvider.executeServiceAction(
                     connectId: connectId,
@@ -53,7 +53,7 @@ struct RequestPipeline {
         parseAndValidate: @escaping (Res) async throws -> Result<Res, InternalValidationFailure>
     ) async -> Result<Res, InternalValidationFailure> {
         return await requestResult
-            .prepareSerializedRequest(pubKeyExchangeType: pubKeyExchangeType)
+            .prepareSerializedRequest(networkProvider: networkProvider, pubKeyExchangeType: pubKeyExchangeType)
             .flatMapAsync { (requestData, connectId) in
                 await networkProvider.executeServiceAction(
                     connectId: connectId,

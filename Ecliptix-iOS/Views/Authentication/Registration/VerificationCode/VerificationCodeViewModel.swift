@@ -92,8 +92,8 @@ final class VerificationCodeViewModel: ObservableObject {
     ) async {
         let cancellationToken = CancellationToken()
     
-        await RequestBuilder.buildInitiateVerificationRequest(phoneNumberIdentifier: phoneNumberIdentifier, type: type)
-            .prepareSerializedRequest(pubKeyExchangeType: .dataCenterEphemeralConnect)
+        await RequestBuilder.buildInitiateVerificationRequest(networkProvider: networkController, phoneNumberIdentifier: phoneNumberIdentifier, type: type)
+            .prepareSerializedRequest(networkProvider: networkController, pubKeyExchangeType: .dataCenterEphemeralConnect)
             .flatMapAsync({ (request, connectId) in
                 await self.networkController.executeServiceAction(
                     connectId: connectId,
@@ -159,7 +159,9 @@ final class VerificationCodeViewModel: ObservableObject {
 
     private func sendVerificationCode() async {        
         _ = await RequestPipeline.run(
-            requestResult: RequestBuilder.buildSendOtpRequest(otpCode: combinedCode.replacingOccurrences(of: Self.emptySign, with: "")),
+            requestResult: RequestBuilder.buildSendOtpRequest(
+                networkProvider: networkController,
+                otpCode: combinedCode.replacingOccurrences(of: Self.emptySign, with: "")),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
             serviceType: .verifyOtp,
             flowType: .single,

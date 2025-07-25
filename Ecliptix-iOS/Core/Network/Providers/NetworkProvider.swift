@@ -20,9 +20,7 @@ final class NetworkProvider: NetworkProviderProtocol {
     private var connections: [UInt32: EcliptixProtocolSystem] = [:]
     private let lock = DispatchSemaphore(value: 1)
     private var isSessionConsiderdHealthy: Bool = false
-    
-    private var applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings? = nil
-    
+        
     private lazy var sessionLock = SessionLock(networkProvider: self)
     
     init(
@@ -44,7 +42,7 @@ final class NetworkProvider: NetworkProviderProtocol {
         connectId: UInt32
     ) async {
         do {
-            self.applicationInstanceSettings = applicationInstanceSettings
+            AppSettingsService.shared.setSettings(applicationInstanceSettings)
             
             let identityKeys = try EcliptixSystemIdentityKeys.create(oneTimeKeyCount: Self.defaultOneTimeKeyCount).unwrap()
             let protocolSystem = EcliptixProtocolSystem(ecliptixSystemIdentityKeys: identityKeys)
@@ -95,13 +93,11 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
     
     private func perfromFullRecoveryLogic() async -> Result<Unit, NetworkFailure> {
-        guard self.applicationInstanceSettings != nil else {
+        guard let settings = AppSettingsService.shared.getSettings() else {
             return .failure(.invalidRequestType("Application instance settings not available"))
         }
         
-        let connectId = Self.computeUniqueConnectId(
-            applicationInstanceSettings: self.applicationInstanceSettings!,
-            pubKeyExchangeType: .dataCenterEphemeralConnect)
+        let connectId = AppSettingsService.computeUniqueConnectId(settings: settings, pubKeyExchangeType: .dataCenterEphemeralConnect)
         
         self.connections.removeValue(forKey: connectId)
         
@@ -112,7 +108,7 @@ final class NetworkProvider: NetworkProviderProtocol {
                 let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
                 let restoreResult = await restoreSecrecyChannel(
                     ecliptixSecrecyChannelState: state,
-                    applicationInstanceSettings: self.applicationInstanceSettings!)
+                    applicationInstanceSettings: settings)
                 if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
                     debugPrint("Session successfully restored from storage")
                     return .success(.value)
@@ -121,7 +117,7 @@ final class NetworkProvider: NetworkProviderProtocol {
                 debugPrint("Failed to restore session from storage, will attempt full re-establishment")
             }
             
-            await self.initiateEcliptixProtocolSystem(applicationInstanceSettings: self.applicationInstanceSettings!, connectId: connectId)
+            await self.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
             
             let establishResult = await establishSecrecyChannel(connectId: connectId)
             guard establishResult.isOk else {
@@ -158,6 +154,9 @@ final class NetworkProvider: NetworkProviderProtocol {
         onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         token: CancellationToken? = CancellationToken()
     ) async -> Result<Data, NetworkFailure> {
+        guard var settings = AppSettingsService.shared.getSettings() else {
+            return .failure(.invalidRequestType("Application instance settings not available"))
+        }
         
         return await RetryExecutor.executeResult(
                 maxRetryCount: nil,
@@ -180,9 +179,9 @@ final class NetworkProvider: NetworkProviderProtocol {
                 },
                 onRetry: { _, _ in
                     if serviceType == .registerAppDevice {
-                        _ = await SessionProvider.establishSession(settings: self.applicationInstanceSettings!)
+                        _ = await SessionProvider.establishSession(settings: settings)
                     } else {
-                        _ = await SessionProvider.recoverSession(settings: &self.applicationInstanceSettings!)
+                        _ = await SessionProvider.recoverSession(settings: &settings)
                     }
                 })
                 {
@@ -311,8 +310,8 @@ final class NetworkProvider: NetworkProviderProtocol {
         ecliptixSecrecyChannelState: Ecliptix_Proto_KeyMaterials_EcliptixSessionState,
         applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
     ) async -> Result<Bool, NetworkFailure> {
-        if self.applicationInstanceSettings == nil {
-            self.applicationInstanceSettings = applicationInstanceSettings
+        guard var settings = AppSettingsService.shared.getSettings() else {
+            return .failure(.invalidRequestType("Application instance settings not available"))
         }
         
         do {

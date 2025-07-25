@@ -10,12 +10,13 @@ import SwiftProtobuf
 
 extension Result where Success: Message, Failure == InternalValidationFailure {
     func prepareSerializedRequest(
+        networkProvider: NetworkProvider,
         pubKeyExchangeType: Ecliptix_Proto_PubKeyExchangeType = .dataCenterEphemeralConnect
     ) -> Result<(Data, UInt32), InternalValidationFailure> {
         return self
             .flatMap { request in
                 ViewModelBase
-                    .computeConnectId(pubKeyExchangeType: pubKeyExchangeType)
+                    .computeConnectId(networkProvider: networkProvider, pubKeyExchangeType: pubKeyExchangeType)
                     .mapInternalServiceApiFailure()
                     .map { connectId in (request, connectId) }
             }

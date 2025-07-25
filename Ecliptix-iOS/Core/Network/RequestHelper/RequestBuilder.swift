@@ -23,6 +23,7 @@ struct RequestBuilder {
     }
     
     static func buildValidationPhoneNumberRequest(
+        networkProvider: NetworkProvider,
         phoneNumber: String
     ) -> Result<Ecliptix_Proto_Membership_ValidatePhoneNumberRequest, InternalValidationFailure> {
         
@@ -32,7 +33,7 @@ struct RequestBuilder {
             return .failure(.phoneNumberIsGuid(String(localized: "Phone number must not be a GUID.")))
         }
         
-        return buildAppDeviceIdentifier()
+        return buildAppDeviceIdentifier(networkProvider: networkProvider)
             .map { deviceIdData in
                 var request = Ecliptix_Proto_Membership_ValidatePhoneNumberRequest()
                 
@@ -44,10 +45,11 @@ struct RequestBuilder {
     }
     
     static func buildInitiateVerificationRequest(
+        networkProvider: NetworkProvider,
         phoneNumberIdentifier: Data,
         type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum
     ) -> Result<Ecliptix_Proto_Membership_InitiateVerificationRequest, InternalValidationFailure> {
-        buildAppDeviceIdentifier()
+        buildAppDeviceIdentifier(networkProvider: networkProvider)
             .map { deviceIdData in
                 var request = Ecliptix_Proto_Membership_InitiateVerificationRequest()
                 
@@ -61,9 +63,10 @@ struct RequestBuilder {
     }
     
     static func buildSendOtpRequest(
+        networkProvider: NetworkProvider,
         otpCode: String
     ) -> Result<Ecliptix_Proto_Membership_VerifyCodeRequest, InternalValidationFailure> {
-        buildAppDeviceIdentifier()
+        buildAppDeviceIdentifier(networkProvider: networkProvider)
             .map { deviceIdData in
                 var request = Ecliptix_Proto_Membership_VerifyCodeRequest()
                 
@@ -210,8 +213,8 @@ struct RequestBuilder {
     }
     
     // MARK: - Private helpers
-    private static func buildAppDeviceIdentifier() -> Result<Data, InternalValidationFailure> {
-        return ViewModelBase.systemDeviceIdentifier()
+    private static func buildAppDeviceIdentifier(networkProvider: NetworkProvider) -> Result<Data, InternalValidationFailure> {
+        return ViewModelBase.systemDeviceIdentifier(networkProvider: networkProvider)
             .mapError { error in
                 // Here we should log this!
                 

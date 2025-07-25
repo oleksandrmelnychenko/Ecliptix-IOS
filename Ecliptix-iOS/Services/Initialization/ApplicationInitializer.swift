@@ -62,11 +62,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 return false
             }
 
-            let storedNewSettingsResult = self.secureStorageProvider.store(key: String(connectId), data: try settings.serializedData())
-            guard storedNewSettingsResult.isOk else {
-                Logger.error("Failed to store application instance settings securely: \(try storedNewSettingsResult.unwrapErr())", category: "AppInit")
-                return false
-            }
+            AppSettingsService.shared.setSettings(settings)
             
             Logger.info("Application initialized successfully", category: "AppInit")
             

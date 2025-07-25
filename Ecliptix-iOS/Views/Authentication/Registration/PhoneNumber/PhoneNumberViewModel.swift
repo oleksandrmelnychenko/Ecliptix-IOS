@@ -59,7 +59,9 @@ final class PhoneNumberViewModel: ObservableObject {
     
     private func validatePhoneNumber(phoneNumber: String) async {
         _ = await RequestPipeline.run(
-            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(phoneNumber: phoneNumber),
+            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(
+                networkProvider: networkController,
+                phoneNumber: phoneNumber),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
             serviceType: .validatePhoneNumber,
             flowType: .single,
@@ -87,7 +89,9 @@ final class PhoneNumberViewModel: ObservableObject {
     
     private func recoveryPhoneNumber(phoneNumber: String) async {
         _ = await RequestPipeline.run(
-            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(phoneNumber: phoneNumber),
+            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(
+                networkProvider: networkController,
+                phoneNumber: phoneNumber),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
             serviceType: .recoverySecretKeyPhoneVerification,
             flowType: .single,
