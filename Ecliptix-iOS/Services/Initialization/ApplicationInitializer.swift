@@ -8,28 +8,29 @@
 import Foundation
 
 final class ApplicationInitializer: ApplicationInitializerProtocol {
-    private static let settingsKey = "ApplicationInstanceSettings"
-    
     private let networkProvider: NetworkProvider
     private let secureStorageProvider: SecureStorageProviderProtocol
+    private let localizationService: LocalizationService
     private let systemEvents: SystemEventsProtocol
     
     init(
         networkProvider: NetworkProvider,
         secureStorageProvider: SecureStorageProviderProtocol,
+        localizationService: LocalizationService,
         systemEvents: SystemEventsProtocol
     ) {
         self.networkProvider = networkProvider
         self.secureStorageProvider = secureStorageProvider
+        self.localizationService = localizationService
         self.systemEvents = systemEvents
     }
     
-    public func initializeAsync() async -> Bool {
+    public func initializeAsync(defaultSystemSettings: DefaultSystemSettings) async -> Bool {
         
         do {
             self.systemEvents.publish(.new(.initializing))
             
-            let settingsResult = getOrCreateInstanceSettingsAsync()
+            let settingsResult = self.secureStorageProvider.initApplicationInstanceSettings(defaultCulture: defaultSystemSettings.culture)
             guard settingsResult.isOk else {
                 Logger.error("Failed to get or create application instance settings: \(try! settingsResult.unwrapErr())", category: "AppInit")
                 self.systemEvents.publish(.new(.fatalError))
@@ -39,6 +40,13 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             let result = try settingsResult.unwrap()
             var settings = result.settings
             let isNewInstance = result.isNewInstance
+            
+            guard let language = SupportedLanguage(code: settings.culture) else {
+                Logger.error("Unsupported language code: \(settings.culture)")
+                return false
+            }
+
+            self.localizationService.setLanguage(language)
 
             let connectIdResult = await self.ensureSecrecyChannelAsync(settings: settings, isNewInstance: isNewInstance)
             guard connectIdResult.isOk else {
@@ -54,7 +62,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
                 return false
             }
 
-            let storedNewSettingsResult = self.secureStorageProvider.store(key: Self.settingsKey, data: try settings.serializedData())
+            let storedNewSettingsResult = self.secureStorageProvider.store(key: String(connectId), data: try settings.serializedData())
             guard storedNewSettingsResult.isOk else {
                 Logger.error("Failed to store application instance settings securely: \(try storedNewSettingsResult.unwrapErr())", category: "AppInit")
                 return false
@@ -68,40 +76,6 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         } catch {
             Logger.error("An unhandled error occurred during application initialization: \(error)", category: "AppInit")
             return false
-        }
-    }
-    
-    private func getOrCreateInstanceSettingsAsync() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
-        do {
-            self.secureStorageProvider.delete(key: Self.settingsKey)
-            
-            let getResult = self.secureStorageProvider.tryGetByKey(key: Self.settingsKey)
-            guard getResult.isOk else {
-                return .failure(try getResult.unwrapErr())
-            }
-                        
-            let maybeSettingsData = try getResult.unwrap()
-            
-            if let data = maybeSettingsData {
-                let existingSettings = try Ecliptix_Proto_AppDevice_ApplicationInstanceSettings(serializedBytes: data)
-                return .success(InstanceSettingsResult(settings: existingSettings, isNewInstance: false))
-            }
-            
-            var newSettings = Ecliptix_Proto_AppDevice_ApplicationInstanceSettings()
-            newSettings.appInstanceID = Helpers.guidToData(UUID())
-            newSettings.deviceID = Helpers.guidToData(UUID())
-//            newSettings.culture = "en-US"
-            
-            let storeResult = secureStorageProvider.store(key: Self.settingsKey, data: try newSettings.serializedData())
-            
-            switch storeResult {
-            case .success:
-                return .success(InstanceSettingsResult(settings: newSettings, isNewInstance: true))
-            case .failure(let error):
-                return .failure(error)
-            }
-        } catch {
-            return .failure(.secureStoreUnknown("An unexpected error occurred while retrieving or storing instance settings", inner: error))
         }
     }
     

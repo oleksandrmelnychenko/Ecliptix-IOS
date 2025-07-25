@@ -10,12 +10,22 @@ import SwiftUI
 struct LanguageMenu: View {
     
     @EnvironmentObject var localizationService: LocalizationService
+    private let secureStorageKey = try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
     
     var body: some View {
         Menu {
             ForEach(SupportedLanguage.allCases, id: \.self) { language in
                 Button {
-                    localizationService.setLanguage(language)
+                    localizationService.setLanguage(language) {
+                        let result = self.secureStorageKey.setApplicationSettingsCultureAsync(culture: language.rawValue)
+                        
+                        switch result {
+                        case .success:
+                            print("Culture saved successfully")
+                        case .failure(let error):
+                            print("Failed to save culture: \(error)")
+                        }
+                    }
                 } label: {
                     HStack {
                         Image(language.flagImageName)

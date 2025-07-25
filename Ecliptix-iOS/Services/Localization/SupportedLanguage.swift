@@ -9,6 +9,10 @@ enum SupportedLanguage: String, CaseIterable {
     case en = "en-US"
     case uk = "uk-UA"
     
+    init?(code: String) {
+        self.init(rawValue: code)
+    }
+    
     var flagImageName: String {
         switch self {
         case .en: return "usa_flag"

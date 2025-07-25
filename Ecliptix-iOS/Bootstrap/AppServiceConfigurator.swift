@@ -7,7 +7,7 @@
 
 enum AppServiceConfigurator {
     @MainActor static func registerCoreServices() {
-        ServiceLocator.shared.register(AppSettings.self, service: AppSettings())
+        ServiceLocator.shared.register(DefaultSystemSettings.self, service: DefaultSystemSettings())
         ServiceLocator.shared.register(SecureStorageProviderProtocol.self, service: KeychainStorageProvider(ttlDays: 90))
         
         ServiceLocator.shared.register(NavigationService.self, service: NavigationService())

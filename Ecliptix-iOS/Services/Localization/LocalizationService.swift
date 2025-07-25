@@ -35,16 +35,13 @@ final class LocalizationService: ObservableObject {
             self.objectWillChange.send()
         }
     }
-
-    func toggleLanguage() {
-        let next = currentLanguage.next
-        load(locale: next.code)
-    }
     
-    func setLanguage(_ language: SupportedLanguage) {
+    func setLanguage(_ language: SupportedLanguage, onCultureChanged: (() -> Void)? = nil) {
         load(locale: language.code)
+        
         DispatchQueue.main.async {
             self.objectWillChange.send()
+            onCultureChanged?()
         }
     }
 

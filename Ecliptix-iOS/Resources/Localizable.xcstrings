@@ -28,22 +28,19 @@
     "Create a Pass phase" : {
 
     },
-    "Create a Password" : {
-
-    },
     "Device ID could not be retrieved." : {
 
     },
     "Device ID is not a valid UUID." : {
 
     },
+    "Enter Secret Key" : {
+
+    },
     "Failed to unwrap SignInComplete request" : {
 
     },
     "Internet connection" : {
-
-    },
-    "Make sure it’s secure and something you’ll remember." : {
 
     },
     "Make sure it’s something you’ll remember." : {
@@ -66,9 +63,6 @@
 
     },
     "Needs %lld chars (a, A, 1, #)" : {
-
-    },
-    "Next" : {
 
     },
     "No internet connection" : {
@@ -123,9 +117,6 @@
 
     },
     "Required" : {
-
-    },
-    "Secret Key" : {
 
     },
     "The wallet designed to make digital ID and global finance simple for all." : {

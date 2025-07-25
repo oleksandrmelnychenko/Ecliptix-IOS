@@ -28,6 +28,7 @@ struct Ecliptix_iOSApp: App {
         establishConnectionExecutor = ApplicationInitializer(
             networkProvider: try! ServiceLocator.shared.resolve(NetworkProvider.self),
             secureStorageProvider: try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
+            localizationService: localService,
             systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
     }
     
@@ -45,7 +46,7 @@ struct Ecliptix_iOSApp: App {
                 guard !didInitialize else { return }
                 didInitialize = true
                 
-                _ = await establishConnectionExecutor.initializeAsync()
+                _ = await establishConnectionExecutor.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
             }
         }
     }
