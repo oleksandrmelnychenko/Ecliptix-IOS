@@ -16,7 +16,7 @@ enum OpaqueConstants {
     static let serverMacKeyInfo = Data("server_mac_key".utf8)
     static let protocolVersion = Data("Ecliptix-OPAQUE-v1".utf8)
 
-    static let compressedPublicKeyLength = 33
+    static let ecCompressedPointLength = 33
     static let defaultKeyLength = 32
     static let macKeyLength = 32
 

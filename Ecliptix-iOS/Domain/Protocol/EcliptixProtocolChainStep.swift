@@ -448,6 +448,8 @@ final class EcliptixProtocolChainStep {
     }
     
     private func handleDhKeyUpdate(newDhPrivateKey: inout Data?, newDhPublicKey: inout Data?) -> Result<Unit, EcliptixProtocolFailure> {
+        self.messageKeys.removeAll()
+        
         if newDhPrivateKey == nil && newDhPublicKey == nil {
             return Self.okResult
         }
