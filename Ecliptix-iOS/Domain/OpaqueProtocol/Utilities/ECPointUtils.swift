@@ -127,10 +127,4 @@ struct ECPointUtils {
         }
         return result
     }
-    
-    static func describePoint(_ point: OpaquePointer, group: OpaquePointer, ctx: OpaquePointer) -> String {
-        var buffer = [UInt8](repeating: 0, count: 65)
-        let len = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, &buffer, buffer.count, ctx)
-        return len > 0 ? Data(buffer[..<len]).map { String(format: "%02x", $0) }.joined() : "<invalid>"
-    }
 }

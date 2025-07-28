@@ -13,7 +13,7 @@ import OpenSSL
 struct OpaqueCryptoUtilities {
     static func hkdfExtract(ikm: Data, salt: Data?) -> Result<Data, OpaqueFailure> {
         guard !ikm.isEmpty else {
-            return .failure(.invalidInput())
+            return .failure(.invalidInput("IKM is empty"))
         }
 
         let effectiveSalt = (salt?.isEmpty ?? true)
@@ -24,19 +24,27 @@ struct OpaqueCryptoUtilities {
         return .success(Data(prk))
     }
     
-    static func hkdfExpand(prk: Data, info: Data, outputLength: Int) -> Data {
+    static func hkdfExpand(prk: Data, info: Data, outputLength: Int) -> Result<Data, OpaqueFailure> {
+        guard !prk.isEmpty else {
+            return .failure(.invalidInput("PRK is empty"))
+        }
+        
         let pseudoRandomKey = SymmetricKey(data: prk)
         let okm = HKDF<SHA256>.expand(
             pseudoRandomKey: pseudoRandomKey,
             info: info,
             outputByteCount: outputLength
         )
-        return okm.withUnsafeBytes { Data($0) }
+        let keyData = okm.withUnsafeBytes { Data($0) }
+        return .success(keyData)
     }
     
-    static func deriveKey(ikm: Data, salt: Data?, info: Data, outputLength: Int) -> Data {
-        let pseudoRandomKey = SymmetricKey(data: ikm)
+    static func deriveKey(ikm: Data, salt: Data?, info: Data, outputLength: Int) -> Result<Data, OpaqueFailure> {
+        guard !ikm.isEmpty else {
+            return .failure(.invalidInput("IKM is empty"))
+        }
         
+        let pseudoRandomKey = SymmetricKey(data: ikm)
         let derived = HKDF<SHA256>.deriveKey(
             inputKeyMaterial: pseudoRandomKey,
             salt: salt ?? Data(),
@@ -44,7 +52,8 @@ struct OpaqueCryptoUtilities {
             outputByteCount: outputLength
         )
         
-        return derived.withUnsafeBytes { Data($0) }
+        let keyData = derived.withUnsafeBytes { Data($0) }
+        return .success(keyData)
     }
     
     static func encrypt(plaintext: Data, key: Data, associatedData: Data?) -> Result<Data, OpaqueFailure> {
@@ -52,54 +61,93 @@ struct OpaqueCryptoUtilities {
             return .failure(.encryptFailed("Invalid key length"))
         }
 
-        let ctx = EVP_CIPHER_CTX_new()
+        guard let ctx = EVP_CIPHER_CTX_new() else {
+            return .failure(.encryptFailed("Failed to create cipher context"))
+        }
         defer { EVP_CIPHER_CTX_free(ctx) }
+        
+        let nonce = Data((0..<OpaqueConstants.aesGcmNonceLengthBytes).map { _ in UInt8.random(in: 0...255) })
 
-        var outLen: Int32 = 0
-        var tag = Data(count: 16)
-        var ciphertext = Data(count: plaintext.count + 16)
-
-        let nonce = (0..<OpaqueConstants.aesGcmNonceLengthBytes).map { _ in UInt8.random(in: 0...255) }
-        let nonceData = Data(nonce)
-
+        // Init context
         guard EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
-            return .failure(.encryptFailed("Init failed"))
+            return .failure(.encryptFailed("EncryptInit_ex failed"))
         }
 
-        guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Int32(nonceData.count), nil) == 1 else {
+        guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Int32(nonce.count), nil) == 1 else {
             return .failure(.encryptFailed("Setting IV length failed"))
         }
 
-        key.withUnsafeBytes { keyPtr in
-            _ = nonceData.withUnsafeBytes { noncePtr in
-                EVP_EncryptInit_ex(ctx, nil, nil, keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self))
+        guard key.withUnsafeBytes({ keyPtr in
+            nonce.withUnsafeBytes { noncePtr in
+                EVP_EncryptInit_ex(
+                    ctx, nil, nil,
+                    keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self)
+                ) == 1
             }
+        }) else {
+            return .failure(.encryptFailed("EncryptInit_ex key/nonce failed"))
         }
 
+        // AAD
         if let aad = associatedData, !aad.isEmpty {
-            _ = aad.withUnsafeBytes { aadPtr in
-                EVP_EncryptUpdate(ctx, nil, &outLen, aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(aad.count))
+            let result = aad.withUnsafeBytes { aadPtr in
+                var outLen: Int32 = 0
+                return EVP_EncryptUpdate(
+                    ctx,
+                    nil,
+                    &outLen,
+                    aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    Int32(aad.count)
+                ) == 1
+            }
+            if !result {
+                return .failure(.encryptFailed("AAD failed"))
             }
         }
 
+        // Ciphertext
+        var ciphertext = Data(count: plaintext.count)
         var cipherLen: Int32 = 0
-        plaintext.withUnsafeBytes { plainPtr in
-            _ = ciphertext.withUnsafeMutableBytes { cipherPtr in
-                EVP_EncryptUpdate(ctx, cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), &cipherLen, plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(plaintext.count))
+        
+        let updateOk = plaintext.withUnsafeBytes { plainPtr in
+            ciphertext.withUnsafeMutableBytes { cipherPtr in
+                EVP_EncryptUpdate(
+                    ctx,
+                    cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    &cipherLen,
+                    plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    Int32(plaintext.count)
+                ) == 1
             }
         }
 
-        outLen = 0
-        _ = ciphertext.withUnsafeMutableBytes {
-            EVP_EncryptFinal_ex(ctx, $0.baseAddress?.assumingMemoryBound(to: UInt8.self).advanced(by: Int(cipherLen)), &outLen)
+        if !updateOk {
+            return .failure(.encryptFailed("EncryptUpdate failed"))
+        }
+        
+        // Finalize
+        var finalLen: Int32 = 0
+        guard ciphertext.withUnsafeMutableBytes({
+            EVP_EncryptFinal_ex(
+                ctx,
+                $0.baseAddress?.assumingMemoryBound(to: UInt8.self).advanced(by: Int(cipherLen)),
+                &finalLen
+            ) == 1
+        }) else {
+            return .failure(.encryptFailed("EncryptFinal failed"))
         }
 
-        _ = tag.withUnsafeMutableBytes {
-            EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, $0.baseAddress)
+        // Get tag
+        var tagBytes = [UInt8](repeating: 0, count: OpaqueConstants.aesGcmTagLengthBytes)
+        guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, Int32(tagBytes.count), &tagBytes) == 1 else {
+            return .failure(.encryptFailed("Get TAG failed"))
         }
+        let tag = Data(tagBytes)
 
+        // Compose output
         var output = Data()
-        output.append(nonceData)
+        output.append(nonce)
         output.append(ciphertext.prefix(Int(cipherLen)))
         output.append(tag)
 
@@ -112,7 +160,7 @@ struct OpaqueCryptoUtilities {
         }
 
         let nonceLen = OpaqueConstants.aesGcmNonceLengthBytes
-        let tagLen = OpaqueConstants.aesGcmTagLengthBits / 8
+        let tagLen = OpaqueConstants.aesGcmTagLengthBytes
 
         guard ciphertextWithNonce.count >= nonceLen + tagLen else {
             return .failure(.decryptFailed("Ciphertext too short"))
@@ -122,53 +170,95 @@ struct OpaqueCryptoUtilities {
         let tag = ciphertextWithNonce.suffix(tagLen)
         let ciphertext = ciphertextWithNonce.dropFirst(nonceLen).dropLast(tagLen)
 
-        let ctx = EVP_CIPHER_CTX_new()
+        guard let ctx = EVP_CIPHER_CTX_new() else {
+            return .failure(.decryptFailed("Failed to create cipher context"))
+        }
         defer { EVP_CIPHER_CTX_free(ctx) }
 
         guard EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
-            return .failure(.decryptFailed("Init failed"))
+            return .failure(.decryptFailed("DecryptInit failed"))
         }
 
         guard EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Int32(nonce.count), nil) == 1 else {
             return .failure(.decryptFailed("Setting IV length failed"))
         }
 
-        key.withUnsafeBytes { keyPtr in
-            _ = nonce.withUnsafeBytes { noncePtr in
-                EVP_DecryptInit_ex(ctx, nil, nil, keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self))
+        guard key.withUnsafeBytes({ keyPtr in
+            nonce.withUnsafeBytes { noncePtr in
+                EVP_DecryptInit_ex(
+                    ctx, nil, nil,
+                    keyPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    noncePtr.baseAddress?.assumingMemoryBound(to: UInt8.self)
+                ) == 1
             }
+        }) else {
+            return .failure(.decryptFailed("DecryptInit_ex key/nonce failed"))
         }
 
         if let aad = associatedData, !aad.isEmpty {
-            aad.withUnsafeBytes { aadPtr in
+            let aadOk = aad.withUnsafeBytes { aadPtr in
                 var outLen: Int32 = 0
-                EVP_DecryptUpdate(ctx, nil, &outLen, aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(aad.count))
+                return EVP_DecryptUpdate(ctx, nil, &outLen,
+                                         aadPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                                         Int32(aad.count)) == 1
+            }
+            if !aadOk {
+                return .failure(.decryptFailed("AAD failed"))
             }
         }
 
-        var plaintext = Data(count: ciphertext.count)
-        var outLen: Int32 = 0
-        ciphertext.withUnsafeBytes { cipherPtr in
-            _ = plaintext.withUnsafeMutableBytes { plainPtr in
-                EVP_DecryptUpdate(ctx, plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), &outLen, cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(ciphertext.count))
+        var plaintext = Data(count: ciphertext.count + tagLen)
+        var totalLen: Int32 = 0
+
+        let updateOk = ciphertext.withUnsafeBytes { cipherPtr in
+            plaintext.withUnsafeMutableBytes { plainPtr in
+                EVP_DecryptUpdate(
+                    ctx,
+                    plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    &totalLen,
+                    cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    Int32(ciphertext.count)
+                ) == 1
             }
         }
 
-        _ = tag.withUnsafeBytes {
-            EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, Int32(tag.count), UnsafeMutableRawPointer(mutating: $0.baseAddress))
+        if !updateOk {
+            return .failure(.decryptFailed("DecryptUpdate failed"))
         }
 
-        if EVP_DecryptFinal_ex(ctx, nil, &outLen) != 1 {
+        // Set TAG
+        guard tag.withUnsafeBytes({
+            EVP_CIPHER_CTX_ctrl(
+                ctx,
+                EVP_CTRL_GCM_SET_TAG,
+                Int32(tag.count),
+                UnsafeMutableRawPointer(mutating: $0.baseAddress)
+            ) == 1
+        }) else {
+            return .failure(.decryptFailed("Setting tag failed"))
+        }
+
+        // Finalize decryption
+        var finalLen: Int32 = 0
+        let finalOk = plaintext.withUnsafeMutableBytes { plainPtr in
+            EVP_DecryptFinal_ex(
+                ctx,
+                plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self).advanced(by: Int(totalLen)),
+                &finalLen
+            ) == 1
+        }
+        
+        if !finalOk {
             return .failure(.decryptFailed("Invalid tag, authentication failed"))
         }
 
-        return .success(plaintext)
+        return .success(plaintext.prefix(Int(totalLen + finalLen)))
     }
     
     static func createMac(key: Data, data: Data) -> Data {
         let symmetricKey = SymmetricKey(data: key)
         let hmac = HMAC<SHA256>.authenticationCode(for: data, using: symmetricKey)
-        return hmac.withUnsafeBytes { Data($0) }
+        return Data(hmac)
     }
     
     static func recoverOprfKey(oprfResponse: Data, blind: UnsafePointer<BIGNUM>, group: OpaquePointer) -> Result<Data, OpaqueFailure> {
@@ -184,95 +274,79 @@ struct OpaqueCryptoUtilities {
             return .failure(.pointDecodingFailed("Failed to decode EC_POINT"))
         }
 
-        guard let order = BN_new() else {
-            return .failure(.invalidInput("Failed to allocate BIGNUM for order"))
+        guard let order = BN_new(), EC_GROUP_get_order(group, order, ctx) == 1 else {
+            return .failure(.invalidInput("Failed to get group order"))
         }
         defer { BN_free(order) }
 
-        guard EC_GROUP_get_order(group, order, ctx) == 1 else {
-            return .failure(.invalidInput("Failed to get group order"))
-        }
-
-        guard let blindInv = BN_new() else {
-            return .failure(.invalidInput("Failed to allocate BIGNUM for inverse"))
+        guard let blindInv = BN_mod_inverse(nil, blind, order, ctx) else {
+            return .failure(.invalidInput("Failed to compute modular inverse"))
         }
         defer { BN_free(blindInv) }
 
-        guard BN_mod_inverse(blindInv, blind, order, ctx) != nil else {
-            return .failure(.invalidInput("Failed to compute modular inverse"))
-        }
-
-        let finalPoint = EC_POINT_new(group)!
-        defer { EC_POINT_free(finalPoint) }
-
-        guard EC_POINT_mul(group, finalPoint, nil, point, blindInv, ctx) == 1 else {
+        guard let finalPoint = EC_POINT_new(group),
+              EC_POINT_mul(group, finalPoint, nil, point, blindInv, ctx) == 1 else {
             return .failure(.pointMultiplicationFailed("Failed to multiply point with inverse"))
         }
-        
+        defer { EC_POINT_free(finalPoint) }
+
         return ECPointUtils.compressPoint(finalPoint, group: group, ctx: ctx)
     }
 
     static func hashToPoint(_ input: Data) -> Result<Data, OpaqueFailure> {
-        let ctx = EVP_MD_CTX_new()
-        guard ctx != nil else {
+        guard let ctx = EVP_MD_CTX_new() else {
             return .failure(.hashingValidPointFailed("Failed to create EVP context"))
         }
         defer { EVP_MD_CTX_free(ctx) }
 
+        guard let ecGroup = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1) else {
+            return .failure(.hashingValidPointFailed("Failed to create curve group"))
+        }
+        defer { EC_GROUP_free(ecGroup) }
+
+        guard let bnCtx = BN_CTX_new() else {
+            return .failure(.hashingValidPointFailed("Failed to create BN_CTX"))
+        }
+        defer { BN_CTX_free(bnCtx) }
+
+        let hashLen = Int(EVP_MD_get_size(EVP_sha256()))
         var counter: UInt8 = 0
-        let maxAttempts: UInt8 = 255
 
-        while counter < maxAttempts {
-            var hash = Data(repeating: 0, count: Int(EVP_MD_get_size(EVP_sha256())))
+        while counter < 255 {
+            var hash = [UInt8](repeating: 0, count: hashLen)
+
             EVP_DigestInit_ex(ctx, EVP_sha256(), nil)
-            _ = input.withUnsafeBytes { EVP_DigestUpdate(ctx, $0.baseAddress, input.count) }
-            var c = counter
-            _ = withUnsafeBytes(of: &c) { EVP_DigestUpdate(ctx, $0.baseAddress, 1) }
-            _ = hash.withUnsafeMutableBytes {
-                EVP_DigestFinal_ex(ctx, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), nil)
-            }
+            input.withUnsafeBytes { _ = EVP_DigestUpdate(ctx, $0.baseAddress, input.count) }
+            withUnsafeBytes(of: counter) { _ = EVP_DigestUpdate(ctx, $0.baseAddress, 1) }
+            EVP_DigestFinal_ex(ctx, &hash, nil)
 
-            guard let x = BN_bin2bn([UInt8](hash), Int32(hash.count), nil),
-                  let max = BN_new() else {
+            guard let x = BN_bin2bn(hash, Int32(hash.count), nil) else {
                 counter += 1
                 continue
             }
-            defer {
-                BN_free(x)
-                BN_free(max)
+            defer { BN_free(x) }
+
+            // Якщо x валідне — створити EC_POINT
+            let pubKeyBytes = [OpaqueConstants.ecCompressedPrefixEven] + hash.prefix(OpaqueConstants.defaultKeyLength)
+            guard let point = EC_POINT_new(ecGroup) else {
+                counter += 1
+                continue
+            }
+            defer { EC_POINT_free(point) }
+
+            let success = pubKeyBytes.withUnsafeBytes {
+                EC_POINT_oct2point(ecGroup, point, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), pubKeyBytes.count, bnCtx) == 1 &&
+                EC_POINT_is_on_curve(ecGroup, point, bnCtx) == 1
             }
 
-            let maxBytes = [UInt8](repeating: 0xFF, count: 32)
-            _ = BN_bin2bn(maxBytes, 32, max)
-
-            if BN_is_zero(x) == 0 && BN_cmp(x, max) < 0 {
-                let pub = Data([0x02]) + hash.prefix(32)
-                let ecGroup = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1)!
-                defer { EC_GROUP_free(ecGroup) }
-
-                let bnCtx = BN_CTX_new()!
-                defer { BN_CTX_free(bnCtx) }
-
-                guard let point = EC_POINT_new(ecGroup) else {
-                    counter += 1
-                    continue
-                }
-                defer { EC_POINT_free(point) }
-
-                let buf = pub.withUnsafeBytes { $0.baseAddress?.assumingMemoryBound(to: UInt8.self) }
-                if EC_POINT_oct2point(ecGroup, point, buf, pub.count, bnCtx) != 1 ||
-                    EC_POINT_is_on_curve(ecGroup, point, bnCtx) != 1 {
-                    counter += 1
-                    continue
-                }
-
+            if success {
                 return ECPointUtils.compressPoint(point, group: ecGroup, ctx: bnCtx)
             }
 
             counter += 1
         }
 
-        return .failure(.hashingValidPointFailed("Failed to find valid EC point in \(maxAttempts) attempts"))
+        return .failure(.hashingValidPointFailed("Failed to find valid EC point in 255 attempts"))
     }
 }
 

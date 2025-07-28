@@ -936,7 +936,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "B99A6C05-898D-4ADB-8695-46BB1B4A866B"
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
@@ -1010,6 +1010,116 @@
             endingLineNumber = "22"
             landmarkName = "body"
             landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DB2E637C-D7AB-46B4-950E-DCAEE9F0AD09"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "173"
+            endingLineNumber = "173"
+            landmarkName = "submitRegistrationPassword()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "DB2E637C-D7AB-46B4-950E-DCAEE9F0AD09 - 98f030227151e526"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #2 (Ecliptix_iOS.Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, Foundation.Data, Foundation.Data, Foundation.Data, Ecliptix_iOS.OpaqueProtocolService) async -&gt; () in closure #2 (Ecliptix_iOS.Ecliptix_Proto_Membership_OpaqueSignInInitResponse) async -&gt; () in closure #2 (Foundation.Data, (oprfRequest: Foundation.Data, blind: Swift.UnsafeMutablePointer&lt;__C.bignum_st&gt;)) async -&gt; () in Ecliptix_iOS.SignInViewModel.submitRegistrationPassword() async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "173"
+                  endingLineNumber = "173">
+               </Location>
+               <Location
+                  uuid = "DB2E637C-D7AB-46B4-950E-DCAEE9F0AD09 - 3563dc8e0b7aa124"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #2 (Ecliptix_iOS.Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, Foundation.Data, Foundation.Data, Foundation.Data, Ecliptix_iOS.OpaqueProtocolService) async -&gt; () in closure #2 (Ecliptix_iOS.Ecliptix_Proto_Membership_OpaqueSignInInitResponse) async -&gt; () in closure #2 (Foundation.Data, (oprfRequest: Foundation.Data, blind: Swift.UnsafeMutablePointer&lt;__C.bignum_st&gt;)) async -&gt; () in Ecliptix_iOS.SignInViewModel.submitRegistrationPassword() async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "173"
+                  endingLineNumber = "173">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1C85E3EE-1B58-4801-A919-932B527314F9"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Views/Authentication/SignIn/SignInViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "164"
+            endingLineNumber = "164"
+            landmarkName = "submitRegistrationPassword()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "897CCE63-FA3A-4400-82DA-50EFD875E56A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Domain/OpaqueProtocol/OpaqueClientAuthentication.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "23"
+            endingLineNumber = "23"
+            landmarkName = "createSignInFinalizationRequest(phoneNumber:passwordData:signInResponse:blind:staticPublicKeyPoint:staticPublicKey:group:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BC60288A-5C3D-4EBE-8543-368973D1D1F9"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Domain/OpaqueProtocol/OpaqueAke.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "23"
+            endingLineNumber = "23"
+            landmarkName = "performClientAke(ephPrivateKey:statPrivateKey:statSPub:ephSPub:group:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0BCFAF37-114F-42E8-9816-CEE4ABB14856"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Domain/OpaqueProtocol/OpaqueClientAuthentication.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "81"
+            endingLineNumber = "81"
+            landmarkName = "createSignInFinalizationRequest(phoneNumber:passwordData:signInResponse:blind:staticPublicKeyPoint:staticPublicKey:group:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

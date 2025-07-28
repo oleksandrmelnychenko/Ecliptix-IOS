@@ -54,7 +54,7 @@ enum TranscriptHasher {
     }
     
     private static func digestFinal(ctx: OpaquePointer) -> Result<Data, OpaqueFailure> {
-        var hash = Data(repeating: 0, count: 32)
+        var hash = Data(repeating: 0, count: OpaqueConstants.defaultKeyLength)
         var outLen: UInt32 = 0
         let success = hash.withUnsafeMutableBytes {
             EVP_DigestFinal_ex(ctx, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), &outLen) == 1

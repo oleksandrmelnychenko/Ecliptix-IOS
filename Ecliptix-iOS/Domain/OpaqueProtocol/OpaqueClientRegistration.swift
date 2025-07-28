@@ -22,12 +22,16 @@ enum OpaqueClientRegistration {
             }
 
             // Step 2: Derive credential key
-            let credentialKey = OpaqueCryptoUtilities.deriveKey(
+            let credentialKeyResult = OpaqueCryptoUtilities.deriveKey(
                 ikm: oprfKey,
                 salt: nil,
                 info: OpaqueConstants.credentialKeyInfo,
                 outputLength: OpaqueConstants.defaultKeyLength
             )
+            guard case let .success(credentialKey) = credentialKeyResult else {
+                return .failure(try credentialKeyResult.unwrapErr())
+            }
+
 
             // Step 3: Generate key pair
             guard let (privBN, pubPoint) = ECPointUtils.generateKeyPair(group: group) else {

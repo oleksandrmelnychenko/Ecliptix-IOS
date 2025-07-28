@@ -111,7 +111,6 @@ class OpaqueProtocolService {
                 return .failure(try compressedResult.unwrapErr())
             }
 
-            
             return .success((oprfRequest: compressed, blind: blind))
         } catch {
             return .failure(.invalidInput("Error during create oprf request", inner: error))

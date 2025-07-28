@@ -25,12 +25,16 @@ enum OpaqueClientAuthentication {
             }
 
             // 2. Credential Key
-            let credentialKey = OpaqueCryptoUtilities.deriveKey(
+            let credentialKeyResult = OpaqueCryptoUtilities.deriveKey(
                 ikm: oprfKey,
                 salt: nil,
                 info: OpaqueConstants.credentialKeyInfo,
                 outputLength: OpaqueConstants.defaultKeyLength
             )
+            guard case let .success(credentialKey) = credentialKeyResult else {
+                return .failure(try credentialKeyResult.unwrapErr())
+            }
+
             
             // 3. Validate registration record
             guard signInResponse.registrationRecord.count >= OpaqueConstants.ecCompressedPointLength else {
@@ -125,30 +129,41 @@ enum OpaqueClientAuthentication {
         }
     }
     
-    private static func deriveFinalKeys(akeResult: Data, transcriptHash: Data) -> Result<(sessionKey: Data, clientMacKey: Data, serverMacKey: Data), OpaqueFailure> {
-        do {
-            let prkResult = OpaqueCryptoUtilities.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt)
-
-            guard case .success(let prk) = prkResult else {
-                return .failure(try prkResult.unwrapErr())
-            }
-
+    private static func deriveFinalKeys(
+        akeResult: Data,
+        transcriptHash: Data
+    ) -> Result<(sessionKey: Data, clientMacKey: Data, serverMacKey: Data), OpaqueFailure> {
+        return OpaqueCryptoUtilities.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt).flatMap { prk in
             var infoBuffer = Data(count: OpaqueConstants.sessionKeyInfo.count + transcriptHash.count)
             infoBuffer.replaceSubrange(OpaqueConstants.sessionKeyInfo.count..<infoBuffer.count, with: transcriptHash)
-            
+
+            // sessionKey
             infoBuffer.replaceSubrange(0..<OpaqueConstants.sessionKeyInfo.count, with: OpaqueConstants.sessionKeyInfo)
-            let sessionKey = OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+            return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).flatMap { sessionKey in
 
-            infoBuffer.replaceSubrange(0..<OpaqueConstants.clientMacKeyInfo.count, with: OpaqueConstants.clientMacKeyInfo)
-            let clientMacKey = OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                // clientMacKey
+                infoBuffer.replaceSubrange(0..<OpaqueConstants.clientMacKeyInfo.count, with: OpaqueConstants.clientMacKeyInfo)
+                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).flatMap { clientMacKey in
 
-            infoBuffer.replaceSubrange(0..<OpaqueConstants.serverMacKeyInfo.count, with: OpaqueConstants.serverMacKeyInfo)
-            let serverMacKey = OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
-
-            return .success((sessionKey, clientMacKey, serverMacKey))
-        } catch {
-            return .failure(error as! OpaqueFailure)
+                    // serverMacKey
+                    infoBuffer.replaceSubrange(0..<OpaqueConstants.serverMacKeyInfo.count, with: OpaqueConstants.serverMacKeyInfo)
+                    return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).map { serverMacKey in
+                        (sessionKey, clientMacKey, serverMacKey)
+                    }
+                }
+            }
         }
+    }
+    
+    private static func expandKey(infoPrefix: Data, transcriptHash: Data, prk: Data) -> Result<Data, OpaqueFailure> {
+        var info = Data()
+        info.append(infoPrefix)
+        info.append(transcriptHash)
+        return OpaqueCryptoUtilities.hkdfExpand(
+            prk: prk,
+            info: info,
+            outputLength: OpaqueConstants.macKeyLength
+        )
     }
     
     private static func deriveClientStaticPrivateKey(
@@ -169,6 +184,7 @@ enum OpaqueClientAuthentication {
         guard let bnMutable = BN_bin2bn([UInt8](data), Int32(data.count), nil) else {
             return .failure(.invalidInput("Failed to create private key BIGNUM"))
         }
+        
         return .success(bnMutable)
     }
 
