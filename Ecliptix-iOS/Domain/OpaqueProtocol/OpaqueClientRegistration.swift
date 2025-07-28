@@ -30,7 +30,7 @@ enum OpaqueClientRegistration {
             )
 
             // Step 3: Generate key pair
-            guard let (privBN, pubPoint) = OpaqueCryptoUtilities.generateKeyPair(group: group) else {
+            guard let (privBN, pubPoint) = ECPointUtils.generateKeyPair(group: group) else {
                 return .failure(.invalidInput("Failed to generate EC key pair"))
             }
             defer {
@@ -38,9 +38,15 @@ enum OpaqueClientRegistration {
                 EC_POINT_free(pubPoint)
             }
 
+            let ctx = BN_CTX_new()
+            guard let ctx else {
+                return .failure(.invalidInput("Failed to allocate BN_CTX"))
+            }
+            defer { BN_CTX_free(ctx) }
+            
             // Step 4: Serialize keys
             guard case let .success(clientPrivateKeyBytes) = exportPrivateKey(privBN),
-                  case let .success(clientPublicKeyBytes) = exportCompressedPublicKey(pubPoint, group: group) else {
+                  case let .success(clientPublicKeyBytes) = ECPointUtils.compressPoint(pubPoint, group: group, ctx: ctx) else {
                 return .failure(.pointCompressionFailed("Key export failed"))
             }
 
@@ -70,19 +76,5 @@ enum OpaqueClientRegistration {
         var buffer = [UInt8](repeating: 0, count: Int(length))
         BN_bn2bin(bn, &buffer)
         return .success(Data(buffer))
-    }
-
-    private static func exportCompressedPublicKey(_ point: OpaquePointer, group: OpaquePointer) -> Result<Data, OpaqueFailure> {
-        var output = Data(repeating: 0, count: 33)
-        let written = output.withUnsafeMutableBytes {
-            EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED,
-                               $0.baseAddress?.assumingMemoryBound(to: UInt8.self), 33, nil)
-        }
-
-        guard written == 33 else {
-            return .failure(.pointCompressionFailed("Compressed key must be 33 bytes"))
-        }
-
-        return .success(output)
     }
 }

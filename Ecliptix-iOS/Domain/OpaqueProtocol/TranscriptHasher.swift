@@ -9,7 +9,6 @@ import Foundation
 import OpenSSL
 
 enum TranscriptHasher {
-    
     static func hash(
         phoneNumber: String,
         oprfResponse: Data,

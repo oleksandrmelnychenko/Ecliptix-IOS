@@ -23,16 +23,16 @@ final class HashToPointTests: XCTestCase {
 //        }
 //    }
     
-    func test_hashToPoint_shouldMatchExpected() {
-        let phoneNumber = "+380970177981"
-        let 
-        
-        TranscriptHasher.hash(
-            phoneNumber: <#T##String#>,
-            oprfResponse: <#T##Data#>,
-            clientStaticPublicKey: <#T##Data#>,
-            clientEphemeralPublicKey: <#T##Data#>,
-            serverStaticPublicKey: <#T##Data#>,
-            serverEphemeralPublicKey: <#T##Data#>)
-    }
+//    func test_hashToPoint_shouldMatchExpected() {
+//        let phoneNumber = "+380970177981"
+//        let 
+//        
+//        TranscriptHasher.hash(
+//            phoneNumber: <#T##String#>,
+//            oprfResponse: <#T##Data#>,
+//            clientStaticPublicKey: <#T##Data#>,
+//            clientEphemeralPublicKey: <#T##Data#>,
+//            serverStaticPublicKey: <#T##Data#>,
+//            serverEphemeralPublicKey: <#T##Data#>)
+//    }
 }

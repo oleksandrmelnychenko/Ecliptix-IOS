@@ -32,18 +32,13 @@ enum OpaqueClientAuthentication {
                 outputLength: OpaqueConstants.defaultKeyLength
             )
             
-            print("CredentialKey:", credentialKey.hexEncodedString())
-
             // 3. Validate registration record
-            guard signInResponse.registrationRecord.count >= OpaqueConstants.compressedPublicKeyLength else {
+            guard signInResponse.registrationRecord.count >= OpaqueConstants.ecCompressedPointLength else {
                 return .failure(.invalidInput("Invalid registration record: too short."))
             }
 
-            let clientStaticPublicKeyBytes = signInResponse.registrationRecord.prefix(OpaqueConstants.compressedPublicKeyLength)
-            let envelope = signInResponse.registrationRecord.dropFirst(OpaqueConstants.compressedPublicKeyLength)
-
-            print("Envelope bytes:", envelope.hexEncodedString())
-            
+            let clientStaticPublicKeyBytes = signInResponse.registrationRecord.prefix(OpaqueConstants.ecCompressedPointLength)
+            let envelope = signInResponse.registrationRecord.dropFirst(OpaqueConstants.ecCompressedPointLength)
             
             // 4. Static private key decryption
             let staticKeyResult = deriveClientStaticPrivateKey(
@@ -52,20 +47,19 @@ enum OpaqueClientAuthentication {
                 associatedData: passwordData
             )
             guard case let .success(clientStaticPrivateKeyBN) = staticKeyResult else {
-                return staticKeyResult.map { _ in fatalError() }
+                return .failure(try staticKeyResult.unwrapErr())
             }
-
-            print("clientStaticPrivateKeyBN is zero:", BN_is_zero(clientStaticPrivateKeyBN) == 1)
             
             // 5. Generate ephemeral key pair
             let ephKeyResult = createClientEphemeralKeyPair(group: group)
             guard case let .success((ephPrivateBN, ephPublicPoint)) = ephKeyResult else {
-               return ephKeyResult.map { _ in fatalError() }
+                return .failure(try ephKeyResult.unwrapErr())
             }
             
             defer {
                 BN_free(ephPrivateBN)
                 EC_POINT_free(ephPublicPoint)
+                BN_free(clientStaticPrivateKeyBN)
             }
             
             // 6. Decode server ephemeral public key
@@ -75,7 +69,7 @@ enum OpaqueClientAuthentication {
             }
             defer { BN_CTX_free(ctx) }
             
-            guard case let .success(ephSPubPoint) = OpaqueCryptoUtilities.decodeCompressedPoint(signInResponse.serverEphemeralPublicKey, group: group, ctx: ctx) else {
+            guard case let .success(ephSPubPoint) = ECPointUtils.decodeCompressedPoint(signInResponse.serverEphemeralPublicKey, group: group, ctx: ctx) else {
                 return .failure(.invalidInput("Failed to decode server ephemeral key"))
             }
             
@@ -88,24 +82,13 @@ enum OpaqueClientAuthentication {
                 group: group
             )
             guard case let .success(ake) = akeResult else {
-                return akeResult.map { _ in fatalError() }
+                return .failure(try akeResult.unwrapErr())
             }
             
             // 8. Compress client ephemeral public key
-            var clientEphemeralPubKey = Data(repeating: 0, count: 33)
-            let written = clientEphemeralPubKey.withUnsafeMutableBytes {
-                EC_POINT_point2oct(
-                    group,
-                    ephPublicPoint,
-                    POINT_CONVERSION_COMPRESSED,
-                    $0.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                    33,
-                    nil
-                )
-            }
-
-            guard written == 33 else {
-                return .failure(.pointCompressionFailed("Invalid ephemeral public key size"))
+            var clientEphemeralPubKeyResult = ECPointUtils.compressPoint(ephPublicPoint, group: group, ctx: ctx)
+            guard case let .success(clientEphemeralPubKey) = clientEphemeralPubKeyResult else {
+                return .failure(try clientEphemeralPubKeyResult.unwrapErr())
             }
 
             // 9. Build transcript hash
@@ -118,14 +101,13 @@ enum OpaqueClientAuthentication {
                 serverEphemeralPublicKey: signInResponse.serverEphemeralPublicKey
             )
             guard case let .success(transcriptHash) = transcriptResult else {
-                return transcriptResult.map { _ in fatalError() }
+                return .failure(try transcriptResult.unwrapErr())
             }
 
             // 10. Derive final session/mac keys
-            print("Ake: \(ake.hexEncodedString())")
             let keysResult = deriveFinalKeys(akeResult: ake, transcriptHash: transcriptHash)
             guard case let .success((sessionKey, clientMacKey, serverMacKey)) = keysResult else {
-                return keysResult.map { _ in fatalError() }
+                return .failure(try keysResult.unwrapErr())
             }
 
             // 11. MAC and finalize request
@@ -173,7 +155,7 @@ enum OpaqueClientAuthentication {
         envelope: Data,
         credentialKey: Data,
         associatedData: Data
-    ) -> Result<UnsafePointer<BIGNUM>, OpaqueFailure> {
+    ) -> Result<UnsafeMutablePointer<BIGNUM>, OpaqueFailure> {
         let decrypted = OpaqueCryptoUtilities.decrypt(
             ciphertextWithNonce: envelope,
             key: credentialKey,
@@ -184,19 +166,16 @@ enum OpaqueClientAuthentication {
             return .failure(.decryptFailed("Failed to decrypt envelope"))
         }
         
-        print("Decrypted key data:", data.hexEncodedString())
-
-        guard let bn = BN_bin2bn([UInt8](data), Int32(data.count), nil) else {
+        guard let bnMutable = BN_bin2bn([UInt8](data), Int32(data.count), nil) else {
             return .failure(.invalidInput("Failed to create private key BIGNUM"))
         }
-
-        return .success(bn)
+        return .success(bnMutable)
     }
 
     private static func createClientEphemeralKeyPair(
         group: OpaquePointer
     ) -> Result<(UnsafeMutablePointer<BIGNUM>, OpaquePointer), OpaqueFailure> {
-        guard let (priv, pub) = OpaqueCryptoUtilities.generateKeyPair(group: group) else {
+        guard let (priv, pub) = ECPointUtils.generateKeyPair(group: group) else {
             return .failure(.invalidInput("Ephemeral key generation failed"))
         }
 

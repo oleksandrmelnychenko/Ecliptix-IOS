@@ -209,20 +209,7 @@ struct OpaqueCryptoUtilities {
             return .failure(.pointMultiplicationFailed("Failed to multiply point with inverse"))
         }
         
-        var compressed = Data(repeating: 0, count: 33)
-        let tempWritten = UnsafeMutablePointer<UInt8>.allocate(capacity: 33)
-        defer { tempWritten.deallocate() }
-
-        let written = EC_POINT_point2oct(group, finalPoint, POINT_CONVERSION_COMPRESSED,
-                                         tempWritten, 33, ctx)
-        compressed.replaceSubrange(0..<33, with: UnsafeBufferPointer(start: tempWritten, count: 33))
-
-
-        guard written == 33 else {
-            return .failure(.pointCompressionFailed("Incorrect compressed point size"))
-        }
-
-        return .success(compressed)
+        return ECPointUtils.compressPoint(finalPoint, group: group, ctx: ctx)
     }
 
     static func hashToPoint(_ input: Data) -> Result<Data, OpaqueFailure> {
@@ -279,16 +266,7 @@ struct OpaqueCryptoUtilities {
                     continue
                 }
 
-                var compressed = Data(repeating: 0, count: 33)
-                let written = compressed.withUnsafeMutableBytes {
-                    EC_POINT_point2oct(ecGroup, point, POINT_CONVERSION_COMPRESSED,
-                                       $0.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                                       33, bnCtx)
-                }
-
-                if written == 33 {
-                    return .success(compressed)
-                }
+                return ECPointUtils.compressPoint(point, group: ecGroup, ctx: bnCtx)
             }
 
             counter += 1

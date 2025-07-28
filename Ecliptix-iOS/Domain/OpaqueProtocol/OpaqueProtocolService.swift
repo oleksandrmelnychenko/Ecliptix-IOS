@@ -77,7 +77,7 @@ class OpaqueProtocolService {
             let group = getDefaultGroup()
             
             // 1. Генеруємо сліпий скаляр
-            guard let blind = OpaqueCryptoUtilities.generateRandomScalar(group: group) else {
+            guard let blind = ECPointUtils.generateRandomScalar(group: group) else {
                 return .failure(.invalidInput("Failed to generate random scalar"))
             }
             
@@ -90,7 +90,7 @@ class OpaqueProtocolService {
             defer { BN_CTX_free(ctx) }
             
             // 3. Декодуємо EC_POINT з байтів
-            guard case let .success(point) = OpaqueCryptoUtilities.decodeCompressedPoint(encodedPoint, group: group, ctx: ctx) else {
+            guard case let .success(point) = ECPointUtils.decodeCompressedPoint(encodedPoint, group: group, ctx: ctx) else {
                 return .failure(.pointDecodingFailed("Failed to decode EC point from bytes"))
             }
             defer { EC_POINT_free(point) }
@@ -106,17 +106,12 @@ class OpaqueProtocolService {
             }
 
             // 5. Стиснути до байтів
-            var compressed = Data(repeating: 0, count: 33)
-            let written = compressed.withUnsafeMutableBytes {
-                EC_POINT_point2oct(group, blindedPoint, POINT_CONVERSION_COMPRESSED,
-                                   $0.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                                   33, ctx)
+            var compressedResult = ECPointUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
+            guard case let .success(compressed) = compressedResult else {
+                return .failure(try compressedResult.unwrapErr())
             }
 
-            guard written == 33 else {
-                return .failure(.pointCompressionFailed("Compressed point size incorrect"))
-            }
-
+            
             return .success((oprfRequest: compressed, blind: blind))
         } catch {
             return .failure(.invalidInput("Error during create oprf request", inner: error))
