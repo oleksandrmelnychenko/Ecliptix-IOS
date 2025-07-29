@@ -32,10 +32,10 @@ enum OpaqueClientRegistration {
                 return .failure(try credentialKeyResult.unwrapErr())
             }
 
-
             // Step 3: Generate key pair
-            guard let (privBN, pubPoint) = ECPointUtils.generateKeyPair(group: group) else {
-                return .failure(.invalidInput("Failed to generate EC key pair"))
+            let generatedKeyPairResult = ECPointUtils.generateKeyPair(group: group)
+            guard case let .success((privBN, pubPoint)) = generatedKeyPairResult else {
+                return .failure(try generatedKeyPairResult.unwrapErr())
             }
             defer {
                 BN_free(privBN)
@@ -55,7 +55,7 @@ enum OpaqueClientRegistration {
             }
 
             // Step 5: Encrypt private key (envelope)
-            let envelopeResult = OpaqueCryptoUtilities.encrypt(
+            let envelopeResult = SymmetricCryptoService.encrypt(
                 plaintext: clientPrivateKeyBytes,
                 key: credentialKey,
                 associatedData: password

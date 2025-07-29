@@ -169,14 +169,14 @@ struct RequestBuilder {
         return Result<Data, InternalValidationFailure>.success(passwordData)
             .flatMap { _ in
                 OpaqueProtocolService.createOprfRequest(password: passwordData)
-                    .mapError { .internalServiceApi("Failed to create OPRF request", inner: $0) }
+                    .mapOpaqueFailure()
             }
             .flatMap { oprfData in
                 OpaqueProtocolService.createRegistrationRecord(
                     password: passwordData,
                     oprfResponse: response.peerOprf,
                     blind: oprfData.blind)
-                .mapError { .internalServiceApi("Failed to create registration record", inner: $0) }
+                .mapOpaqueFailure()
             }
             .map { envelope in
                 var request = Ecliptix_Proto_Membership_OprfRecoverySecretKeyCompleteRequest()
@@ -202,14 +202,24 @@ struct RequestBuilder {
     }
     
     static func buildSignInCompleteRequest(
-        requestResult: Result<(Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, Data, Data, Data), OpaqueFailure>
+        phoneNumber: String,
+        clientEphemeralPublicKey: Data,
+        clientMacKey: Data,
+        transcriptHash: Data,
+        response: Ecliptix_Proto_Membership_OpaqueSignInInitResponse
     ) -> Result<Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, InternalValidationFailure> {
-        
-        Result<Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, InternalValidationFailure>.Try({
-            return try requestResult.unwrap().0
-        }, errorMapper: { error in
-            .internalServiceApi(String(localized: "Failed to unwrap SignInComplete request"), inner: error)
-        })
+        return OpaqueCryptoUtilities.createMac(key: clientMacKey, data: transcriptHash)
+            .mapOpaqueFailure()
+            .map { clientMac in
+                var request = Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest()
+                
+                request.phoneNumber = phoneNumber
+                request.clientEphemeralPublicKey = clientEphemeralPublicKey
+                request.clientMac = clientMac
+                request.serverStateToken = response.serverStateToken
+                
+                return request
+            }
     }
     
     // MARK: - Private helpers

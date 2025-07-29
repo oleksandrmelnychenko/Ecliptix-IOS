@@ -110,4 +110,29 @@ struct OpaqueFailure: Error {
             innerError: inner
         )
     }
+    
+    func toInternalValidationFailure() -> InternalValidationFailure {
+        switch self.type {
+        case .hashingValidPointFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .decryptFailure:
+            .opaqueError(self.message, inner: self.innerError)
+        case .encryptFailure:
+            .opaqueError(self.message, inner: self.innerError)
+        case .invalidInput:
+            .opaqueError(self.message, inner: self.innerError)
+        case .invalidKeySignature:
+            .opaqueError(self.message, inner: self.innerError)
+        case .macVerificationFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .pointCompressionFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .pointDecodingFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .pointMultiplicationFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .hashFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        }
+    }
 }

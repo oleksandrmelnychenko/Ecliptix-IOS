@@ -21,19 +21,20 @@ class OpaqueProtocolService {
         let group = Self.getDefaultGroup()
         self.defaultGroup = group
 
-        let staticPublicKeyPoint: OpaquePointer? = staticPublicKey.withUnsafeBytes {
-            guard let point = EC_POINT_new(group) else { return nil }
-            let result = EC_POINT_oct2point(
-                group,
-                point,
-                $0.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                staticPublicKey.count,
-                nil
-            )
-            return result == 1 ? point : nil
-        }
+        let ctx = BN_CTX_new()
+        if let ctx {
+            defer { BN_CTX_free(ctx) }
 
-        self.staticPublicKeyPoint = staticPublicKeyPoint
+            let decodeResult = ECPointUtils.decodeCompressedPoint(staticPublicKey, group: group, ctx: ctx)
+            switch decodeResult {
+            case let .success(point):
+                self.staticPublicKeyPoint = point
+            case .failure:
+                self.staticPublicKeyPoint = nil
+            }
+        } else {
+            self.staticPublicKeyPoint = nil
+        }
     }
     
     deinit {
@@ -56,7 +57,7 @@ class OpaqueProtocolService {
         password: Data,
         response: Ecliptix_Proto_Membership_OpaqueSignInInitResponse,
         blind: UnsafePointer<BIGNUM>
-    ) -> Result<(Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, Data, Data, Data), OpaqueFailure> {
+    ) -> Result<SignInFinalizationContext, OpaqueFailure> {
         guard let staticPoint = staticPublicKeyPoint else {
             return .failure(.invalidInput("Static public key point is nil"))
         }
@@ -77,8 +78,9 @@ class OpaqueProtocolService {
             let group = getDefaultGroup()
             
             // 1. Генеруємо сліпий скаляр
-            guard let blind = ECPointUtils.generateRandomScalar(group: group) else {
-                return .failure(.invalidInput("Failed to generate random scalar"))
+            let generatedScalarResult = ECPointUtils.generateRandomScalar(group: group)
+            guard case let .success(blind) = generatedScalarResult else {
+                return .failure(try generatedScalarResult.unwrapErr())
             }
             
             // 2. Хешуємо пароль у точку
@@ -106,7 +108,7 @@ class OpaqueProtocolService {
             }
 
             // 5. Стиснути до байтів
-            var compressedResult = ECPointUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
+            let compressedResult = ECPointUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
             guard case let .success(compressed) = compressedResult else {
                 return .failure(try compressedResult.unwrapErr())
             }
@@ -121,14 +123,13 @@ class OpaqueProtocolService {
         response: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse,
         sessionKey: Data, serverMacKey: Data, transcriptHash: Data
     ) -> Result<Data, OpaqueFailure> {
-        let expectedServerMac = OpaqueCryptoUtilities.createMac(key: serverMacKey, data: transcriptHash)
-        let actualServerMac = response.serverMac
-
-        guard expectedServerMac == actualServerMac else {
-            return .failure(.macVerificationFailed("Server MAC verification failed."))
-        }
-
-        return .success(sessionKey)
+        return OpaqueCryptoUtilities
+            .createMac(key: serverMacKey, data: transcriptHash)
+            .flatMap { expectedServerMac in
+                response.serverMac == expectedServerMac
+                    ? .success(sessionKey)
+                    : .failure(.macVerificationFailed("Server MAC verification failed."))
+            }
     }
     
     private static var cachedGroup: OpaquePointer = {

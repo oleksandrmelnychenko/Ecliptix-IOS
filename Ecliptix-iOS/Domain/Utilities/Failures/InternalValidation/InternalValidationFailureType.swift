@@ -14,6 +14,7 @@ enum InternalValidationFailureType {
     case secureStoreError
     case networkError
     case internalServiceApi
+    case opaqueError
     
     case unknown
 }

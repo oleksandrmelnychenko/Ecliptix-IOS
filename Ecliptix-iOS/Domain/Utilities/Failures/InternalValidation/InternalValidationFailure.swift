@@ -49,7 +49,9 @@ struct InternalValidationFailure: Error, CustomStringConvertible {
     public static func networkError(_ details: String, inner: Error? = nil) -> InternalValidationFailure {
         .init(type: .networkError, message: details, error: inner)
     }
-    
+    public static func opaqueError(_ details: String, inner: Error? = nil) -> InternalValidationFailure {
+        .init(type: .opaqueError, message: details, error: inner)
+    }
     public static func unknown(_ details: String, inner: Error? = nil) -> InternalValidationFailure {
         .init(type: .unknown, message: details, error: inner)
     }

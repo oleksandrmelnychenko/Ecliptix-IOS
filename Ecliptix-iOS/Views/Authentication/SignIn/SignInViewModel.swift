@@ -151,27 +151,29 @@ final class SignInViewModel: ObservableObject {
                         let serverPublicKeyResult = ViewModelBase.serverPublicKey(networkProvider: self.networkController)
                             .mapInternalServiceApiFailure()
 
-                        let finalizationResult = serverPublicKeyResult
-                            .flatMap { serverPubKey in
+                        let finalizationResult = serverPublicKeyResult.flatMap { serverPubKey in
                                 let opaqueService = OpaqueProtocolService(staticPublicKey: serverPubKey)
+
                                 return opaqueService.createSignInFinalizationRequest(
                                     phoneNumber: self.phoneNumber,
                                     password: passwordData,
                                     response: response,
                                     blind: oprfData.blind
                                 )
-                                .mapError { error in
-                                    InternalValidationFailure.internalServiceApi("Failed to finalize sign-in", inner: error)
-                                }
-                                .map { (finalizeRequest, sessionKey, serverMacKey, transcriptHash) in
-                                    (finalizeRequest, sessionKey, serverMacKey, transcriptHash, opaqueService)
-                                }
+                                .mapOpaqueFailure()
+                                .map { context in (opaqueService, context) }
                             }
 
                         await finalizationResult.MatchAsync(
-                            onSuccessAsync: { (finalizeRequest, sessionKey, serverMacKey, transcriptHash, opaqueService) in
+                            onSuccessAsync: { (opaqueService, context) in
                                 await RequestPipeline.runAsync(
-                                    requestResult: .success(finalizeRequest),
+                                    requestResult: RequestBuilder.buildSignInCompleteRequest(
+                                        phoneNumber: self.phoneNumber,
+                                        clientEphemeralPublicKey: context.clientEphemeralPublicKey,
+                                        clientMacKey: context.sessionKeys.clientMacKey,
+                                        transcriptHash: context.transcriptHash,
+                                        response: response
+                                    ),
                                     pubKeyExchangeType: .dataCenterEphemeralConnect,
                                     serviceType: .opaqueSignInCompleteRequest,
                                     flowType: .single,
@@ -187,9 +189,9 @@ final class SignInViewModel: ObservableObject {
                                     onSuccess: { finalizeResponse in
                                         let verificationResult = opaqueService.verifyServerMacAndGetSessionKey(
                                             response: finalizeResponse,
-                                            sessionKey: sessionKey,
-                                            serverMacKey: serverMacKey,
-                                            transcriptHash: transcriptHash
+                                            sessionKey: context.sessionKeys.sessionKey,
+                                            serverMacKey: context.sessionKeys.serverMacKey,
+                                            transcriptHash: context.transcriptHash
                                         )
 
                                         switch verificationResult {

@@ -8,6 +8,8 @@
 import Foundation
 import OpenSSL
 
+
+
 enum OpaqueClientAuthentication {
     static func createSignInFinalizationRequest(
         phoneNumber: String,
@@ -17,7 +19,7 @@ enum OpaqueClientAuthentication {
         staticPublicKeyPoint: OpaquePointer,
         staticPublicKey: Data,
         group: OpaquePointer
-    ) -> Result<(Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, Data, Data, Data), OpaqueFailure> {
+    ) -> Result<SignInFinalizationContext, OpaqueFailure> {
         do {
             // 1. OPRF
             guard case let .success(oprfKey) = OpaqueCryptoUtilities.recoverOprfKey(oprfResponse: signInResponse.serverOprfResponse, blind: blind, group: group) else {
@@ -55,10 +57,11 @@ enum OpaqueClientAuthentication {
             }
             
             // 5. Generate ephemeral key pair
-            let ephKeyResult = createClientEphemeralKeyPair(group: group)
+            let ephKeyResult = ECPointUtils.generateKeyPair(group: group)
             guard case let .success((ephPrivateBN, ephPublicPoint)) = ephKeyResult else {
                 return .failure(try ephKeyResult.unwrapErr())
             }
+            print("Private ephemeral key: \(ephPrivateBN)")
             
             defer {
                 BN_free(ephPrivateBN)
@@ -88,9 +91,10 @@ enum OpaqueClientAuthentication {
             guard case let .success(ake) = akeResult else {
                 return .failure(try akeResult.unwrapErr())
             }
+            print("Ake bytes: \(Array(ake))")
             
             // 8. Compress client ephemeral public key
-            var clientEphemeralPubKeyResult = ECPointUtils.compressPoint(ephPublicPoint, group: group, ctx: ctx)
+            let clientEphemeralPubKeyResult = ECPointUtils.compressPoint(ephPublicPoint, group: group, ctx: ctx)
             guard case let .success(clientEphemeralPubKey) = clientEphemeralPubKeyResult else {
                 return .failure(try clientEphemeralPubKeyResult.unwrapErr())
             }
@@ -110,20 +114,24 @@ enum OpaqueClientAuthentication {
 
             // 10. Derive final session/mac keys
             let keysResult = deriveFinalKeys(akeResult: ake, transcriptHash: transcriptHash)
-            guard case let .success((sessionKey, clientMacKey, serverMacKey)) = keysResult else {
+            guard case let .success(sessionKeys) = keysResult else {
                 return .failure(try keysResult.unwrapErr())
             }
 
-            // 11. MAC and finalize request
-            let clientMac = OpaqueCryptoUtilities.createMac(key: clientMacKey, data: transcriptHash)
+            // 11. MAC
+//            let clientMac = try OpaqueCryptoUtilities.createMac(key: sessionKeys.clientMacKey, data: transcriptHash).unwrap()
+//            
+//            var request = Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest()
+//            request.phoneNumber = phoneNumber
+//            request.clientMac = clientMac
+//            request.clientEphemeralPublicKey = clientEphemeralPubKey
+//            request.serverStateToken = signInResponse.serverStateToken
 
-            let finalizeRequest = Self.buildFinalizeRequest(
-                phoneNumber: phoneNumber,
+            return .success(SignInFinalizationContext(
                 clientEphemeralPublicKey: clientEphemeralPubKey,
-                clientMac: clientMac,
-                serverStateToken: signInResponse.serverStateToken)
-            
-            return .success((finalizeRequest, sessionKey, serverMacKey, transcriptHash))
+                sessionKeys: sessionKeys,
+                transcriptHash: transcriptHash)
+            )
         } catch {
             return .failure(.invalidInput("Error during create sign in finalization request", inner: error))
         }
@@ -132,38 +140,35 @@ enum OpaqueClientAuthentication {
     private static func deriveFinalKeys(
         akeResult: Data,
         transcriptHash: Data
-    ) -> Result<(sessionKey: Data, clientMacKey: Data, serverMacKey: Data), OpaqueFailure> {
-        return OpaqueCryptoUtilities.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt).flatMap { prk in
-            var infoBuffer = Data(count: OpaqueConstants.sessionKeyInfo.count + transcriptHash.count)
-            infoBuffer.replaceSubrange(OpaqueConstants.sessionKeyInfo.count..<infoBuffer.count, with: transcriptHash)
+    ) -> Result<SessionKeys, OpaqueFailure> {
+        return OpaqueCryptoUtilities.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt)
+            .flatMap { prk in
+                var infoBuffer = Data(count: OpaqueConstants.sessionKeyInfo.count + transcriptHash.count)
+                infoBuffer.replaceSubrange(OpaqueConstants.sessionKeyInfo.count..<infoBuffer.count, with: transcriptHash)
 
-            // sessionKey
-            infoBuffer.replaceSubrange(0..<OpaqueConstants.sessionKeyInfo.count, with: OpaqueConstants.sessionKeyInfo)
-            return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).flatMap { sessionKey in
+                // sessionKey
+                infoBuffer.replaceSubrange(0..<OpaqueConstants.sessionKeyInfo.count, with: OpaqueConstants.sessionKeyInfo)
+                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                    .flatMap { sessionKey in
 
-                // clientMacKey
-                infoBuffer.replaceSubrange(0..<OpaqueConstants.clientMacKeyInfo.count, with: OpaqueConstants.clientMacKeyInfo)
-                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).flatMap { clientMacKey in
+                        // clientMacKey
+                        infoBuffer.replaceSubrange(0..<OpaqueConstants.clientMacKeyInfo.count, with: OpaqueConstants.clientMacKeyInfo)
+                        return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                            .flatMap { clientMacKey in
 
-                    // serverMacKey
-                    infoBuffer.replaceSubrange(0..<OpaqueConstants.serverMacKeyInfo.count, with: OpaqueConstants.serverMacKeyInfo)
-                    return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength).map { serverMacKey in
-                        (sessionKey, clientMacKey, serverMacKey)
+                                // serverMacKey
+                                infoBuffer.replaceSubrange(0..<OpaqueConstants.serverMacKeyInfo.count, with: OpaqueConstants.serverMacKeyInfo)
+                                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                                    .map { serverMacKey in
+                                        SessionKeys(
+                                            sessionKey: sessionKey,
+                                            clientMacKey: clientMacKey,
+                                            serverMacKey: serverMacKey
+                                        )
+                                    }
+                            }
                     }
-                }
             }
-        }
-    }
-    
-    private static func expandKey(infoPrefix: Data, transcriptHash: Data, prk: Data) -> Result<Data, OpaqueFailure> {
-        var info = Data()
-        info.append(infoPrefix)
-        info.append(transcriptHash)
-        return OpaqueCryptoUtilities.hkdfExpand(
-            prk: prk,
-            info: info,
-            outputLength: OpaqueConstants.macKeyLength
-        )
     }
     
     private static func deriveClientStaticPrivateKey(
@@ -171,31 +176,13 @@ enum OpaqueClientAuthentication {
         credentialKey: Data,
         associatedData: Data
     ) -> Result<UnsafeMutablePointer<BIGNUM>, OpaqueFailure> {
-        let decrypted = OpaqueCryptoUtilities.decrypt(
-            ciphertextWithNonce: envelope,
-            key: credentialKey,
-            associatedData: associatedData
-        )
-        
-        guard case let .success(data) = decrypted else {
-            return .failure(.decryptFailed("Failed to decrypt envelope"))
-        }
-        
-        guard let bnMutable = BN_bin2bn([UInt8](data), Int32(data.count), nil) else {
-            return .failure(.invalidInput("Failed to create private key BIGNUM"))
-        }
-        
-        return .success(bnMutable)
-    }
-
-    private static func createClientEphemeralKeyPair(
-        group: OpaquePointer
-    ) -> Result<(UnsafeMutablePointer<BIGNUM>, OpaquePointer), OpaqueFailure> {
-        guard let (priv, pub) = ECPointUtils.generateKeyPair(group: group) else {
-            return .failure(.invalidInput("Ephemeral key generation failed"))
-        }
-
-        return .success((priv, pub))
+        return SymmetricCryptoService.decrypt(ciphertextWithNonce: envelope, key: credentialKey, associatedData: associatedData)
+            .flatMap { data in
+                guard let bn = BN_bin2bn([UInt8](data), Int32(data.count), nil) else {
+                    return .failure(.invalidInput("Failed to create private key BIGNUM"))
+                }
+                return .success(bn)
+            }
     }
     
     private static func buildTranscriptHash(

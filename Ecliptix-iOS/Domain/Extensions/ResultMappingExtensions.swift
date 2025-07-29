@@ -73,3 +73,14 @@ extension Result where Failure == NetworkFailure {
         }
     }
 }
+
+extension Result where Failure == OpaqueFailure {
+    func mapOpaqueFailure() -> Result<Success, InternalValidationFailure> {
+        switch self {
+        case .success(let value):
+            return .success(value)
+        case .failure(let opaqueFailure):
+            return .failure(opaqueFailure.toInternalValidationFailure())
+        }
+    }
+}
