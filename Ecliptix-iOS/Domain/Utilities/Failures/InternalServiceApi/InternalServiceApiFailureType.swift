@@ -16,4 +16,5 @@ enum InternalServiceApiFailureType {
     
     case dependencyResolution
     case deserialization
+    case serialization
 }

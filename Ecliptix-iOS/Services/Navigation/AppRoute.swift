@@ -13,7 +13,7 @@ enum AppRoute: Hashable {
     
     case phoneNumberVerification(authFlow: AuthFlow)
     case verificationCode(phoneNumberIdentifier: Data, authFlow: AuthFlow)
-    case passwordSetup(verificationSessionId: Data, authFlow: AuthFlow)
+    case passwordSetup(authFlow: AuthFlow)
     case passPhaseRegistration
     
     case signIn

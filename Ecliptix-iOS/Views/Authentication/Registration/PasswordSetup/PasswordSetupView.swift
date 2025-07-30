@@ -14,10 +14,8 @@ struct PasswordSetupView: View {
     @StateObject private var viewModel: PasswordSetupViewModel
     @State private var showPassword = false
     
-    init(verificationSessionId: Data, authFlow: AuthFlow) {
-        _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(
-            verficationSessionId: verificationSessionId,
-            authFlow: authFlow))
+    init(authFlow: AuthFlow) {
+        _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(authFlow: authFlow))
     }
 
     var body: some View {
@@ -97,9 +95,7 @@ struct PasswordSetupView: View {
     let navService = NavigationService()
     let localService = LocalizationService.shared
     
-    PasswordSetupView(
-        verificationSessionId: Data(),
-        authFlow: .registration)
-    .environmentObject(navService)
-    .environmentObject(localService)
+    PasswordSetupView(authFlow: .registration)
+        .environmentObject(navService)
+        .environmentObject(localService)
 }

@@ -21,8 +21,8 @@ struct ViewFactory {
         case let .verificationCode(phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow):
             VerificationCodeView(phoneNumberIdentifier: phoneNumberIdentifier, authFlow: authFlow)
             
-        case let .passwordSetup(verificationSessionId: verificationSessionId, authFlow: authFlow):
-            PasswordSetupView(verificationSessionId: verificationSessionId, authFlow: authFlow)
+        case let .passwordSetup(authFlow: authFlow):
+            PasswordSetupView(authFlow: authFlow)
             
         case .passPhaseRegistration:
             PassPhaseRegisterView()

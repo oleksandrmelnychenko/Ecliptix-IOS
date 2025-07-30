@@ -224,7 +224,7 @@ struct RequestBuilder {
     
     // MARK: - Private helpers
     private static func buildAppDeviceIdentifier(networkProvider: NetworkProvider) -> Result<Data, InternalValidationFailure> {
-        return ViewModelBase.systemDeviceIdentifier(networkProvider: networkProvider)
+        return ViewModelBase.systemDeviceIdentifier()
             .mapError { error in
                 // Here we should log this!
                 

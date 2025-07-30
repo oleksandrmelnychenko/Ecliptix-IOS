@@ -148,7 +148,7 @@ final class SignInViewModel: ObservableObject {
                 .MatchAsync(
                     onSuccessAsync: { response in
                     
-                        let serverPublicKeyResult = ViewModelBase.serverPublicKey(networkProvider: self.networkController)
+                        let serverPublicKeyResult = ViewModelBase.serverPublicKey()
                             .mapInternalServiceApiFailure()
 
                         let finalizationResult = serverPublicKeyResult.flatMap { serverPubKey in

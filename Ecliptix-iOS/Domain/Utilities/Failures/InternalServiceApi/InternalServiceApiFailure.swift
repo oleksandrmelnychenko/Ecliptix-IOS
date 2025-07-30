@@ -96,6 +96,14 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible, FailureBasePro
         )
     }
     
+    static func serialization(_ details: String, inner: Error? = nil) -> InternalServiceApiFailure {
+        return InternalServiceApiFailure(
+            type: .serialization,
+            message: details,
+            error: inner
+        )
+    }
+    
     func toInternalValidationFailure() -> InternalValidationFailure {
         switch self.type {
         case .secureStoreNotFound:
@@ -109,6 +117,8 @@ struct InternalServiceApiFailure: Error, CustomStringConvertible, FailureBasePro
         case .dependencyResolution:
             .internalServiceApi(self.message, inner: self.innerError)
         case .deserialization:
+            .internalServiceApi(self.message, inner: self.innerError)
+        case .serialization:
             .internalServiceApi(self.message, inner: self.innerError)
         }
     }

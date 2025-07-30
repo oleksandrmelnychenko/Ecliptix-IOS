@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package ecliptix.proto.app_device;
 option csharp_namespace = "Ecliptix.Protobuf.AppDevice";
+import "Membership.proto";
 
 message AppDevice {
   bytes app_instance_id = 1;
@@ -35,4 +36,6 @@ message ApplicationInstanceSettings{
   string system_device_identifier = 4;
   AppDevice.DeviceType device_type = 5;
   string culture = 6;
+    
+  ecliptix.proto.membership.Membership membership = 7;
 }

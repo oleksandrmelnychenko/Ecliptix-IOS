@@ -93,48 +93,76 @@ final class NetworkProvider: NetworkProviderProtocol {
     }
     
     private func perfromFullRecoveryLogic() async -> Result<Unit, NetworkFailure> {
-        guard let settings = AppSettingsService.shared.getSettings() else {
-            return .failure(.invalidRequestType("Application instance settings not available"))
+        let getSettingsResult = AppSettingsService.shared.getSettings()
+
+        guard case let .success(settings) = getSettingsResult else {
+            return .failure(.unexpectedError("Missing app settings"))
         }
-        
-        let connectId = AppSettingsService.computeUniqueConnectId(settings: settings, pubKeyExchangeType: .dataCenterEphemeralConnect)
-        
+
+        let connectId = AppSettingsService.computeUniqueConnectId(
+            settings: settings,
+            pubKeyExchangeType: .dataCenterEphemeralConnect
+        )
+
         self.connections.removeValue(forKey: connectId)
-        
-        do {
-            let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
-            
-            if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
-                let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
-                let restoreResult = await restoreSecrecyChannel(
-                    ecliptixSecrecyChannelState: state,
-                    applicationInstanceSettings: settings)
-                if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
-                    debugPrint("Session successfully restored from storage")
-                    return .success(.value)
+
+        let storedResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
+        switch storedResult {
+        case .success(let maybeData):
+            if let data = maybeData {
+                do {
+                    let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
+                    let restoreResult = await restoreSecrecyChannel(
+                        ecliptixSecrecyChannelState: state,
+                        applicationInstanceSettings: settings
+                    )
+
+                    switch restoreResult {
+                    case .success(true):
+                        debugPrint("Session successfully restored from storage")
+                        return .success(.value)
+
+                    default:
+                        debugPrint("Failed to restore session from storage, will attempt full re-establishment")
+                        break
+                    }
+
+                } catch {
+                    return .failure(.unexpectedError("Failed to deserialize EcliptixSessionState", inner: error))
                 }
-                
-                debugPrint("Failed to restore session from storage, will attempt full re-establishment")
             }
-            
-            await self.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
-            
-            let establishResult = await establishSecrecyChannel(connectId: connectId)
-            guard establishResult.isOk else {
-                return .failure(try establishResult.unwrapErr())
+        case .failure(let error):
+            debugPrint("Failed to load session state: \(error)")
+            break
+        }
+
+        // 🔁 Спроба переініціалізації
+        await self.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
+
+        let establishResult = await establishSecrecyChannel(connectId: connectId)
+
+        switch establishResult {
+        case .success(let state):
+            do {
+                let data = try state.serializedData()
+                let storeResult = self.secureStorageProvider.store(key: String(connectId), data: data)
+
+                if case .failure(let storeError) = storeResult {
+                    debugPrint("Failed to store newly established session state: \(storeError.message)")
+                }
+
+                debugPrint("Session successfully established via new key exchange")
+                return .success(.value)
+
+            } catch {
+                return .failure(.unexpectedError("Failed to serialize EcliptixSessionState", inner: error))
             }
-            
-            let storedResult = self.secureStorageProvider.store(key: String(connectId), data: try establishResult.unwrap().serializedData())
-            if storedResult.isErr {
-                debugPrint("Failed to store newly established session state: \(try storedResult.unwrapErr())")
-            }
-            
-            debugPrint("Session successfully established via new key exchange")
-            return .success(.value)
-        } catch {
-            return .failure(.unexpectedError("An unhandled error occurred during full recovery logic", inner: error))
+
+        case .failure(let establishError):
+            return .failure(establishError)
         }
     }
+
     
     static func computeUniqueConnectId(
         applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
@@ -154,8 +182,10 @@ final class NetworkProvider: NetworkProviderProtocol {
         onSuccessCallback: @escaping (Data) async -> Result<Unit, NetworkFailure>,
         token: CancellationToken? = CancellationToken()
     ) async -> Result<Data, NetworkFailure> {
-        guard var settings = AppSettingsService.shared.getSettings() else {
-            return .failure(.invalidRequestType("Application instance settings not available"))
+        let getSettingsResult = AppSettingsService.shared.getSettings()
+
+        guard case var .success(settings) = getSettingsResult else {
+            return .failure(.unexpectedError("Missing app settings"))
         }
         
         return await RetryExecutor.executeResult(
@@ -309,9 +339,11 @@ final class NetworkProvider: NetworkProviderProtocol {
     public func restoreSecrecyChannel(
         ecliptixSecrecyChannelState: Ecliptix_Proto_KeyMaterials_EcliptixSessionState,
         applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
-    ) async -> Result<Bool, NetworkFailure> {
-        guard var settings = AppSettingsService.shared.getSettings() else {
-            return .failure(.invalidRequestType("Application instance settings not available"))
+    ) async -> Result<Bool, NetworkFailure> {        
+        let getSettingsResult = AppSettingsService.shared.getSettings()
+
+        guard case let .success(settings) = getSettingsResult else {
+            return .failure(.unexpectedError("Missing app settings"))
         }
         
         do {

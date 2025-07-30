@@ -107,10 +107,8 @@ struct VerificationCodeView: View {
             }
         }
         .onChange(of: viewModel.shouldNavigateToPasswordSetUp) { _, shouldNavigate in
-            if shouldNavigate,
-               let identifier = viewModel.uniqueIdentifier {
+            if shouldNavigate {
                 navigation.navigate(to: .passwordSetup(
-                    verificationSessionId: identifier,
                     authFlow: viewModel.authFlow
                 ))
                 

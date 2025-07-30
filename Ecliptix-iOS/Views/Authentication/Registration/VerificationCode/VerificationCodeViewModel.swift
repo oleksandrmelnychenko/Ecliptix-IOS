@@ -24,7 +24,6 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var alertMessage: String = ""
     
     @Published var shouldNavigateToPasswordSetUp: Bool = false
-    @Published var uniqueIdentifier: Data?
     @Published var authFlow: AuthFlow
 
 
@@ -93,7 +92,7 @@ final class VerificationCodeViewModel: ObservableObject {
         let cancellationToken = CancellationToken()
     
         await RequestBuilder.buildInitiateVerificationRequest(networkProvider: networkController, phoneNumberIdentifier: phoneNumberIdentifier, type: type)
-            .prepareSerializedRequest(networkProvider: networkController, pubKeyExchangeType: .dataCenterEphemeralConnect)
+            .prepareSerializedRequest(pubKeyExchangeType: .dataCenterEphemeralConnect)
             .flatMapAsync({ (request, connectId) in
                 await self.networkController.executeServiceAction(
                     connectId: connectId,
@@ -168,9 +167,8 @@ final class VerificationCodeViewModel: ObservableObject {
             cancellationToken: CancellationToken(),
             networkProvider: self.networkController,
             parseAndValidate: { (response: Ecliptix_Proto_Membership_VerifyCodeResponse) in
-                                
                 guard response.result != .invalidOtp else {
-                    throw InternalValidationFailure.networkError(response.message)
+                    return .failure(.networkError(response.message))
                 }
                                 
                 return .success(response)
@@ -178,7 +176,13 @@ final class VerificationCodeViewModel: ObservableObject {
         )
         .Match(
             onSuccess: { response in
-                self.uniqueIdentifier = response.membership.uniqueIdentifier
+                let setUniqueIdResult = AppSettingsService.shared.setMembership(response.membership)
+                
+                if setUniqueIdResult.isErr {
+                    self.errorMessage = "Failed to save membership"
+                    return
+                }
+                
                 self.shouldNavigateToPasswordSetUp = true
         }, onFailure: { error in
             self.errorMessage = error.message

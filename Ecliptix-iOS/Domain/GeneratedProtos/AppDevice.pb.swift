@@ -146,9 +146,20 @@ public struct Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: @unchecked S
 
   public var culture: String = String()
 
+  public var membership: Ecliptix_Proto_Membership_Membership {
+    get {return _membership ?? Ecliptix_Proto_Membership_Membership()}
+    set {_membership = newValue}
+  }
+  /// Returns true if `membership` has been explicitly set.
+  public var hasMembership: Bool {return self._membership != nil}
+  /// Clears the value of `membership`. Subsequent reads from it will return its default value.
+  public mutating func clearMembership() {self._membership = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _membership: Ecliptix_Proto_Membership_Membership? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -268,6 +279,7 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     4: .standard(proto: "system_device_identifier"),
     5: .standard(proto: "device_type"),
     6: .same(proto: "culture"),
+    7: .same(proto: "membership"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -282,12 +294,17 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
       case 4: try { try decoder.decodeSingularStringField(value: &self.systemDeviceIdentifier) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.deviceType) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.culture) }()
+      case 7: try { try decoder.decodeSingularMessageField(value: &self._membership) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.appInstanceID.isEmpty {
       try visitor.visitSingularBytesField(value: self.appInstanceID, fieldNumber: 1)
     }
@@ -306,6 +323,9 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     if !self.culture.isEmpty {
       try visitor.visitSingularStringField(value: self.culture, fieldNumber: 6)
     }
+    try { if let v = self._membership {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -316,6 +336,7 @@ extension Ecliptix_Proto_AppDevice_ApplicationInstanceSettings: SwiftProtobuf.Me
     if lhs.systemDeviceIdentifier != rhs.systemDeviceIdentifier {return false}
     if lhs.deviceType != rhs.deviceType {return false}
     if lhs.culture != rhs.culture {return false}
+    if lhs._membership != rhs._membership {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

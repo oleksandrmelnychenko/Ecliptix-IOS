@@ -28,13 +28,10 @@ final class PasswordSetupViewModel: ObservableObject {
 
     private var securePasswordHandle: SodiumSecureMemoryHandle?
     private var secureConfirmPasswordHandle: SodiumSecureMemoryHandle?
-    
-    private let verificationSessionId: Data
-    
+        
     private let authFlow: AuthFlow
     
-    init(verficationSessionId: Data, authFlow: AuthFlow) {
-        self.verificationSessionId = verficationSessionId
+    init(authFlow: AuthFlow) {
         self.authFlow = authFlow
         
         networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
@@ -295,6 +292,12 @@ final class PasswordSetupViewModel: ObservableObject {
             errorMessage = "Failed to create password manager."
             return
         }
+        
+        let membershipResult = ViewModelBase.membership()
+        guard case let .success(membership) = membershipResult else {
+            self.errorMessage = "Failed to retrive membership"
+            return
+        }
                 
         let result = getPasswordData(securePasswordHandle: self.securePasswordHandle!)
             .flatMap { passwordData in
@@ -310,7 +313,7 @@ final class PasswordSetupViewModel: ObservableObject {
                         passwordData: passwordData,
                         oprfRequest: oprfData.oprfRequest,
                         passwordManager: self.passwordManager!,
-                        verificationSessionId: self.verificationSessionId),
+                        verificationSessionId: membership.uniqueIdentifier),
                     pubKeyExchangeType: .dataCenterEphemeralConnect,
                     serviceType: .opaqueRegistrationInit,
                     flowType: .single,

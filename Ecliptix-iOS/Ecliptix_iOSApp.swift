@@ -13,8 +13,9 @@ struct Ecliptix_iOSApp: App {
     
     @StateObject private var navigationService: NavigationService
     @StateObject private var localizationService: LocalizationService
+    @StateObject private var wizardViewModel: WizardViewModel
     
-    private let establishConnectionExecutor: ApplicationInitializer
+//    private let establishConnectionExecutor: ApplicationInitializer
     
     init() {
         ApplicationBootstrap.configure()
@@ -24,30 +25,43 @@ struct Ecliptix_iOSApp: App {
         
         _navigationService = StateObject(wrappedValue: navService)
         _localizationService = StateObject(wrappedValue: localService)
-                
-        establishConnectionExecutor = ApplicationInitializer(
+        
+        let initializer = ApplicationInitializer(
             networkProvider: try! ServiceLocator.shared.resolve(NetworkProvider.self),
             secureStorageProvider: try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self),
             localizationService: localService,
             systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
+        
+        _wizardViewModel = StateObject(wrappedValue: WizardViewModel(
+            connectionService: initializer
+        ))
     }
+    
+//    var body: some Scene {
+//        WindowGroup {
+//            NavigationStack(path: $navigationService.path) {
+//                WelcomeView()
+//                    .navigationDestination(for: AppRoute.self) { route in
+//                        ViewFactory.view(for: route)
+//                    }
+//            }
+//            .environmentObject(navigationService)
+//            .environmentObject(localizationService)
+//            .task {
+//                guard !didInitialize else { return }
+//                didInitialize = true
+//                
+//                _ = await establishConnectionExecutor.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
+//            }
+//        }
+//    }
     
     var body: some Scene {
         WindowGroup {
-            NavigationStack(path: $navigationService.path) {
-                WelcomeView()
-                    .navigationDestination(for: AppRoute.self) { route in
-                        ViewFactory.view(for: route)
-                    }
-            }
-            .environmentObject(navigationService)
-            .environmentObject(localizationService)
-            .task {
-                guard !didInitialize else { return }
-                didInitialize = true
-                
-                _ = await establishConnectionExecutor.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
-            }
+            WizardRootView()
+                .environmentObject(navigationService)
+                .environmentObject(localizationService)
+                .environmentObject(wizardViewModel)
         }
     }
 }

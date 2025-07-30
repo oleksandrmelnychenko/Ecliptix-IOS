@@ -17,6 +17,8 @@ final class KeychainStorageProvider: SecureStorageProviderProtocol {
     }
     
     func initApplicationInstanceSettings() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
+        _ = delete(key: Self.settingsKey)
+        
         return self.tryGetByKey(key: Self.settingsKey)
             .flatMap { maybeSettingsData in
                 do {
