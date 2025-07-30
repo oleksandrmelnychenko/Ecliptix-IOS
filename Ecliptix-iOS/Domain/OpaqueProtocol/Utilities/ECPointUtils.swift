@@ -11,7 +11,7 @@ import OpenSSL
 struct ECPointUtils {
     static func generateKeyPair(
         group: OpaquePointer
-    ) -> Result<(privateKey: UnsafeMutablePointer<BIGNUM>, publicKey: OpaquePointer), OpaqueFailure> {
+    ) -> Result<EcKeyPair, OpaqueFailure> {
         return withBnCtx { ctx in
             BigNumUtils.getOrder(of: group, ctx: ctx)
                 .flatMap { order in
@@ -27,7 +27,7 @@ struct ECPointUtils {
                                         return .failure(.pointMultiplicationFailed("Failed to generate public key from private key"))
                                     }
 
-                                    return .success((privateKey, publicKey))
+                                    return .success(EcKeyPair(privateKey: privateKey, publicKey: publicKey))
                                 }
                         }
                 }

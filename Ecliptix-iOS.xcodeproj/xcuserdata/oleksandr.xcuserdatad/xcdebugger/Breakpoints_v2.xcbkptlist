@@ -3,22 +3,4 @@
    uuid = "653834C4-A58A-4DFD-ACDE-C4AE4E072A0B"
    type = "1"
    version = "2.0">
-   <Breakpoints>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "344BDDFE-D103-47D0-8A3C-D3FC5AB21283"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ecliptix-iOS/Domain/OpaqueProtocol/OpaqueClientAuthentication.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "createSignInFinalizationRequest(phoneNumber:passwordData:signInResponse:blind:staticPublicKeyPoint:staticPublicKey:group:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-   </Breakpoints>
 </Bucket>

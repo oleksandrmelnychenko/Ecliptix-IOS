@@ -62,7 +62,7 @@ class OpaqueProtocolService {
             return .failure(.invalidInput("Static public key point is nil"))
         }
 
-        return OpaqueClientAuthentication.createSignInFinalizationRequest(
+        return OpaqueClientAuthentication.createSignInFinalizationContext(
             phoneNumber: phoneNumber,
             passwordData: password,
             signInResponse: response,
@@ -74,50 +74,30 @@ class OpaqueProtocolService {
     }
     
     static func createOprfRequest(password: Data) -> Result<(oprfRequest: Data, blind: UnsafeMutablePointer<BIGNUM>), OpaqueFailure> {
-        do {
-            let group = getDefaultGroup()
-            
-            // 1. Генеруємо сліпий скаляр
-            let generatedScalarResult = BigNumUtils.generateRandomScalar(group: group)
-            guard case let .success(blind) = generatedScalarResult else {
-                return .failure(try generatedScalarResult.unwrapErr())
-            }
-            
-            // 2. Хешуємо пароль у точку
-            guard case let .success(encodedPoint) = OpaqueHashingUtils.hashToPoint(password, group: group) else {
-                return .failure(.pointDecodingFailed("Failed to hash password to EC point"))
-            }
-            
-            let ctx = BN_CTX_new()!
-            defer { BN_CTX_free(ctx) }
-            
-            // 3. Декодуємо EC_POINT з байтів
-            guard case let .success(point) = ECPointUtils.decodeCompressedPoint(encodedPoint, group: group, ctx: ctx) else {
-                return .failure(.pointDecodingFailed("Failed to decode EC point from bytes"))
-            }
-            defer { EC_POINT_free(point) }
+        let group = getDefaultGroup()
+        
+        return BigNumUtils.generateRandomScalar(group: group)
+            .flatMap { blind in
+                OpaqueHashingUtils.hashToPoint(password, group: group)
+                    .flatMap { encodedPoint in
+                        ECPointUtils.withBnCtx { ctx in
+                            ECPointUtils.decodeCompressedPoint(encodedPoint, group: group, ctx: ctx)
+                                .flatMap { point in
+                                    defer { EC_POINT_free(point) }
 
-            // 4. Помножити на сліпий скаляр
-            guard let blindedPoint = EC_POINT_new(group) else {
-                return .failure(.pointMultiplicationFailed("Failed to allocate blinded EC_POINT"))
+                                    return ECPublicKeyUtils.pointMul(group: group, point: point, scalar: blind, ctx: ctx)
+                                        .flatMap { blindedPoint in
+                                            ECPublicKeyUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
+                                               .map { compressed in
+                                                   (oprfRequest: compressed, blind: blind)
+                                               }
+                                        }
+                                }
+                        }
+                    }
             }
-            defer { EC_POINT_free(blindedPoint) }
-
-            guard EC_POINT_mul(group, blindedPoint, nil, point, blind, ctx) == 1 else {
-                return .failure(.pointMultiplicationFailed("Failed to multiply point with blind"))
-            }
-
-            // 5. Стиснути до байтів
-            let compressedResult = ECPublicKeyUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
-            guard case let .success(compressed) = compressedResult else {
-                return .failure(try compressedResult.unwrapErr())
-            }
-
-            return .success((oprfRequest: compressed, blind: blind))
-        } catch {
-            return .failure(.invalidInput("Error during create oprf request", inner: error))
-        }
     }
+
 
     public func verifyServerMacAndGetSessionKey(
         response: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse,
