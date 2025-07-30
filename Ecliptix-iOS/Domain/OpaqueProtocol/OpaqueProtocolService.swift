@@ -78,13 +78,13 @@ class OpaqueProtocolService {
             let group = getDefaultGroup()
             
             // 1. Генеруємо сліпий скаляр
-            let generatedScalarResult = ECPointUtils.generateRandomScalar(group: group)
+            let generatedScalarResult = BigNumUtils.generateRandomScalar(group: group)
             guard case let .success(blind) = generatedScalarResult else {
                 return .failure(try generatedScalarResult.unwrapErr())
             }
             
             // 2. Хешуємо пароль у точку
-            guard case let .success(encodedPoint) = OpaqueCryptoUtilities.hashToPoint(password) else {
+            guard case let .success(encodedPoint) = OpaqueHashingUtils.hashToPoint(password, group: group) else {
                 return .failure(.pointDecodingFailed("Failed to hash password to EC point"))
             }
             
@@ -108,7 +108,7 @@ class OpaqueProtocolService {
             }
 
             // 5. Стиснути до байтів
-            let compressedResult = ECPointUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
+            let compressedResult = ECPublicKeyUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
             guard case let .success(compressed) = compressedResult else {
                 return .failure(try compressedResult.unwrapErr())
             }
@@ -123,8 +123,7 @@ class OpaqueProtocolService {
         response: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse,
         sessionKey: Data, serverMacKey: Data, transcriptHash: Data
     ) -> Result<Data, OpaqueFailure> {
-        return OpaqueCryptoUtilities
-            .createMac(key: serverMacKey, data: transcriptHash)
+        return EVPCryptoUtils.createMac(key: serverMacKey, data: transcriptHash)
             .flatMap { expectedServerMac in
                 response.serverMac == expectedServerMac
                     ? .success(sessionKey)

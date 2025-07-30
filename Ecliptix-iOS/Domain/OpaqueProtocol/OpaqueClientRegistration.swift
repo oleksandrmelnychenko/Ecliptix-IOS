@@ -17,12 +17,12 @@ enum OpaqueClientRegistration {
     ) -> Result<Data, OpaqueFailure> {
         do {
             // Step 1: Recover OPRF Key
-            guard case let .success(oprfKey) = OpaqueCryptoUtilities.recoverOprfKey(oprfResponse: oprfResponse, blind: blind, group: group) else {
+            guard case let .success(oprfKey) = OpaqueHashingUtils.recoverOprfKey(oprfResponse: oprfResponse, blind: blind, group: group) else {
                 return .failure(.invalidInput("Failed to recover OPRF key"))
             }
 
             // Step 2: Derive credential key
-            let credentialKeyResult = OpaqueCryptoUtilities.deriveKey(
+            let credentialKeyResult = EVPCryptoUtils.deriveKey(
                 ikm: oprfKey,
                 salt: nil,
                 info: OpaqueConstants.credentialKeyInfo,
@@ -50,7 +50,7 @@ enum OpaqueClientRegistration {
             
             // Step 4: Serialize keys
             guard case let .success(clientPrivateKeyBytes) = exportPrivateKey(privBN),
-                  case let .success(clientPublicKeyBytes) = ECPointUtils.compressPoint(pubPoint, group: group, ctx: ctx) else {
+                  case let .success(clientPublicKeyBytes) = ECPublicKeyUtils.compressPoint(pubPoint, group: group, ctx: ctx) else {
                 return .failure(.pointCompressionFailed("Key export failed"))
             }
 

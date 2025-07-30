@@ -5,20 +5,26 @@
 //  Created by Oleksandr Melnechenko on 26.06.2025.
 //
 
-enum OpaqueFailureType: Error {
-    case hashingValidPointFailed
-    case decryptFailure
-    case encryptFailure
+enum OpaqueFailureType {
+    // General
     case invalidInput
-    case invalidKeySignature
+    case hashToPointFailed
+    case digestComputationFailed
+
+    // Encryption
+    case encryptFailure
+    case decryptFailure
     case macVerificationFailed
-    
+
+    // EC Point
     case pointCompressionFailed
     case pointDecodingFailed
     case pointMultiplicationFailed
-    
-    case hashFailed
+    case pointNotOnCurve
+    case invalidEcGroup
+    case modularInverseFailed
 }
+
 
 struct OpaqueFailure: Error {
     let type: OpaqueFailureType
@@ -31,62 +37,62 @@ struct OpaqueFailure: Error {
         self.innerError = innerError
     }
     
-    static func macVerificationFailed(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
+    static func invalidInput(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
-            type: .macVerificationFailed,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.macVerificationFailed : details!,
+            type: .invalidInput,
+            message: details,
             innerError: inner
         )
     }
-
-    static func invalidKeySignature(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+    
+    static func hashToPointFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
-            type: .invalidKeySignature,
+            type: .hashToPointFailed,
+            message: details,
+            innerError: inner
+        )
+    }
+    
+    static func digestComputationFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .digestComputationFailed,
             message: details,
             innerError: inner
         )
     }
 
-    static func hashingValidPointFailed(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
-        return OpaqueFailure(
-            type: .hashingValidPointFailed,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.hashingValidPointFailed : details!,
-            innerError: inner
-        )
-    }
-
-    static func decryptFailed(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
-        return OpaqueFailure(
-            type: .decryptFailure,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.decryptFailed : details!,
-            innerError: inner
-        )
-    }
-
-    static func encryptFailed(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
+    static func encryptFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
             type: .encryptFailure,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.encryptFailed : details!,
+            message: details,
+            innerError: inner
+        )
+    }
+    
+    static func decryptFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .decryptFailure,
+            message: details,
+            innerError: inner
+        )
+    }
+    
+    static func macVerificationFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .macVerificationFailed,
+            message: details,
+            innerError: inner
+        )
+    }
+    
+    static func pointCompressionFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .pointCompressionFailed,
+            message: details,
             innerError: inner
         )
     }
 
-    static func invalidInput(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
-        return OpaqueFailure(
-            type: .invalidInput,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.inputKeyingMaterialCannotBeNullOrEmpty : details!,
-            innerError: inner
-        )
-    }
-    
-    static func pointCompressionFailed(_ details: String? = nil, inner: Error? = nil) -> OpaqueFailure {
-        return OpaqueFailure(
-            type: .pointCompressionFailed,
-            message: details?.isEmpty != false ? OpaqueMessageKeys.pointCompressionFailed : details!,
-            innerError: inner
-        )
-    }
-    
     static func pointDecodingFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
             type: .pointDecodingFailed,
@@ -103,9 +109,25 @@ struct OpaqueFailure: Error {
         )
     }
     
-    static func hashFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+    static func pointNotOnCurve(_ details: String, inner: Error? = nil) -> OpaqueFailure {
         return OpaqueFailure(
-            type: .hashFailed,
+            type: .pointNotOnCurve,
+            message: details,
+            innerError: inner
+        )
+    }
+
+    static func invalidEcGroup(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .pointNotOnCurve,
+            message: details,
+            innerError: inner
+        )
+    }
+
+    static func modularInverseFailed(_ details: String, inner: Error? = nil) -> OpaqueFailure {
+        return OpaqueFailure(
+            type: .pointNotOnCurve,
             message: details,
             innerError: inner
         )
@@ -113,15 +135,16 @@ struct OpaqueFailure: Error {
     
     func toInternalValidationFailure() -> InternalValidationFailure {
         switch self.type {
-        case .hashingValidPointFailed:
+            
+        case .invalidInput:
             .opaqueError(self.message, inner: self.innerError)
-        case .decryptFailure:
+        case .hashToPointFailed:
+            .opaqueError(self.message, inner: self.innerError)
+        case .digestComputationFailed:
             .opaqueError(self.message, inner: self.innerError)
         case .encryptFailure:
             .opaqueError(self.message, inner: self.innerError)
-        case .invalidInput:
-            .opaqueError(self.message, inner: self.innerError)
-        case .invalidKeySignature:
+        case .decryptFailure:
             .opaqueError(self.message, inner: self.innerError)
         case .macVerificationFailed:
             .opaqueError(self.message, inner: self.innerError)
@@ -131,7 +154,11 @@ struct OpaqueFailure: Error {
             .opaqueError(self.message, inner: self.innerError)
         case .pointMultiplicationFailed:
             .opaqueError(self.message, inner: self.innerError)
-        case .hashFailed:
+        case .pointNotOnCurve:
+            .opaqueError(self.message, inner: self.innerError)
+        case .invalidEcGroup:
+            .opaqueError(self.message, inner: self.innerError)
+        case .modularInverseFailed:
             .opaqueError(self.message, inner: self.innerError)
         }
     }

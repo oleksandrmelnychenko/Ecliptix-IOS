@@ -208,7 +208,7 @@ struct RequestBuilder {
         transcriptHash: Data,
         response: Ecliptix_Proto_Membership_OpaqueSignInInitResponse
     ) -> Result<Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest, InternalValidationFailure> {
-        return OpaqueCryptoUtilities.createMac(key: clientMacKey, data: transcriptHash)
+        return EVPCryptoUtils.createMac(key: clientMacKey, data: transcriptHash)
             .mapOpaqueFailure()
             .map { clientMac in
                 var request = Ecliptix_Proto_Membership_OpaqueSignInFinalizeRequest()

@@ -22,12 +22,12 @@ enum OpaqueClientAuthentication {
     ) -> Result<SignInFinalizationContext, OpaqueFailure> {
         do {
             // 1. OPRF
-            guard case let .success(oprfKey) = OpaqueCryptoUtilities.recoverOprfKey(oprfResponse: signInResponse.serverOprfResponse, blind: blind, group: group) else {
+            guard case let .success(oprfKey) = OpaqueHashingUtils.recoverOprfKey(oprfResponse: signInResponse.serverOprfResponse, blind: blind, group: group) else {
                 return .failure(.invalidInput("Invalid OPRF response"))
             }
 
             // 2. Credential Key
-            let credentialKeyResult = OpaqueCryptoUtilities.deriveKey(
+            let credentialKeyResult = EVPCryptoUtils.deriveKey(
                 ikm: oprfKey,
                 salt: nil,
                 info: OpaqueConstants.credentialKeyInfo,
@@ -94,7 +94,7 @@ enum OpaqueClientAuthentication {
             print("Ake bytes: \(Array(ake))")
             
             // 8. Compress client ephemeral public key
-            let clientEphemeralPubKeyResult = ECPointUtils.compressPoint(ephPublicPoint, group: group, ctx: ctx)
+            let clientEphemeralPubKeyResult = ECPublicKeyUtils.compressPoint(ephPublicPoint, group: group, ctx: ctx)
             guard case let .success(clientEphemeralPubKey) = clientEphemeralPubKeyResult else {
                 return .failure(try clientEphemeralPubKeyResult.unwrapErr())
             }
@@ -141,24 +141,24 @@ enum OpaqueClientAuthentication {
         akeResult: Data,
         transcriptHash: Data
     ) -> Result<SessionKeys, OpaqueFailure> {
-        return OpaqueCryptoUtilities.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt)
+        return EVPCryptoUtils.hkdfExtract(ikm: akeResult, salt: OpaqueConstants.akeSalt)
             .flatMap { prk in
                 var infoBuffer = Data(count: OpaqueConstants.sessionKeyInfo.count + transcriptHash.count)
                 infoBuffer.replaceSubrange(OpaqueConstants.sessionKeyInfo.count..<infoBuffer.count, with: transcriptHash)
 
                 // sessionKey
                 infoBuffer.replaceSubrange(0..<OpaqueConstants.sessionKeyInfo.count, with: OpaqueConstants.sessionKeyInfo)
-                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                return EVPCryptoUtils.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
                     .flatMap { sessionKey in
 
                         // clientMacKey
                         infoBuffer.replaceSubrange(0..<OpaqueConstants.clientMacKeyInfo.count, with: OpaqueConstants.clientMacKeyInfo)
-                        return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                        return EVPCryptoUtils.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
                             .flatMap { clientMacKey in
 
                                 // serverMacKey
                                 infoBuffer.replaceSubrange(0..<OpaqueConstants.serverMacKeyInfo.count, with: OpaqueConstants.serverMacKeyInfo)
-                                return OpaqueCryptoUtilities.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
+                                return EVPCryptoUtils.hkdfExpand(prk: prk, info: infoBuffer, outputLength: OpaqueConstants.macKeyLength)
                                     .map { serverMacKey in
                                         SessionKeys(
                                             sessionKey: sessionKey,
