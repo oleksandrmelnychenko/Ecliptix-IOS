@@ -21,10 +21,10 @@ enum OpaqueConstants {
     static let serverMacKeyInfo  = Data("server_mac_key".utf8)
 
     // MARK: - Key Sizes
-    static let defaultKeyLength        = 32 // 256-bit key
-    static let macKeyLength            = 32
+    static let defaultKeyLength = 32 // 256-bit key
+    static let macKeyLength = 32
     static let ecCompressedPointLength = 33
-    static let bnScalarByteLength      = 32 // EC scalar field size in bytes
+    static let bnScalarByteLength = 32 // EC scalar field size in bytes
 
     // MARK: - AES-GCM Parameters
     static let aesGcmNonceLengthBytes  = 12

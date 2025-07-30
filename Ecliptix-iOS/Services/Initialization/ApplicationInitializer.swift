@@ -30,7 +30,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         do {
             self.systemEvents.publish(.new(.initializing))
             
-            let settingsResult = self.secureStorageProvider.initApplicationInstanceSettings(defaultCulture: defaultSystemSettings.culture)
+            let settingsResult = self.secureStorageProvider.initApplicationInstanceSettings()
             guard settingsResult.isOk else {
                 Logger.error("Failed to get or create application instance settings: \(try! settingsResult.unwrapErr())", category: "AppInit")
                 self.systemEvents.publish(.new(.fatalError))
@@ -40,13 +40,6 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             let result = try settingsResult.unwrap()
             var settings = result.settings
             let isNewInstance = result.isNewInstance
-            
-            guard let language = SupportedLanguage(code: settings.culture) else {
-                Logger.error("Unsupported language code: \(settings.culture)")
-                return false
-            }
-
-            self.localizationService.setLanguage(language)
 
             let connectIdResult = await self.ensureSecrecyChannelAsync(settings: settings, isNewInstance: isNewInstance)
             guard connectIdResult.isOk else {

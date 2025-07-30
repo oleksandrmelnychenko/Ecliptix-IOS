@@ -16,9 +16,7 @@ final class KeychainStorageProvider: SecureStorageProviderProtocol {
         self.ttlDays = ttlDays
     }
     
-    func initApplicationInstanceSettings(defaultCulture: String) -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
-        _ = delete(key: Self.settingsKey)
-        
+    func initApplicationInstanceSettings() -> Result<InstanceSettingsResult, InternalServiceApiFailure> {
         return self.tryGetByKey(key: Self.settingsKey)
             .flatMap { maybeSettingsData in
                 do {
@@ -30,30 +28,9 @@ final class KeychainStorageProvider: SecureStorageProviderProtocol {
                     var newSettings = Ecliptix_Proto_AppDevice_ApplicationInstanceSettings()
                     newSettings.appInstanceID = Helpers.guidToData(UUID())
                     newSettings.deviceID = Helpers.guidToData(UUID())
-                    newSettings.culture = defaultCulture
                     
                     return self.store(key: Self.settingsKey, data: try newSettings.serializedData())
                         .map { _ in InstanceSettingsResult(settings: newSettings, isNewInstance: true) }
-                } catch {
-                    return .failure(.secureStoreUnknown("An unexpected error occurred while processing instance settings", inner: error))
-                }
-            }
-            .mapError { error in
-                .secureStoreUnknown("An unexpected error occurred while retrieving or storing instance settings", inner: error)
-            }
-    }
-    
-    func setApplicationSettingsCultureAsync(culture: String) -> Result<Unit, InternalServiceApiFailure> {
-        return self.tryGetByKey(key: Self.settingsKey)
-            .flatMap { maybeSettingsData in
-                do {
-                    if let data = maybeSettingsData {
-                        var existingSettings = try Ecliptix_Proto_AppDevice_ApplicationInstanceSettings(serializedBytes: data)
-                        existingSettings.culture = culture
-                        
-                        return self.store(key: Self.settingsKey, data: try existingSettings.serializedData())
-                    }
-                    return .failure(.secureStoreNotFound("No existing settings found to update culture"))
                 } catch {
                     return .failure(.secureStoreUnknown("An unexpected error occurred while processing instance settings", inner: error))
                 }

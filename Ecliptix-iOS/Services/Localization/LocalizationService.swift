@@ -6,15 +6,51 @@
 //
 
 import Foundation
+import UIKit
 
 final class LocalizationService: ObservableObject {
     static let shared = LocalizationService()
 
-    @Published private(set) var currentLanguage: SupportedLanguage = .uk
+    @Published private(set) var currentLanguage: SupportedLanguage = .en
     private var localizedData: [String: Any] = [:]
 
+    private let userDefaultsKey = "SelectedLanguageCode"
+    private let lastSeenSystemLanguageKey = "LastSeenSystemLanguageCode"
+    
+//    private init() {
+//        // 1. Перевірка системної мови, встановленої в НАЛАШТУВАННЯХ додатку
+//        let appLanguageCode = Bundle.main.preferredLocalizations.first ?? "en"
+//        
+//        // 2. Якщо мова підтримується — використовуємо її
+//        if let lang = SupportedLanguage.allCases.first(where: { appLanguageCode.starts(with: $0.code.prefix(2)) }) {
+//            self.currentLanguage = lang
+//            setLanguage(lang, save: false) // ❗️НЕ зберігаємо в UserDefaults
+//            return
+//        }
+//
+//        // 3. Інакше — пробуємо збережену мову користувача
+//        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey),
+//           let savedLang = SupportedLanguage(rawValue: saved) {
+//            self.currentLanguage = savedLang
+//            setLanguage(savedLang)
+//            return
+//        }
+//
+//        // 4. Інакше — дефолтна системна мова
+//        let systemLang = SupportedLanguage.fromSystemLocale()
+//        self.currentLanguage = systemLang
+//        setLanguage(systemLang)
+//    }
     private init() {
-        load(locale: currentLanguage.code)
+        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey),
+           let savedLang = SupportedLanguage(rawValue: saved) {
+            self.currentLanguage = savedLang
+            load(locale: savedLang.code)
+        } else {
+            let systemLang = SupportedLanguage.fromSystemLocale()
+            self.currentLanguage = systemLang
+            load(locale: systemLang.code)
+        }
     }
 
     private func load(locale: String) {
@@ -31,15 +67,16 @@ final class LocalizationService: ObservableObject {
         DispatchQueue.main.async {
             self.localizedData = json
             self.currentLanguage = lang
-            self.objectWillChange.send()
         }
     }
     
     func setLanguage(_ language: SupportedLanguage, onCultureChanged: (() -> Void)? = nil) {
+        UserDefaults.standard.set(language.code, forKey: userDefaultsKey)
+        UserDefaults.standard.synchronize()
+
         load(locale: language.code)
-        
+
         DispatchQueue.main.async {
-            self.objectWillChange.send()
             onCultureChanged?()
         }
     }
@@ -57,6 +94,27 @@ final class LocalizationService: ObservableObject {
         }
 
         return currentLevel as? String ?? key
+    }
+    
+    func checkIfSystemLanguageChanged() -> SupportedLanguage? {
+        let currentSystemCode = Bundle.main.preferredLocalizations.first ?? "en"
+
+        guard let systemLang = SupportedLanguage.allCases.first(where: { currentSystemCode.starts(with: $0.code.prefix(2)) }) else {
+            return nil
+        }
+
+        let lastSeenCode = UserDefaults.standard.string(forKey: lastSeenSystemLanguageKey)
+
+        // Якщо мова в системі змінилася з моменту останнього запуску
+        if systemLang.code != lastSeenCode {
+            // Зберігаємо нову
+            UserDefaults.standard.set(systemLang.code, forKey: lastSeenSystemLanguageKey)
+
+            // Показуємо тільки якщо вона ≠ з поточною в додатку
+            return systemLang != currentLanguage ? systemLang : nil
+        }
+
+        return nil
     }
 }
 

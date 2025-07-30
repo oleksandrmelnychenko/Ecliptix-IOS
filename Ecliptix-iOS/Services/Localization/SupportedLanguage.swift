@@ -5,6 +5,8 @@
 //  Created by Oleksandr Melnechenko on 30.06.2025.
 //
 
+import Foundation
+
 enum SupportedLanguage: String, CaseIterable {
     case en = "en-US"
     case uk = "uk-UA"
@@ -38,5 +40,15 @@ enum SupportedLanguage: String, CaseIterable {
             return all[nextIndex]
         }
         return self
+    }
+    
+    static func fromSystemLocale() -> SupportedLanguage {
+        let systemLanguage = Locale.preferredLanguages.first ?? "en"
+        for lang in SupportedLanguage.allCases {
+            if systemLanguage.starts(with: lang.code.prefix(2)) {
+                return lang
+            }
+        }
+        return .en
     }
 }

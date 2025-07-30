@@ -17,6 +17,9 @@ struct AuthScreenContainer<Content: View>: View {
     @State private var bannerOffset: CGFloat = -40
     @State private var bannerOpacity: Double = 0
     
+    @State private var showLanguageAlert = false
+    @State private var suggestedLanguage: SupportedLanguage?
+    
     @StateObject private var networkMonitor = NetworkMonitor()
     @EnvironmentObject var localizationService: LocalizationService
     
@@ -79,28 +82,40 @@ struct AuthScreenContainer<Content: View>: View {
                     .zIndex(2)
             }
         }
+        .onAppear {
+            if let mismatchLang = localizationService.checkIfSystemLanguageChanged() {
+                suggestedLanguage = mismatchLang
+                showLanguageAlert = true
+            }
+        }
+        .alert("Change Language?", isPresented: $showLanguageAlert) {
+            Button("Yes") {
+                if let lang = suggestedLanguage {
+                    localizationService.setLanguage(lang)
+                }
+            }
+            Button("No", role: .cancel) {}
+        } message: {
+            Text("Your system language is \(suggestedLanguage?.displayName ?? ""). Would you like to switch?")
+        }
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             if isConnected {
-                // Залиш банер ще на трохи
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     withAnimation(.easeInOut(duration: 0.4)) {
                         bannerOffset = -40
                         bannerOpacity = 0
                     }
 
-                    // Після завершення анімації повністю ховаємо View
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         showConnectionView = false
                     }
                 }
             } else {
-                // Показуємо View
                 showConnectionView = true
                 bannerOffset = -20
                 bannerOpacity = 0
                 bannerVisible = true
 
-                // Анімуємо заїзд
                 withAnimation(.easeOut(duration: 0.4)) {
                     bannerOffset = 0
                     bannerOpacity = 1

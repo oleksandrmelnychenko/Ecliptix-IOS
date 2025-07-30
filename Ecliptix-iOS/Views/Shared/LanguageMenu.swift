@@ -16,16 +16,7 @@ struct LanguageMenu: View {
         Menu {
             ForEach(SupportedLanguage.allCases, id: \.self) { language in
                 Button {
-                    localizationService.setLanguage(language) {
-                        let result = self.secureStorageKey.setApplicationSettingsCultureAsync(culture: language.rawValue)
-                        
-                        switch result {
-                        case .success:
-                            print("Culture saved successfully")
-                        case .failure(let error):
-                            print("Failed to save culture: \(error)")
-                        }
-                    }
+                    localizationService.setLanguage(language)
                 } label: {
                     HStack {
                         Image(language.flagImageName)
