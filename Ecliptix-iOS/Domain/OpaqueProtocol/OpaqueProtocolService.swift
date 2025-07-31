@@ -73,7 +73,7 @@ class OpaqueProtocolService {
         )
     }
     
-    static func createOprfRequest(password: Data) -> Result<(oprfRequest: Data, blind: UnsafeMutablePointer<BIGNUM>), OpaqueFailure> {
+    static func createOprfRequest(password: Data) -> Result<OprfData, OpaqueFailure> {
         let group = getDefaultGroup()
         
         return BigNumUtils.generateRandomScalar(group: group)
@@ -89,7 +89,7 @@ class OpaqueProtocolService {
                                         .flatMap { blindedPoint in
                                             ECPublicKeyUtils.compressPoint(blindedPoint, group: group, ctx: ctx)
                                                .map { compressed in
-                                                   (oprfRequest: compressed, blind: blind)
+                                                   OprfData(oprfRequest: compressed, blind: blind)
                                                }
                                         }
                                 }

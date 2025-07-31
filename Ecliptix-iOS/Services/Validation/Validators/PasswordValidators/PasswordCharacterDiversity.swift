@@ -12,6 +12,25 @@ struct PasswordCharacterDiversity {
     private static let uppercaseRegex = try! NSRegularExpression(pattern: "[A-Z]", options: [])
     private static let digitRegex = try! NSRegularExpression(pattern: "\\d", options: [])
     private static let specialCharRegex = try! NSRegularExpression(pattern: "^[a-zA-Z0-9]*$", options: [])
+    private static let nonEnglishLetterRegex = try! NSRegularExpression(pattern: "[^A-Za-z\\W\\d_]", options: [])
+    
+    static func upperCase(_ s: String) -> Bool {
+        let range = NSRange(location: 0, length: s.utf16.count)
+        
+        return uppercaseRegex.firstMatch(in: s, range: range) == nil
+    }
+    
+    static func noDigit(_ s: String) -> Bool {
+        let range = NSRange(location: 0, length: s.utf16.count)
+        
+        return digitRegex.firstMatch(in: s, range: range) == nil
+    }
+    
+    static func noNonEnglishLetters(_ s: String) -> Bool {
+        let range = NSRange(location: 0, length: s.utf16.count)
+        
+        return nonEnglishLetterRegex.firstMatch(in: s, options: [], range: range) != nil
+    }
     
     static func lacksCharacterDiversity(_ s: String, minCharClasses: Int) -> Bool {
         return getCharacterClassCount(s) < minCharClasses

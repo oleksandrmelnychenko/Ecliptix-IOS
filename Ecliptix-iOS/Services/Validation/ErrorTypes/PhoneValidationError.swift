@@ -6,21 +6,30 @@
 //
 
 enum PhoneValidationError: ValidationError {
-    case empty
-    case missingCountryCode
+    case cannotBeEmpty
+    case mustStartWithCountryCode
     case containsNonDigits
-    case invalidLength(min: Int, max: Int)
-
-    var message: String {
+    case incorrectLength(min: Int, max: Int)
+    
+    var messageKey: String {
         switch self {
-        case .empty:
-            return String(localized: "Phone number cannot be empty.")
-        case .missingCountryCode:
-            return String(localized: "Must start with a country code (+).")
+        case .cannotBeEmpty:
+            return Strings.ValidationErrors.PhoneNumber.cannotBeEmpty
+        case .mustStartWithCountryCode:
+            return Strings.ValidationErrors.PhoneNumber.mustStartWithCountryCode
         case .containsNonDigits:
-            return String(localized: "Can only contain digits after the country code.")
-        case .invalidLength(let min, let max):
-            return String(localized: "Must be between \(min) and \(max) digits long.")
+            return Strings.ValidationErrors.PhoneNumber.containsNonDigits
+        case .incorrectLength:
+            return Strings.ValidationErrors.PhoneNumber.incorrectLength
+        }
+    }
+    
+    var args: [CVarArg] {
+        switch self {
+        case .incorrectLength(let min, let max):
+            return [min, max]
+        default:
+            return []
         }
     }
 }

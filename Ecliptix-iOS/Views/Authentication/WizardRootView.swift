@@ -9,6 +9,8 @@ import SwiftUI
 
 struct WizardRootView: View {
     @EnvironmentObject var wizardViewModel: WizardViewModel
+    @EnvironmentObject var navigationService: NavigationService
+    @EnvironmentObject var localizationService: LocalizationService
 
     var body: some View {
         Group {
@@ -16,7 +18,12 @@ struct WizardRootView: View {
             case .loading:
                 ProgressView("Loading...")
             case .onboarding:
-                WelcomeView()
+                NavigationStack(path: $navigationService.path) {
+                    WelcomeView()
+                        .navigationDestination(for: AppRoute.self) { route in
+                            ViewFactory.view(for: route)
+                        }
+                }
             }
         }
         .task {

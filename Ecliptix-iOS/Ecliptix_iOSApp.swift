@@ -58,10 +58,12 @@ struct Ecliptix_iOSApp: App {
     
     var body: some Scene {
         WindowGroup {
-            WizardRootView()
-                .environmentObject(navigationService)
-                .environmentObject(localizationService)
-                .environmentObject(wizardViewModel)
+            NavigationStack(path: $navigationService.path) {
+                WizardRootView()
+            }
+            .environmentObject(navigationService)
+            .environmentObject(localizationService)
+            .environmentObject(wizardViewModel)
         }
     }
 }

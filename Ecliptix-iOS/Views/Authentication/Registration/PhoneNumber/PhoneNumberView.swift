@@ -26,7 +26,6 @@ struct PhoneNumberView: View {
             
             FieldInput<PhoneValidationError, PhoneInputField>(
                 title: String(localized: "Phone Number"),
-                text: $viewModel.phoneNumber,
                 hintText: Strings.Authentication.SignUp.PhoneVerification.mobileHint,
                 validationErrors: viewModel.validationErrors,
                 showValidationErrors: self.$viewModel.showPhoneNumberValidationErrors,

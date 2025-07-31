@@ -75,4 +75,30 @@ enum Strings {
             static var continueButton: String { "Authentication.SignIn.Continue".localized }
         }
     }
+    
+    enum ValidationErrors {
+        enum PhoneNumber {
+            static var mustStartWithCountryCode: String { "ValidationErrors.PhoneNumber.MustStartWithCountryCode".localized }
+            static var containsNonDigits: String { "ValidationErrors.PhoneNumber.ContainsNonDigits".localized }
+            static var incorrectLength: String { "ValidationErrors.PhoneNumber.IncorrectLength".localized }
+            static var cannotBeEmpty: String { "ValidationErrors.PhoneNumber.CannotBeEmpty".localized }
+        }
+        
+        enum SecureKey {
+            static var required: String { "ValidationErrors.SecureKey.Required".localized }
+            static var minLength: String { "ValidationErrors.SecureKey.MinLength".localized }
+            static var maxLength: String { "ValidationErrors.SecureKey.MaxLength".localized }
+            static var noUppercase: String { "ValidationErrors.SecureKey.NoUppercase".localized }
+            static var noSpaces: String { "ValidationErrors.SecureKey.NoSpaces".localized }
+            static var tooSimple: String { "ValidationErrors.SecureKey.TooSimple".localized }
+            static var tooCommon: String { "ValidationErrors.SecureKey.TooCommon".localized }
+            static var noDigit: String { "ValidationErrors.SecureKey.NoDigit".localized }
+            static var sequentialPattern: String { "ValidationErrors.SecureKey.SequentialPattern".localized }
+            static var repeatedChars: String { "ValidationErrors.SecureKey.RepeatedChars".localized }
+            static var lacksDiversity: String { "ValidationErrors.SecureKey.LacksDiversity".localized }
+            static var containsAppName: String { "ValidationErrors.SecureKey.ContainsAppName".localized }
+            static var invalidCredentials: String { "ValidationErrors.SecureKey.InvalidCredentials".localized }
+            static var nonEnglishLetters: String { "ValidationErrors.SecureKey.NonEnglishLetters".localized }
+        }
+    }
 }

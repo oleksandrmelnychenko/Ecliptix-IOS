@@ -8,15 +8,21 @@
 import Foundation
 
 struct PasswordValidator: FieldValidating {
-    private static let minLength: Int = 8
-    private static let maxLength: Int = 128
-    private static let minCharClasses: Int = 3
-    private static let minTotalEntropyBits: Double = 50
-    
-    func validate(_ value: String) -> [PasswordValidationError] {
-        let rules: [(String) -> PasswordValidationError?] = [
+    private static let minLength: Int = 6
+    private static let maxLength: Int = 21
+    private static let minCharClasses: Int = 2
+    private static let minTotalEntropyBits: Double = 30
+        
+    func validate(_ value: String) -> (errors: [PasswordValidationError], suggestions: [PasswordValidationError]) {
+        let validationRules: [(String) -> PasswordValidationError?] = [
             checkEmpty,
             checkTooShort,
+            checkUpperCase,
+            checkNonEnglishLetters
+        ]
+        
+        let recommendations: [(String) -> PasswordValidationError?] = [
+            checkNoDigit,
             checkTooLong,
             checkLeadingOrTrailingSpaces,
             checkTooSimple,
@@ -29,31 +35,53 @@ struct PasswordValidator: FieldValidating {
 
         var errors: [PasswordValidationError] = []
 
-        for rule in rules {
+        for rule in validationRules {
             if let error = rule(value) {
                 errors.append(error)
             }
         }
+        if !errors.isEmpty {
+            return (errors, [])
+        }
+        
+        var suggestions: [PasswordValidationError] = []
 
-        return errors
+        for rule in recommendations {
+            if let suggestion = rule(value) {
+                suggestions.append(suggestion)
+            }
+        }
+        if !suggestions.isEmpty {
+            return (errors, suggestions)
+        }
+        
+        return ([], [])
     }
     
     // MARK: - Validation Rules
 
     private func checkEmpty(_ password: String) -> PasswordValidationError? {
-        return password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .empty : nil
+        return password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .required : nil
     }
 
     private func checkTooShort(_ password: String) -> PasswordValidationError? {
-        return password.count < Self.minLength ? .tooShort(Self.minLength) : nil
+        return password.count < Self.minLength ? .minLength(Self.minLength) : nil
+    }
+    
+    private func checkUpperCase(_ password: String) -> PasswordValidationError? {
+        return PasswordCharacterDiversity.upperCase(password) ? .noUppercase : nil
+    }
+    
+    private func checkNonEnglishLetters(_ password: String) -> PasswordValidationError? {
+        return PasswordCharacterDiversity.noNonEnglishLetters(password) ? .nonEnglishLetters : nil
     }
 
     private func checkTooLong(_ password: String) -> PasswordValidationError? {
-        return password.count > Self.maxLength ? .tooLong(Self.maxLength) : nil
+        return password.count > Self.maxLength ? .maxLength(Self.maxLength) : nil
     }
 
     private func checkLeadingOrTrailingSpaces(_ password: String) -> PasswordValidationError? {
-        return password.trimmingCharacters(in: .whitespacesAndNewlines) != password ? .leadingOrTrailingSpaces : nil
+        return password.trimmingCharacters(in: .whitespacesAndNewlines) != password ? .noSpaces : nil
     }
 
     private func checkTooSimple(_ password: String) -> PasswordValidationError? {
@@ -63,21 +91,25 @@ struct PasswordValidator: FieldValidating {
     private func checkTooCommon(_ password: String) -> PasswordValidationError? {
         return PasswordCommons.commonlyUsedPasswords.contains(password) ? .tooCommon : nil
     }
+    
+    private func checkNoDigit(_ password: String) -> PasswordValidationError? {
+        return PasswordCharacterDiversity.noDigit(password) ? .noDigit : nil
+    }
 
     private func checkSequentialPattern(_ password: String) -> PasswordValidationError? {
         return PasswordPatterns.isSequentialOrKeyboardPattern(password) ? .sequentialPattern : nil
     }
 
     private func checkExcessiveRepeats(_ password: String) -> PasswordValidationError? {
-        return self.hasExcessiveRepeats(password) ? .excessiveRepeats : nil
+        return self.hasExcessiveRepeats(password) ? .repeatedChars : nil
     }
 
     private func checkInsufficientCharacterDiversity(_ password: String) -> PasswordValidationError? {
-        return PasswordCharacterDiversity.lacksCharacterDiversity(password, minCharClasses: Self.minCharClasses) ? .insufficientCharacterDiversity(requiredTypes: Self.minCharClasses) : nil
+        return PasswordCharacterDiversity.lacksCharacterDiversity(password, minCharClasses: Self.minCharClasses) ? .lacksDiversity(requiredTypes: Self.minCharClasses) : nil
     }
 
     private func checkContainsAppNameVariant(_ password: String) -> PasswordValidationError? {
-        return PasswordAppNameCheck.containsAppNameVariant(password) ? .containsAppNameVariant : nil
+        return PasswordAppNameCheck.containsAppNameVariant(password) ? .containsAppName : nil
     }
     
     private func calculateTotalShannonEntropy(_ string: String) -> Double {

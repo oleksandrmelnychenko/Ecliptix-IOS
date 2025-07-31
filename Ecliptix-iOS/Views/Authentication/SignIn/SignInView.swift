@@ -31,7 +31,6 @@ struct SignInView: View {
             Group {
                 FieldInput<PhoneValidationError, PhoneInputField>(
                     title: String(localized: "Phone Number"),
-                    text: $viewModel.phoneNumber,
                     hintText: Strings.Authentication.SignIn.mobileHint,
                     validationErrors: viewModel.phoneValidationErrors,
                     showValidationErrors: self.$viewModel.showPhoneNumberErrors,
@@ -47,23 +46,26 @@ struct SignInView: View {
                     }
                 }
                 
-                FieldInput<PasswordValidationError, PasswordInputField>(
+                FieldInput<PasswordValidationError, SecurePasswordField>(
                     title: String(localized: "Password"),
-                    text: $viewModel.password,
                     hintText: Strings.Authentication.SignIn.passwordHint,
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     content: {
-                        PasswordInputField(
+                        SecurePasswordField(
                             placeholder: Strings.Authentication.SignIn.passwordPlaceholder,
-                            showPassword: $showPassword,
-                            text: $viewModel.password
+                            onCharacterAdded: { index, chars in
+                                viewModel.insertSecureKeyChars(indext: index, chars: chars)
+                            },
+                            onCharacterRemoved: { index, count in
+                                viewModel.removeSecureKeyChars(index: index, count: count)
+                            }
                         )
                     }
                 )
-                .onChange(of: viewModel.password) { _, newPassword in
-                    self.viewModel.updatePassword(passwordText: newPassword)
-                }
+//                .onChange(of: viewModel.password) { _, newPassword in
+//                    self.viewModel.updatePassword(passwordText: newPassword)
+//                }
                 
                 
             }

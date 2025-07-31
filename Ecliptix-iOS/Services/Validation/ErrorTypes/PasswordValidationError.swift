@@ -8,45 +8,62 @@
 import Foundation
 
 enum PasswordValidationError: ValidationError {
-    case empty
-    case tooShort(Int)
-    case tooLong(Int)
-    case leadingOrTrailingSpaces
+    case required
+    case minLength(Int)
+    case maxLength(Int)
+    case noUppercase
+    case noSpaces
     case tooSimple
     case tooCommon
+    case noDigit
     case sequentialPattern
-    case excessiveRepeats
-    case insufficientCharacterDiversity(requiredTypes: Int)
-    case containsAppNameVariant
+    case repeatedChars
+    case lacksDiversity(requiredTypes: Int)
+    case containsAppName
+    case nonEnglishLetters
     
     case mismatchPasswords
     
-    
-    var message: String {
+    var messageKey: String {
         switch self {
-        case .empty:
-            return String(localized: "Required")
-        case .tooShort(let length):
-            return String(localized: "At least \(length) chars")
-        case .tooLong(let length):
-            return String(localized: "Max \(length) chars")
-        case .leadingOrTrailingSpaces:
-            return String(localized: "No leading/trailing spaces")
+        case .required:
+            return Strings.ValidationErrors.SecureKey.required
+        case .minLength:
+            return Strings.ValidationErrors.SecureKey.minLength
+        case .maxLength:
+            return Strings.ValidationErrors.SecureKey.maxLength
+        case .noUppercase:
+            return Strings.ValidationErrors.SecureKey.noUppercase
+        case .noSpaces:
+            return Strings.ValidationErrors.SecureKey.noSpaces
         case .tooSimple:
-            return String(localized: "Too simple; add length or character variety")
+            return Strings.ValidationErrors.SecureKey.tooSimple
         case .tooCommon:
-            return String(localized: "Too common")
+            return Strings.ValidationErrors.SecureKey.tooCommon
+        case .noDigit:
+            return Strings.ValidationErrors.SecureKey.noDigit
         case .sequentialPattern:
-            return String(localized: "No sequential patterns")
-        case .excessiveRepeats:
-            return String(localized: "No repeating characters")
-        case .insufficientCharacterDiversity(let requiredTypes):
-            return String(localized: "Needs \(requiredTypes) chars (a, A, 1, #)")
-        case .containsAppNameVariant:
-            return String(localized: "Cannot contain app name")
-
+            return Strings.ValidationErrors.SecureKey.sequentialPattern
+        case .repeatedChars:
+            return Strings.ValidationErrors.SecureKey.repeatedChars
+        case .lacksDiversity:
+            return Strings.ValidationErrors.SecureKey.lacksDiversity
+        case .containsAppName:
+            return Strings.ValidationErrors.SecureKey.containsAppName
+        case .nonEnglishLetters:
+            return Strings.ValidationErrors.SecureKey.nonEnglishLetters
+            
         case .mismatchPasswords:
             return String(localized: "Passwords do not match")
+        }
+    }
+    
+    var args: [CVarArg] {
+        switch self {
+        case .minLength(let length): return [length]
+        case .maxLength(let length): return [length]
+        case .lacksDiversity(let requiredTypes): return [requiredTypes]
+        default: return []
         }
     }
 }

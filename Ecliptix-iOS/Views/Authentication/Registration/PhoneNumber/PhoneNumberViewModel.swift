@@ -29,9 +29,9 @@ final class PhoneNumberViewModel: ObservableObject {
     private var validatePhoneNumberResponce: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse? = nil
     
     private func validatePhoneNumber() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.validationErrors = self.phoneValidator.validate(self.phoneNumber)
-        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//            self.validationErrors = self.phoneValidator.validate(self.phoneNumber)
+//        }
     }
     
     init(authFlow: AuthFlow) {

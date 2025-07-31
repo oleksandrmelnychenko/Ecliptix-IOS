@@ -17,6 +17,7 @@ final class WizardViewModel: ObservableObject {
     @Published var step: WizardStep = .loading
     
     private let connectionService: ApplicationInitializer
+    private var hasStarted = false
 
     init(
         connectionService: ApplicationInitializer
@@ -26,13 +27,11 @@ final class WizardViewModel: ObservableObject {
     
     @MainActor
     func start() async {
-        // Можна показати splash/loading
-        step = .loading
+        guard !hasStarted else { return }
+        hasStarted = true
         
-        // 1. Ініціалізація (мережа, з'єднання тощо)
-        _ = await connectionService.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
-
-        // 2. Логіка вибору: приклад
         step = .onboarding
+        
+        _ = await connectionService.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
     }
 }

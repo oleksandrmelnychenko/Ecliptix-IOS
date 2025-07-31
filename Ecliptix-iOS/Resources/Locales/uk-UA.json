@@ -60,6 +60,30 @@
       "Continue": "Продовжити"
     }
   },
+  "ValidationErrors": {
+      "PhoneNumber": {
+        "MustStartWithCountryCode": "Має починатись із +",
+        "ContainsNonDigits": "Лише цифри після коду",
+        "IncorrectLength": "Потрібно %d-%d цифр.",
+        "CannotBeEmpty": "Обов'язкове поле"
+      },
+      "SecureKey": {
+          "Required": "Обов'язкове поле",
+          "MinLength": "Мін. %d символів",
+          "MaxLength": "Макс. %d символів",
+          "NoSpaces": "Без пробілів",
+          "NoUppercase": "Потрібна велика літера",
+          "NoDigit": "Потрібна цифра",
+          "TooSimple": "Занадто простий",
+          "TooCommon": "Занадто поширений",
+          "SequentialPattern": "Без послідовностей (abc, 123)",
+          "RepeatedChars": "Без повторів (aaa, 111)",
+          "LacksDiversity": "Потрібно %d типи символів (A, a, 1, $)",
+          "ContainsAppName": "Не може містити назву додатку",
+          "InvalidCredentials": "Неправильні облікові дані",
+          "NonEnglishLetters": "Лише латинські літери"
+      }
+    },
   "Welcome": {
     "SignInButton": "Увійти",
     "CreateAccountButton": "Створити акаунт"

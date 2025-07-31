@@ -38,7 +38,8 @@ final class PasswordSetupViewModel: ObservableObject {
     }
 
     var passwordValidationErrors: [PasswordValidationError] {
-        passwordValidator.validate(password)
+//        passwordValidator.validate(password)
+        return []
     }
     
     var confirmPasswordValidationErrors: [PasswordValidationError] = []

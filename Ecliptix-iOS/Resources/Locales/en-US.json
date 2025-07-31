@@ -60,6 +60,30 @@
       "Continue": "Continue"
     }
   },
+  "ValidationErrors": {
+      "PhoneNumber": {
+        "MustStartWithCountryCode": "Must start with +",
+        "ContainsNonDigits": "Digits only after code",
+        "IncorrectLength": "%d-%d digits required",
+        "CannotBeEmpty": "Required"
+      },
+      "SecureKey": {
+        "Required": "Required.",
+        "MinLength": "Min %d characters",
+        "MaxLength": "Max %d characters",
+        "NoSpaces": "No spaces allowed",
+        "NoUppercase": "Requires an uppercase letter",
+        "TooSimple": "Too simple",
+        "TooCommon": "Too common",
+        "NoDigit": "Requires a digit",
+        "SequentialPattern": "No sequences (e.g., abc, 123)",
+        "RepeatedChars": "No repeats (e.g., aaa, 111)",
+        "LacksDiversity": "Requires %d character types (A, a, 1, $)",
+        "ContainsAppName":  "Cannot contain app name",
+        "InvalidCredentials": "Invalid credentials",
+        "NonEnglishLetters": "Latin letters only"
+      }
+    },
   "Welcome": {
     "SignInButton": "Sign in",
     "CreateAccountButton": "Create account"

@@ -8,5 +8,5 @@
 protocol FieldValidating {
     associatedtype ErrorType: ValidationError
     
-    func validate(_ value: String) -> [ErrorType]
+    func validate(_ value: String) -> (errors: [ErrorType], suggestions: [PasswordValidationError])
 }

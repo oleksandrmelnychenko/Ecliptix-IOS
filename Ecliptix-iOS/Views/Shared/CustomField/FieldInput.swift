@@ -9,7 +9,6 @@ import SwiftUI
 
 struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     let title: String
-    @Binding var text: String
     @Binding var showValidationErrors: Bool
     var placeholder: String = ""
     let hintText: String
@@ -22,7 +21,6 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
     
     init(
         title: String,
-        text: Binding<String>,
         placeholder: String = "",
         hintText: String = "",
         validationErrors: [ErrorType] = [],
@@ -30,7 +28,6 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
-        self._text = text
         self._showValidationErrors = showValidationErrors
         self.placeholder = placeholder
         self.hintText = hintText
@@ -71,7 +68,7 @@ struct FieldInput<ErrorType: ValidationError, Content: View>: View {
             .font(.subheadline)
             .padding(.horizontal, 8)
             .padding(.bottom)
-            .animation(.easeInOut, value: text)
+//            .animation(.easeInOut, value: text)
         }
         .background(Color("TextBox.BackgroundColor"))
         .foregroundStyle(Color("TextBox.ForegroundColor"))

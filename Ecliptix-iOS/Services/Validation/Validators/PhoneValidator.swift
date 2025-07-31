@@ -13,7 +13,7 @@ struct PhoneValidator: FieldValidating {
     
     private static let nonDigitsRegex = try! NSRegularExpression(pattern: "[^0-9]")
     
-    func validate(_ value: String) -> [PhoneValidationError] {
+    func validate(_ value: String) -> (errors: [PhoneValidationError], suggestions: [PasswordValidationError]) {
         let rules: [(String) -> PhoneValidationError?] = [
             checkEmpty,
             checkMissingCountryCode,
@@ -29,16 +29,16 @@ struct PhoneValidator: FieldValidating {
             }
         }
 
-        return errors
+        return ([], [])
     }
     
     // MARK: - Validation Rules
     private func checkEmpty(_ value: String) -> PhoneValidationError? {
-        return value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .empty : nil
+        return value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .cannotBeEmpty : nil
     }
 
     private func checkMissingCountryCode(_ value: String) -> PhoneValidationError? {
-        return !value.hasPrefix("+") ? .missingCountryCode : nil
+        return !value.hasPrefix("+") ? .mustStartWithCountryCode : nil
     }
 
     private func checkContainsNonDigits(_ value: String) -> PhoneValidationError? {
@@ -55,7 +55,7 @@ struct PhoneValidator: FieldValidating {
         let length = numberPart.count
         
         return (length < Self.minDigits || length > Self.maxDigits)
-            ? .invalidLength(min: Self.minDigits, max: Self.maxDigits)
+            ? .incorrectLength(min: Self.minDigits, max: Self.maxDigits)
             : nil
     }
 }
