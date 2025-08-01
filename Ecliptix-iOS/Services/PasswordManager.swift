@@ -76,27 +76,27 @@ final class PasswordManager {
             ))
     }
     
-    func checkPasswordCompliance(_ password: String, policy: PasswordPolicy) -> Result<Unit, EcliptixProtocolFailure> {
-        var validationErrors: [String] = []
+    func checkPasswordCompliance(_ password: String, policy: PasswordPolicy) -> Result<[PasswordValidationError], EcliptixProtocolFailure> {
+        var validationErrors: [PasswordValidationError] = []
 
         if password.isEmpty {
-            validationErrors.append(Self.passwordEmpty())
+            validationErrors.append(.required)
         } else {
             if password.count < policy.minLength {
-                validationErrors.append(Self.passwordTooShortMessage(length: policy.minLength))
+                validationErrors.append(.minLength(policy.minLength))
             }
             
             let range = NSRange(location: 0, length: password.utf16.count)
             if policy.requireLowercase && Self.lowercaseRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(Self.passwordMustContainLowercase())
+                validationErrors.append(.noLowercase)
             }
             
             if policy.requireUppercase && Self.uppercaseRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(Self.passwordMustContainUppercase())
+                validationErrors.append(.noUppercase)
             }
             
             if policy.requireDigit && Self.digitRegex.firstMatch(in: password, range: range) == nil {
-                validationErrors.append(Self.passwordMustContainDigit())
+                validationErrors.append(.noDigit)
             }
 
             if policy.requireSpecialChar && !policy.allowedSpecialChars.isEmpty {
@@ -105,7 +105,7 @@ final class PasswordManager {
                 
                 if let regex = try? NSRegularExpression(pattern: pattern) {
                     if regex.firstMatch(in: password, range: range) == nil {
-                        validationErrors.append(Self.passwordMustContainSpecialCharacter(charSet: policy.allowedSpecialChars))
+                        validationErrors.append(.noSpecialCharacter(policy.allowedSpecialChars))
                     }
                 }
             }
@@ -117,23 +117,18 @@ final class PasswordManager {
                     
                     if let regex = try? NSRegularExpression(pattern: pattern) {
                         if regex.firstMatch(in: password, range: range) == nil {
-                            validationErrors.append(Self.passwordUnallowedCharactersWithSpecials())
+                            validationErrors.append(.unallowedCharactersWithSpecials)
                         }
                     }
                 } else {
                     if Self.alphanumericOnlyRegex.firstMatch(in: password, range: range) == nil {
-                        validationErrors.append(Self.passwordUnallowedCharactersAlphanumericOnly())
+                        validationErrors.append(.unallowedCharactersAlphanumericOnly)
                     }
                 }
             }
         }
         
-        if !validationErrors.isEmpty {
-            let combinedReasons = validationErrors.joined(separator: "; ")
-            return .failure(.invalidInput("Password does not meet complexity requirements: \(combinedReasons)"))
-        }
-        
-        return .success(.value)
+        return .success(validationErrors)
     }
     
     func hashPassword(_ password: String) -> Result<String, EcliptixProtocolFailure> {

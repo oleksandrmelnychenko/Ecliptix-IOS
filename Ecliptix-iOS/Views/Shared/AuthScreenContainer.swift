@@ -35,36 +35,50 @@ struct AuthScreenContainer<Content: View>: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            ScrollView {
-                VStack(spacing: spacing) {
-                    Logo()
-                        .padding(.top, 15)
-                    
-                    content
-
-                    Spacer(minLength: 60)
-                }
-                .padding(.horizontal)
-                .frame(maxWidth: .infinity)
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .gesture(
-                TapGesture()
-                    .onEnded { hideKeyboard() }
-            )
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                if canGoBack {
-                    ToolbarItem(placement: .navigationBarLeading) {
+            VStack(spacing: 0) {
+                HStack {
+                    if canGoBack {
                         BackButton()
                     }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    Spacer()
                     LanguageMenu()
                 }
+                .padding()
+//                .background(.ultraThinMaterial)
+                .zIndex(10)
+                
+                ScrollView {
+                    VStack(spacing: spacing) {
+                        Logo()
+                            .padding(.top, 15)
+                        
+                        content
+
+                        Spacer(minLength: 60)
+                    }
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .gesture(
+                    TapGesture()
+                        .onEnded { hideKeyboard() }
+                )
+                .navigationBarBackButtonHidden(true)
             }
-            .zIndex(0)
+
+//            .toolbar {
+//                if canGoBack {
+//                    ToolbarItem(placement: .navigationBarLeading) {
+//                        BackButton()
+//                    }
+//                }
+//                
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    LanguageMenu()
+//                }
+//            }
+//            .zIndex(0)
             
             if showConnectionView {
                 Color.clear

@@ -28,13 +28,14 @@ struct PhoneNumberView: View {
             
             FieldInput<PhoneValidationError>(
                 hintText: Strings.Authentication.SignUp.PhoneVerification.mobileHint,
-                validationErrors: viewModel.validationErrors,
+                validationErrors: viewModel.phoneValidationErrors,
                 showValidationErrors: self.$viewModel.showPhoneNumberValidationErrors,
                 isFocused: $isPhoneFocused,
                 content: {
                     PhoneInputField(
                         phoneNumber: $viewModel.phoneNumber, 
-                        placeholder: Strings.Authentication.SignUp.PhoneVerification.mobilePlaceholder
+                        placeholder: Strings.Authentication.SignUp.PhoneVerification.mobilePlaceholder,
+                        isFocused: $isPhoneFocused
                     )
                 }
             )
@@ -48,7 +49,7 @@ struct PhoneNumberView: View {
             
             PrimaryButton(
                 title: Strings.Authentication.SignUp.PhoneVerification.continueButton,
-                isEnabled: !viewModel.phoneNumber.isEmpty && !viewModel.isLoading,
+                isEnabled: viewModel.isFormValid && !viewModel.isLoading,
                 isLoading: viewModel.isLoading,
                 style: .dark,
                 action: {

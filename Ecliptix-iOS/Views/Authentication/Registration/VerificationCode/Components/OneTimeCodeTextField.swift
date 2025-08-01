@@ -11,6 +11,7 @@ import SwiftUI
 struct OneTimeCodeTextField: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
+    @Binding var showError: Bool
     var onBackspace: () -> Void
     var onInput: (String) -> Void
 
@@ -50,7 +51,12 @@ struct OneTimeCodeTextField: UIViewRepresentable {
 
         // Animate focus appearance
         UIView.animate(withDuration: 0.25) {
-            if self.isFocused {
+            if self.showError {
+                uiView.layer.borderColor = UIColor(named: "Validation.Error")?.cgColor
+                uiView.layer.shadowColor = UIColor(named: "Validation.Error")?.cgColor
+                uiView.layer.shadowOpacity = 1
+                uiView.layer.shadowRadius = 4
+            } else if self.isFocused {
                 uiView.layer.borderColor = UIColor(named: "Tips.Color")?.cgColor
                 uiView.layer.shadowColor = UIColor(named: "Tips.Color")?.cgColor
                 uiView.layer.shadowOpacity = 1
@@ -60,6 +66,15 @@ struct OneTimeCodeTextField: UIViewRepresentable {
                 uiView.layer.shadowOpacity = 0
                 uiView.layer.shadowRadius = 0
             }
+        }
+        
+        if showError && !context.coordinator.hasShaken {
+            shake(uiView)
+            context.coordinator.hasShaken = true
+        }
+
+        if isFocused {
+            context.coordinator.hasShaken = false
         }
     }
 
@@ -71,9 +86,21 @@ struct OneTimeCodeTextField: UIViewRepresentable {
 
     class Coordinator: NSObject, UITextFieldDelegate {
         var parent: OneTimeCodeTextField
-
+        var hasShaken: Bool = false
+        
         init(_ parent: OneTimeCodeTextField) {
             self.parent = parent
+        }
+        
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.isFocused = true
+            DispatchQueue.main.async {
+                self.parent.showError = false
+            }
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            parent.isFocused = false
         }
 
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
@@ -95,6 +122,14 @@ struct OneTimeCodeTextField: UIViewRepresentable {
             return false
         }
     }
+    
+    private func shake(_ view: UIView) {
+        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
+        animation.timingFunction = CAMediaTimingFunction(name: .linear)
+        animation.duration = 0.4
+        animation.values = [-8, 8, -6, 6, -4, 4, -2, 2, 0]
+        view.layer.add(animation, forKey: "shake")
+    }
 }
 
 
@@ -104,6 +139,7 @@ struct OneTimeCodeTextField: UIViewRepresentable {
 
 private struct OneTimeCodeTextFieldPreview: View {
     @State private var code: [String] = Array(repeating: "", count: 6)
+    @State private var showError: Bool = false
     @FocusState private var focusedField: Int?
     
     var body: some View {
@@ -119,6 +155,7 @@ private struct OneTimeCodeTextFieldPreview: View {
                             }
                         }
                     ),
+                    showError: $showError,
                     onBackspace: {
                         if index > 0 {
                             focusedField = index - 1

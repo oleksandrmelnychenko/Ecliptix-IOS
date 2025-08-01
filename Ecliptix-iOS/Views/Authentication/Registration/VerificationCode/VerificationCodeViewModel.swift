@@ -19,9 +19,7 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var secondsRemaining: Int = 0
     @Published var remainingTime: String = "00:00"
-    
-    @Published var showAlert: Bool = false
-    @Published var alertMessage: String = ""
+    @Published var showCodeError: Bool = false
     
     @Published var shouldNavigateToPasswordSetUp: Bool = false
     @Published var authFlow: AuthFlow
@@ -53,14 +51,12 @@ final class VerificationCodeViewModel: ObservableObject {
     func verifyCode(onFailure: @escaping () -> Void) async {
         let code = combinedCode.replacingOccurrences(of: Self.emptySign, with: "")
         
-        guard code.count == Self.otpLength else {
-            await MainActor.run {
-                self.errorMessage = "invalid code"
-            }
-            return
-        }
+        isLoading = false
+        errorMessage = nil
 
         await sendVerificationCode()
+        
+        isLoading = false
     }
     
     func handleBackspace(at index: Int, focus: inout Int?) {
@@ -152,6 +148,7 @@ final class VerificationCodeViewModel: ObservableObject {
                 },
                 onFailure: { error in
                     self.errorMessage = error.message
+                    self.showCodeError = true
                 }
             )
     }
@@ -180,12 +177,14 @@ final class VerificationCodeViewModel: ObservableObject {
                 
                 if setUniqueIdResult.isErr {
                     self.errorMessage = "Failed to save membership"
+                    self.showCodeError = true
                     return
                 }
                 
                 self.shouldNavigateToPasswordSetUp = true
         }, onFailure: { error in
             self.errorMessage = error.message
+            self.showCodeError = true
         })
     }
     

@@ -14,6 +14,9 @@ struct PasswordSetupView: View {
     @StateObject private var viewModel: PasswordSetupViewModel
     @State private var showPassword = false
     
+    @State private var isPasswordFocused: Bool = false
+    @State private var isConfirmPasswordFocused: Bool = false
+    
     init(authFlow: AuthFlow) {
         _viewModel = StateObject(wrappedValue: PasswordSetupViewModel(authFlow: authFlow))
     }
@@ -26,41 +29,43 @@ struct PasswordSetupView: View {
             )
             
             Group {
-//                FieldInput<PasswordValidationError, PasswordInputField>(
-//                    title: String(localized: "Password"),
-//                    text: $viewModel.password,
-//                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.passwordHint,
-//                    validationErrors: viewModel.passwordValidationErrors,
-//                    showValidationErrors: self.$viewModel.showPasswordValidationErrors,
-//                    content: {
-//                        PasswordInputField(
-//                            placeholder: String(localized: "Enter Secret Key"),
-//                            isNewPassword: true,
-//                            showPassword: $showPassword,
-//                            text: $viewModel.password,
-//                        )
-//                    }
-//                ).onChange(of: viewModel.password) { _, newPassword in
-//                    viewModel.updatePassword(passwordText: newPassword)
-//                }
-//                                    
-//                FieldInput<PasswordValidationError, PasswordInputField>(
-//                    title: String(localized: "Confirm Password"),
-//                    text: $viewModel.confirmPassword,
-//                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.verifyPasswordHint,
-//                    validationErrors: viewModel.confirmPasswordValidationErrors,
-//                    showValidationErrors: self.$viewModel.showConfirmationPasswordValidationErrors,
-//                    content: {
-//                        PasswordInputField(
-//                            placeholder: String(localized: "Confirm Secret Key"),
-//                            isNewPassword: true,
-//                            showPassword: $showPassword,
-//                            text: $viewModel.confirmPassword,
-//                        )
-//                    }
-//                ).onChange(of: viewModel.confirmPassword) { _, newConfirmPassword in
-//                    viewModel.updateConfirmPassword(passwordText: newConfirmPassword)
-//                }
+                FieldInput<PasswordValidationError>(
+                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.passwordHint,
+                    validationErrors: viewModel.passwordValidationErrors,
+                    showValidationErrors: self.$viewModel.showPasswordValidationErrors,
+                    isFocused: $isPasswordFocused,
+                    content: {
+                        SecurePasswordField(
+                            placeholder: String(localized: "Enter Secret Key"),
+                            onCharacterAdded: { index, chars in
+                                viewModel.insertSecureKeyChars(indext: index, chars: chars)
+                            },
+                            onCharacterRemoved: { index, count in
+                                viewModel.removeSecureKeyChars(index: index, count: count)
+                            },
+                            isFocused: $isPasswordFocused
+                        )
+                    }
+                )
+                
+                FieldInput<PasswordValidationError>(
+                    hintText: Strings.Authentication.SignUp.PasswordConfirmation.verifyPasswordHint,
+                    validationErrors: viewModel.confirmPasswordValidationErrors,
+                    showValidationErrors: self.$viewModel.showConfirmationPasswordValidationErrors,
+                    isFocused: $isConfirmPasswordFocused,
+                    content: {
+                        SecurePasswordField(
+                            placeholder: String(localized: "Confirm Secret Key"),
+                            onCharacterAdded: { index, chars in
+                                viewModel.insertConfirmSecureKeyChars(indext: index, chars: chars)
+                            },
+                            onCharacterRemoved: { index, count in
+                                viewModel.removeConfirmSecureKeyChars(index: index, count: count)
+                            },
+                            isFocused: $isConfirmPasswordFocused
+                        )
+                    }
+                )
             }
             
             FormErrorText(error: viewModel.errorMessage)

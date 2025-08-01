@@ -105,7 +105,7 @@ struct PasswordValidator: FieldValidating {
     }
 
     private func checkInsufficientCharacterDiversity(_ password: String) -> PasswordValidationError? {
-        return PasswordCharacterDiversity.lacksCharacterDiversity(password, minCharClasses: Self.minCharClasses) ? .lacksDiversity(requiredTypes: Self.minCharClasses) : nil
+        return PasswordCharacterDiversity.lacksCharacterDiversity(password, minCharClasses: Self.minCharClasses) ? .lacksDiversity(Self.minCharClasses) : nil
     }
 
     private func checkContainsAppNameVariant(_ password: String) -> PasswordValidationError? {

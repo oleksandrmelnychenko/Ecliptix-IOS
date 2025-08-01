@@ -12,7 +12,6 @@ final class PhoneNumberViewModel: ObservableObject {
     @Published var phoneNumber: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var validationErrors: [PhoneValidationError] = []
     @Published var showPhoneNumberValidationErrors: Bool = false
     
     @Published var shouldNavigateToCodeVerification: Bool = false
@@ -28,6 +27,11 @@ final class PhoneNumberViewModel: ObservableObject {
         phoneValidator.validate(phoneNumber).errors
     }
     
+    var isFormValid: Bool {
+        phoneValidationErrors.isEmpty &&
+        !phoneNumber.isEmpty
+    }
+    
     init(authFlow: AuthFlow) {
         self.networkController = try! ServiceLocator.shared.resolve(NetworkProvider.self)
         
@@ -40,33 +44,32 @@ final class PhoneNumberViewModel: ObservableObject {
         errorMessage = nil
         isLoading = true
 
-        switch authFlow {
+        let serviceType: RpcServiceType = switch authFlow {
         case .registration:
-            await self.validatePhoneNumber(phoneNumber: self.phoneNumber)
+            .validatePhoneNumber
         case .recovery:
-            await self.recoveryPhoneNumber(phoneNumber: self.phoneNumber)
+            .recoverySecretKeyPhoneVerification
         }
         
-        
+        await handlePhoneNumberSubmission(serviceType: serviceType)
+
         isLoading = false
     }
     
-    private func validatePhoneNumber(phoneNumber: String) async {
-        _ = await RequestPipeline.run(
+    private func handlePhoneNumberSubmission(serviceType: RpcServiceType) async {
+        await RequestPipeline.run(
             requestResult: RequestBuilder.buildValidationPhoneNumberRequest(
                 networkProvider: networkController,
                 phoneNumber: phoneNumber),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
-            serviceType: .validatePhoneNumber,
+            serviceType: serviceType,
             flowType: .single,
             cancellationToken: CancellationToken(),
-            networkProvider: self.networkController,
+            networkProvider: networkController,
             parseAndValidate: { (response: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse) in
-                                
                 guard response.result == .succeeded else {
                     return .failure(.networkError(response.message))
                 }
-                
                 return .success(response)
             }
         )
@@ -74,39 +77,10 @@ final class PhoneNumberViewModel: ObservableObject {
             onSuccess: { response in
                 self.shouldNavigateToCodeVerification = true
                 self.phoneNumberIdentifier = response.phoneNumberIdentifier
-        }, onFailure: { error in
-            self.errorMessage = error.message
-
-        })
-    }
-
-    
-    private func recoveryPhoneNumber(phoneNumber: String) async {
-        _ = await RequestPipeline.run(
-            requestResult: RequestBuilder.buildValidationPhoneNumberRequest(
-                networkProvider: networkController,
-                phoneNumber: phoneNumber),
-            pubKeyExchangeType: .dataCenterEphemeralConnect,
-            serviceType: .recoverySecretKeyPhoneVerification,
-            flowType: .single,
-            cancellationToken: CancellationToken(),
-            networkProvider: self.networkController,
-            parseAndValidate: { (response: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse) in
-                                
-                guard response.result == .succeeded else {
-                    return .failure(.networkError(response.message))
-                }
-                
-                return .success(response)
+            },
+            onFailure: { error in
+                self.errorMessage = error.message
             }
         )
-        .Match(
-            onSuccess: { response in
-                self.shouldNavigateToCodeVerification = true
-                self.phoneNumberIdentifier = response.phoneNumberIdentifier
-        }, onFailure: { error in
-            self.errorMessage = error.message
-
-        })
     }
 }

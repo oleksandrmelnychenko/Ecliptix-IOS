@@ -32,6 +32,7 @@ struct VerificationCodeView: View {
                 viewDescription: Strings.Authentication.SignUp.VerificationCodeEntry.description
             )
 
+
             HStack {
                 Spacer()
                 ZStack {
@@ -47,6 +48,7 @@ struct VerificationCodeView: View {
                                         }
                                     }
                                 ),
+                                showError: $viewModel.showCodeError,
                                 onBackspace: {
                                     viewModel.handleBackspace(at: index, focus: &focusedField)
                                 },
@@ -66,7 +68,7 @@ struct VerificationCodeView: View {
                         .frame(height: 55)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                           
+                            
                             if let firstEmpty = viewModel.codeDigits.firstIndex(where: { $0 == VerificationCodeViewModel.emptySign }) {
                                 focusedField = firstEmpty
                             } else {
@@ -76,6 +78,7 @@ struct VerificationCodeView: View {
                 }
                 Spacer()
             }
+                
             
             if viewModel.secondsRemaining > 0 {
                 Text(viewModel.remainingTime)
@@ -85,20 +88,18 @@ struct VerificationCodeView: View {
             
             FormErrorText(error: viewModel.errorMessage)
             
-            if viewModel.secondsRemaining <= 0 {
-                PrimaryButton(
-                    title: Strings.Authentication.SignUp.VerificationCodeEntry.Button.resend,
-                    isEnabled: viewModel.secondsRemaining <= 0,
-                    isLoading: viewModel.isLoading,
-                    style: .light,
-                    action: {
-                        Task {
-                            focusedField = 0
-                            await viewModel.reSendVerificationCode()
-                        }
+            PrimaryButton(
+                title: Strings.Authentication.SignUp.VerificationCodeEntry.Button.resend,
+                isEnabled: viewModel.secondsRemaining <= 0,
+                isLoading: viewModel.isLoading,
+                style: .light,
+                action: {
+                    Task {
+                        focusedField = 0
+                        await viewModel.reSendVerificationCode()
                     }
-                )
-            }
+                }
+            )
         })
         .onAppear {
             viewModel.startValidation()
@@ -133,6 +134,6 @@ struct VerificationCodeView: View {
     VerificationCodeView(
         phoneNumberIdentifier: Data(),
         authFlow: .registration)
-    .environmentObject(navService)
-    .environmentObject(localService)
+            .environmentObject(navService)
+            .environmentObject(localService)
 }

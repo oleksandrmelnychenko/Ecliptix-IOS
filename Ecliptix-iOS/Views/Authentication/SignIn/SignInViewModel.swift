@@ -61,7 +61,12 @@ final class SignInViewModel: ObservableObject {
     func signInButton() async {
         guard isFormValid else { return }
 
+        errorMessage = nil
+        isLoading = true
+        
         await self.submitSignInAsync()
+        
+        isLoading = false
     }
     
     func forgotPasswordTapped() {
@@ -101,38 +106,6 @@ final class SignInViewModel: ObservableObject {
                 self.secureKeyBuffer.dispose()
         }, onFailure: { error in
             self.errorMessage = error.message
-        })
-    }
-
-    private func getPasswordData(
-        securePasswordHandle: SodiumSecureMemoryHandle
-    ) -> Result<Data, InternalValidationFailure> {
-        var rentedPasswordBytes: Data? = Data(count: securePasswordHandle.length)
-
-        defer {
-            if var bytes = rentedPasswordBytes {
-                bytes.resetBytes(in: 0..<bytes.count)
-                bytes.removeAll()
-                rentedPasswordBytes = nil
-            }
-        }
-        
-        return Result<Data, InternalValidationFailure>.Try({
-            _ = try rentedPasswordBytes!.withUnsafeMutableBytes { destPtr in
-                try securePasswordHandle
-                    .read(into: destPtr)
-                    .mapSodiumFailure()
-                    .mapEcliptixProtocolFailure()
-                    .mapNetworkFailure()
-                    .unwrap()
-            }
-            return rentedPasswordBytes!
-        }, errorMapper: { error in
-            if let mapped = error as? InternalValidationFailure {
-                return mapped
-            } else {
-                return .internalServiceApi("Failed to read password from secure memory", inner: error)
-            }
         })
     }
 }

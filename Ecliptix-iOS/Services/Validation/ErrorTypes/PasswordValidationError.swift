@@ -18,9 +18,14 @@ enum PasswordValidationError: ValidationError {
     case noDigit
     case sequentialPattern
     case repeatedChars
-    case lacksDiversity(requiredTypes: Int)
+    case lacksDiversity(Int)
     case containsAppName
     case nonEnglishLetters
+    
+    case noLowercase
+    case noSpecialCharacter(String)
+    case unallowedCharactersWithSpecials
+    case unallowedCharactersAlphanumericOnly
     
     case mismatchPasswords
     
@@ -55,6 +60,15 @@ enum PasswordValidationError: ValidationError {
             
         case .mismatchPasswords:
             return String(localized: "Passwords do not match")
+            
+        case .noLowercase:
+            return "Password must contain at least one lowercase letter."
+        case .noSpecialCharacter:
+            return "Password must contain at least one special character form the set: %@."
+        case .unallowedCharactersWithSpecials:
+            return "Password contains characters that are not allowed. Only alphanumeric and special characters are permitted."
+        case .unallowedCharactersAlphanumericOnly:
+            return "Password contains characters that are not allowed. Only alpanumeric characters are permitted."
         }
     }
     
@@ -63,6 +77,7 @@ enum PasswordValidationError: ValidationError {
         case .minLength(let length): return [length]
         case .maxLength(let length): return [length]
         case .lacksDiversity(let requiredTypes): return [requiredTypes]
+        case .noSpecialCharacter(let charSet): return [charSet]
         default: return []
         }
     }
