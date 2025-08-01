@@ -13,6 +13,8 @@ struct PhoneNumberView: View {
     
     @StateObject private var viewModel: PhoneNumberViewModel
     
+    @State private var isPhoneFocused: Bool = false
+    
     init(authFlow: AuthFlow) {
         _viewModel = StateObject(wrappedValue: PhoneNumberViewModel(authFlow: authFlow))
     }
@@ -24,11 +26,11 @@ struct PhoneNumberView: View {
                 viewDescription: Strings.Authentication.SignUp.PhoneVerification.description
             )
             
-            FieldInput<PhoneValidationError, PhoneInputField>(
-                title: String(localized: "Phone Number"),
+            FieldInput<PhoneValidationError>(
                 hintText: Strings.Authentication.SignUp.PhoneVerification.mobileHint,
                 validationErrors: viewModel.validationErrors,
                 showValidationErrors: self.$viewModel.showPhoneNumberValidationErrors,
+                isFocused: $isPhoneFocused,
                 content: {
                     PhoneInputField(
                         phoneNumber: $viewModel.phoneNumber, 

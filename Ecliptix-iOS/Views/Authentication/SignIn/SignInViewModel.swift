@@ -97,6 +97,8 @@ final class SignInViewModel: ObservableObject {
                 //TODO: here we need to save SessionKey
                 
                 self.shouldNavigateToMainApp = true
+                
+                self.secureKeyBuffer.dispose()
         }, onFailure: { error in
             self.errorMessage = error.message
         })

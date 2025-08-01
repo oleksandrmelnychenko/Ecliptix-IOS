@@ -13,6 +13,9 @@ struct SignInView: View {
     
     @StateObject private var viewModel: SignInViewModel
     @State private var showPassword = false
+    
+    @State private var isPhoneFocused: Bool = false
+    @State private var isPasswordFocused: Bool = false
         
     init() {
         _viewModel = StateObject(wrappedValue: SignInViewModel())
@@ -29,15 +32,17 @@ struct SignInView: View {
             )
             
             Group {
-                FieldInput<PhoneValidationError, PhoneInputField>(
-                    title: String(localized: "Phone Number"),
+                FieldInput<PhoneValidationError>(
                     hintText: Strings.Authentication.SignIn.mobileHint,
                     validationErrors: viewModel.phoneValidationErrors,
                     showValidationErrors: self.$viewModel.showPhoneNumberErrors,
+                    isFocused: $isPhoneFocused,
                     content: {
                         PhoneInputField(
                             phoneNumber: $viewModel.phoneNumber,
-                            placeholder: Strings.Authentication.SignIn.mobilePlaceholder)
+                            placeholder: Strings.Authentication.SignIn.mobilePlaceholder,
+                            isFocused: $isPhoneFocused
+                        )
                     }
                 )
                 .onChange(of: viewModel.phoneNumber) { _, _ in
@@ -45,12 +50,13 @@ struct SignInView: View {
                         self.viewModel.showPhoneNumberErrors = true
                     }
                 }
+
                 
-                FieldInput<PasswordValidationError, SecurePasswordField>(
-                    title: String(localized: "Password"),
+                FieldInput<PasswordValidationError>(
                     hintText: Strings.Authentication.SignIn.passwordHint,
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
+                    isFocused: $isPasswordFocused,
                     content: {
                         SecurePasswordField(
                             placeholder: Strings.Authentication.SignIn.passwordPlaceholder,
@@ -59,21 +65,15 @@ struct SignInView: View {
                             },
                             onCharacterRemoved: { index, count in
                                 viewModel.removeSecureKeyChars(index: index, count: count)
-                            }
+                            },
+                            isFocused: $isPasswordFocused
                         )
                     }
                 )
-//                .onChange(of: viewModel.password) { _, newPassword in
-//                    self.viewModel.updatePassword(passwordText: newPassword)
-//                }
-                
-                
             }
             
             FormErrorText(error: viewModel.errorMessage)
-            
-            Spacer()
-            
+                        
             VStack {
                 PrimaryButton(
                     title: Strings.Authentication.SignIn.continueButton,

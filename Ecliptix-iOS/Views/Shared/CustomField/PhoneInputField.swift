@@ -7,39 +7,79 @@
 
 
 import SwiftUI
+import UIKit
 
-struct PhoneInputField: View {
+struct PhoneInputField: UIViewRepresentable {
     @Binding var phoneNumber: String
     let placeholder: String
+    var isFocused: Binding<Bool>? = nil
 
-    var body: some View {
-        TextField(
-            "",
-            text: $phoneNumber,
-            prompt: Text(placeholder)
-        )
-        .keyboardType(.phonePad)
-        .textContentType(.telephoneNumber)
-        .autocapitalization(.none)
-        .font(.title3)
-        .padding(.horizontal, 8)
-        .onChange(of: phoneNumber) { _, newValue in
-            phoneNumber = sanitizePhoneNumber(newValue)
+    class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: PhoneInputField
+
+        init(parent: PhoneInputField) {
+            self.parent = parent
         }
-        .frame(height: 30)
+
+        @objc func textFieldDidChangeSelection(_ textField: UITextField) {
+            let rawText = textField.text ?? ""
+            let digits = rawText.filter { $0.isWholeNumber }
+
+            if digits.isEmpty {
+                parent.phoneNumber = ""
+                textField.text = ""
+            } else {
+                let formatted = "+" + digits
+                if formatted != textField.text {
+                    textField.text = formatted
+                }
+                parent.phoneNumber = formatted
+            }
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.isFocused?.wrappedValue = true
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            parent.isFocused?.wrappedValue = false
+        }
     }
 
-    private func sanitizePhoneNumber(_ input: String) -> String {
-        let digits = input.filter { $0.isWholeNumber }
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.keyboardType = .phonePad
+        textField.textContentType = .telephoneNumber
+        textField.autocapitalizationType = .none
+        textField.font = UIFont.preferredFont(forTextStyle: .title3)
+        textField.delegate = context.coordinator
+        textField.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.textFieldDidChangeSelection(_:)),
+            for: .editingChanged
+        )
+        return textField
+    }
 
-        if digits.isEmpty {
-            return ""
-        } else {
-            return "+" + digits
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != phoneNumber {
+            uiView.text = phoneNumber
         }
+
+        if let isFocused = isFocused {
+            if isFocused.wrappedValue && !uiView.isFirstResponder {
+                uiView.becomeFirstResponder()
+            } else if !isFocused.wrappedValue && uiView.isFirstResponder {
+                uiView.resignFirstResponder()
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
     }
 }
-
 
 
 #Preview {

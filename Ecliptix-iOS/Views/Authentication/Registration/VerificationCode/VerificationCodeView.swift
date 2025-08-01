@@ -39,7 +39,14 @@ struct VerificationCodeView: View {
                         ForEach(0..<VerificationCodeViewModel.otpLength, id: \.self) { index in
                             OneTimeCodeTextField(
                                 text: $viewModel.codeDigits[index],
-                                isFirstResponder: focusedField == index,
+                                isFocused: Binding(
+                                    get: { focusedField == index },
+                                    set: { newValue in
+                                        if newValue {
+                                            focusedField = index
+                                        }
+                                    }
+                                ),
                                 onBackspace: {
                                     viewModel.handleBackspace(at: index, focus: &focusedField)
                                 },

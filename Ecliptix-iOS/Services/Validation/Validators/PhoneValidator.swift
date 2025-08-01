@@ -29,7 +29,7 @@ struct PhoneValidator: FieldValidating {
             }
         }
 
-        return ([], [])
+        return (errors, [])
     }
     
     // MARK: - Validation Rules

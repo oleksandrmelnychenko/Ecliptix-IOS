@@ -9,11 +9,7 @@ import Foundation
 
 @MainActor
 final class PhoneNumberViewModel: ObservableObject {
-    @Published var phoneNumber: String = "+380970177999" {
-        didSet {
-            validatePhoneNumber()
-        }
-    }
+    @Published var phoneNumber: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var validationErrors: [PhoneValidationError] = []
@@ -28,10 +24,8 @@ final class PhoneNumberViewModel: ObservableObject {
     
     private var validatePhoneNumberResponce: Ecliptix_Proto_Membership_ValidatePhoneNumberResponse? = nil
     
-    private func validatePhoneNumber() {
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//            self.validationErrors = self.phoneValidator.validate(self.phoneNumber)
-//        }
+    var phoneValidationErrors: [PhoneValidationError] {
+        phoneValidator.validate(phoneNumber).errors
     }
     
     init(authFlow: AuthFlow) {

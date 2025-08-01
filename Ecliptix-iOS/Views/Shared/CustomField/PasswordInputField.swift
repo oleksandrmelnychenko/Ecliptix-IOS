@@ -8,24 +8,11 @@
 
 import SwiftUI
 
-//struct PasswordInputField: View {
-//    var placeholder: String = ""
-//    var isNewPassword: Bool = false
-//    @Binding var text: String
-//    
-//    var body: some View {
-//        HStack {
-//            TextField(placeholder, text: $text)
-//                .textContentType(self.isNewPassword ? .newPassword : .password)
-//                .font(.title3)
-//        }
-//    }
-//}
-
 struct SecurePasswordField: UIViewRepresentable {
     var placeholder: String
     var onCharacterAdded: ((Int, String) -> Void)?
     var onCharacterRemoved: ((Int, Int) -> Void)?
+    var isFocused: Binding<Bool>? = nil
 
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
@@ -36,31 +23,48 @@ struct SecurePasswordField: UIViewRepresentable {
         textField.delegate = context.coordinator
         textField.autocorrectionType = .no
         textField.autocapitalizationType = .none
-        context.coordinator.lastText = ""
+        context.coordinator.textField = textField
         return textField
     }
 
-    func updateUIView(_ uiView: UITextField, context: Context) {}
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if let isFocused = isFocused {
+            if isFocused.wrappedValue && !uiView.isFirstResponder {
+                uiView.becomeFirstResponder()
+            } else if !isFocused.wrappedValue && uiView.isFirstResponder {
+                uiView.resignFirstResponder()
+            }
+        }
+    }
 
     func makeCoordinator() -> Coordinator {
-        return Coordinator(onCharacterAdded: onCharacterAdded, onCharacterRemoved: onCharacterRemoved)
+        Coordinator(
+            onCharacterAdded: onCharacterAdded,
+            onCharacterRemoved: onCharacterRemoved,
+            isFocused: isFocused
+        )
     }
 
     class Coordinator: NSObject, UITextFieldDelegate {
-        var lastText: String = ""
+        var textField: UITextField?
         var onCharacterAdded: ((Int, String) -> Void)?
         var onCharacterRemoved: ((Int, Int) -> Void)?
+        var isFocused: Binding<Bool>?
 
-        init(onCharacterAdded: ((Int, String) -> Void)?, onCharacterRemoved: ((Int, Int) -> Void)?) {
+        init(
+            onCharacterAdded: ((Int, String) -> Void)?,
+            onCharacterRemoved: ((Int, Int) -> Void)?,
+            isFocused: Binding<Bool>? = nil
+        ) {
             self.onCharacterAdded = onCharacterAdded
             self.onCharacterRemoved = onCharacterRemoved
+            self.isFocused = isFocused
         }
 
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             let currentText = textField.text ?? ""
-            guard let textRange = Range(range, in: currentText) else { return false }
+            guard Range(range, in: currentText) != nil else { return false }
 
-            let newText = currentText.replacingCharacters(in: textRange, with: string)
             let startIndex = range.location
             let removedCount = range.length
 
@@ -72,10 +76,18 @@ struct SecurePasswordField: UIViewRepresentable {
                 onCharacterRemoved?(startIndex, removedCount)
             }
 
-            lastText = newText
             return true
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            isFocused?.wrappedValue = true
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            isFocused?.wrappedValue = false
         }
     }
 }
+
 
 

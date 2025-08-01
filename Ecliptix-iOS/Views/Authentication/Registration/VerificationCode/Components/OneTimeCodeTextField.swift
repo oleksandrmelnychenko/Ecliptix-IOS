@@ -10,25 +10,29 @@ import SwiftUI
 
 struct OneTimeCodeTextField: UIViewRepresentable {
     @Binding var text: String
-    var isFirstResponder: Bool
+    @Binding var isFocused: Bool
     var onBackspace: () -> Void
     var onInput: (String) -> Void
 
     func makeCoordinator() -> Coordinator {
-        return Coordinator(self)
+        Coordinator(self)
     }
 
     func makeUIView(context: Context) -> UITextField {
-        let textField = SizedTextField()
+        let textField = StyledTextField()
         textField.delegate = context.coordinator
         textField.keyboardType = .numberPad
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 24)
         textField.backgroundColor = UIColor(named: "TextBox.BackgroundColor")
         textField.textColor = UIColor(named: "TextBox.ForegroundColor")
-        textField.layer.cornerRadius = 8
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        
+        textField.layer.cornerRadius = 10
+        textField.layer.borderWidth = 1.5
+        textField.layer.borderColor = UIColor.clear.cgColor
+        textField.layer.shadowOpacity = 0
+        textField.layer.shadowRadius = 0
+        textField.layer.shadowOffset = .zero
+
         return textField
     }
 
@@ -37,16 +41,31 @@ struct OneTimeCodeTextField: UIViewRepresentable {
             uiView.text = text
         }
 
-        if isFirstResponder && !uiView.isFirstResponder {
+        // Update focus
+        if isFocused && !uiView.isFirstResponder {
             uiView.becomeFirstResponder()
-        } else if !isFirstResponder && uiView.isFirstResponder {
+        } else if !isFocused && uiView.isFirstResponder {
             uiView.resignFirstResponder()
         }
+
+        // Animate focus appearance
+        UIView.animate(withDuration: 0.25) {
+            if self.isFocused {
+                uiView.layer.borderColor = UIColor(named: "Tips.Color")?.cgColor
+                uiView.layer.shadowColor = UIColor(named: "Tips.Color")?.cgColor
+                uiView.layer.shadowOpacity = 1
+                uiView.layer.shadowRadius = 4
+            } else {
+                uiView.layer.borderColor = UIColor.clear.cgColor
+                uiView.layer.shadowOpacity = 0
+                uiView.layer.shadowRadius = 0
+            }
+        }
     }
-    
-    class SizedTextField: UITextField {
+
+    class StyledTextField: UITextField {
         override var intrinsicContentSize: CGSize {
-            return CGSize(width: 44, height: 55)
+            CGSize(width: 44, height: 55)
         }
     }
 
@@ -60,19 +79,14 @@ struct OneTimeCodeTextField: UIViewRepresentable {
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             let currentText = textField.text ?? ""
 
-            if string.isEmpty { // backspace
+            if string.isEmpty {
                 if !currentText.isEmpty {
-                    
                     parent.onInput(VerificationCodeViewModel.emptySign)
-                    
-                    parent.onBackspace()
-                } else {
-                    parent.onBackspace()
                 }
+                parent.onBackspace()
                 return false
             }
 
-            
             guard string.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil else {
                 return false
             }
@@ -80,9 +94,9 @@ struct OneTimeCodeTextField: UIViewRepresentable {
             parent.onInput(String(string.prefix(1)))
             return false
         }
-
     }
 }
+
 
 #Preview {
     OneTimeCodeTextFieldPreview()
@@ -91,13 +105,20 @@ struct OneTimeCodeTextField: UIViewRepresentable {
 private struct OneTimeCodeTextFieldPreview: View {
     @State private var code: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedField: Int?
-
+    
     var body: some View {
         HStack(spacing: 8) {
             ForEach(0..<6, id: \.self) { index in
                 OneTimeCodeTextField(
                     text: $code[index],
-                    isFirstResponder: focusedField == index,
+                    isFocused: Binding(
+                        get: { focusedField == index },
+                        set: { newValue in
+                            if newValue {
+                                focusedField = index
+                            }
+                        }
+                    ),
                     onBackspace: {
                         if index > 0 {
                             focusedField = index - 1

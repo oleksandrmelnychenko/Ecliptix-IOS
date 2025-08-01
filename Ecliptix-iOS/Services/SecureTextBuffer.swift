@@ -63,6 +63,12 @@ final class SecureTextBuffer {
         }
     }
     
+    func dispose() {
+        if self.isDisposed { return }
+        self.secureHandle.dispose()
+        self.isDisposed = true
+    }
+    
     private func modifyState(charIndex: Int, removeCharCount: Int, insertChars: String) throws {
         guard !self.isDisposed else {
             throw EcliptixProtocolFailure.objectDisposed(String(describing: SecureTextBuffer.self))
@@ -129,4 +135,6 @@ final class SecureTextBuffer {
             success = true
         }
     }
+    
+    
 }
