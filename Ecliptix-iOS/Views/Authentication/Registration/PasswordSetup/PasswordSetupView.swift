@@ -34,6 +34,7 @@ struct PasswordSetupView: View {
                     validationErrors: viewModel.passwordValidationErrors,
                     showValidationErrors: self.$viewModel.showPasswordValidationErrors,
                     isFocused: $isPasswordFocused,
+                    passwordStrength: viewModel.passwordStrength,
                     content: {
                         SecurePasswordField(
                             placeholder: String(localized: "Enter Secret Key"),

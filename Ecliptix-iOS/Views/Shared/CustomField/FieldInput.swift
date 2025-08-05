@@ -13,6 +13,7 @@ struct FieldInput<ErrorType: ValidationError>: View {
     let hintText: String
     var validationErrors: [ErrorType] = []
     var isFocused: Binding<Bool>?
+    var passwordStrength: PasswordStrengthType? = nil
 
     let content: () -> AnyView
 
@@ -22,6 +23,7 @@ struct FieldInput<ErrorType: ValidationError>: View {
         validationErrors: [ErrorType] = [],
         showValidationErrors: Binding<Bool>,
         isFocused: Binding<Bool>? = nil,
+        passwordStrength: PasswordStrengthType? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self._showValidationErrors = showValidationErrors
@@ -29,6 +31,7 @@ struct FieldInput<ErrorType: ValidationError>: View {
         self.hintText = hintText
         self.validationErrors = validationErrors
         self.isFocused = isFocused
+        self.passwordStrength = passwordStrength
         self.content = { AnyView(content()) }
     }
 
@@ -44,7 +47,12 @@ struct FieldInput<ErrorType: ValidationError>: View {
                     HStack(alignment: .center) {
                         Image("Validation.Lamp")
                             .font(.subheadline)
-                        Text(firstError.message)
+                        if let passwordStrength = self.passwordStrength, passwordStrength != .invalid {
+                            Text("\(passwordStrength.styleKey): \(firstError.message)")
+                        } else {
+                            Text(firstError.message)
+                        }
+                        
                         Spacer()
                     }
                     .foregroundColor(Color("Validation.Error"))
@@ -76,89 +84,43 @@ struct FieldInput<ErrorType: ValidationError>: View {
     private var animationTrigger: Bool {
         showValidationErrors || (isFocused?.wrappedValue == true)
     }
-
+    
     private var borderColor: Color {
+        if showValidationErrors, let strength = passwordStrength {
+            return Color("PasswordStrength.\(strength.styleKey)")
+        }
+        
         if showValidationErrors && !validationErrors.isEmpty {
             return Color("Validation.Error")
-        } else if isFocused?.wrappedValue == true {
-            return Color("Tips.Color")
-        } else {
-            return .clear
         }
-    }
 
+        if isFocused?.wrappedValue == true {
+            return Color("Tips.Color")
+        }
+
+        return .clear
+    }
+    
     private var shadowColor: Color {
+        if showValidationErrors, let strength = passwordStrength {
+            return Color("PasswordStrength.\(strength.styleKey)").opacity(1)
+        }
+        
         if showValidationErrors && !validationErrors.isEmpty {
             return Color("Validation.Error").opacity(1)
-        } else if isFocused?.wrappedValue == true {
-            return Color("Tips.Color").opacity(1)
-        } else {
-            return .clear
         }
-    }
 
+        if isFocused?.wrappedValue == true {
+            return Color("Tips.Color").opacity(1)
+        }
+
+        return .clear
+    }
+    
     private var shadowRadius: CGFloat {
-        (showValidationErrors && !validationErrors.isEmpty) || (isFocused?.wrappedValue == true) ? 4 : 0
+        if showValidationErrors && !validationErrors.isEmpty || isFocused?.wrappedValue == true || passwordStrength != nil {
+            return 4
+        }
+        return 0
     }
 }
-
-
-
-//#Preview {
-//    VStack(spacing: 70) {
-//        FieldInputPreviewWrapper()
-//        
-//        FieldInputPreviewWrapper2()
-//    }
-//    .padding()
-//    
-//
-//
-//}
-//
-//
-//private struct FieldInputPreviewWrapper: View {
-//    @State private var showErrors = true
-//    @State private var isFocused: Bool = false
-//    @State private var phoneNumber: String = ""
-//
-//    var body: some View {
-//        FieldInput<PhoneValidationError>(
-//            placeholder: "Placeholder",
-//            hintText: "this is hint",
-//            validationErrors: [],
-//            showValidationErrors: $showErrors,
-//            isFocused: $isFocused, // передаємо фокус правильно
-//            content: {
-//                PhoneInputField(
-//                    phoneNumber: $phoneNumber,
-//                    placeholder: "Placeholder"
-//                )
-//            }
-//        )
-//        .frame(height: 44)
-//    }
-//}
-//
-//private struct FieldInputPreviewWrapper2: View {
-//    @State private var showErrors = true
-//    @State private var isFocused: Bool = false
-//    @State private var phoneNumber: String = ""
-//
-//    var body: some View {
-//        FieldInput<PhoneValidationError>(
-//            placeholder: "Placeholder",
-//            hintText: "this is hint",
-//            validationErrors: [PhoneValidationError.cannotBeEmpty],
-//            showValidationErrors: $showErrors,
-//            isFocused: $isFocused, // передаємо фокус правильно
-//            content: {
-//                PhoneInputField(
-//                    phoneNumber: $phoneNumber,
-//                    placeholder: "Placeholder",
-//                )
-//            }
-//        )
-//        .frame(height: 44)
-//    }
-//}

@@ -31,13 +31,22 @@ enum NetworkServiceBootstrap {
         
         let secureStoreProvider = try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
         let rpcMetaDataProvider = try! ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
-        let controller = NetworkProvider(
-            secureStorageProvider: secureStoreProvider,
+        
+        let sessionProvider = SessionProvider(
             rpcMetaDataProvider: rpcMetaDataProvider,
+            secureStorageProvider: secureStoreProvider,
             rpcServiceManager: manager,
             networkEvents: try! ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
             systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
-        ServiceLocator.shared.register(NetworkProviderProtocol.self, service: controller)
-        ServiceLocator.shared.register(NetworkProvider.self, service: controller)
+        
+        let requestExecutor = RequestExecutor(rpcServiceManager: manager)
+        
+        let networkProvider = NetworkProvider(
+            requestExecutor: requestExecutor,
+            sessionProvider: sessionProvider,
+            secureStorageProvider: secureStoreProvider
+        )
+        
+        ServiceLocator.shared.register(NetworkProvider.self, service: networkProvider)
     }
 }

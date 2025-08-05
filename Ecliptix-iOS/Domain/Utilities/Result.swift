@@ -95,14 +95,14 @@ extension Result {
     }
     
     func MatchAsync<T>(
-        onSuccessAsync: @escaping (Success) async -> T,
-        onFailureAsync: @escaping (Failure) async -> T
-    ) async -> T {
+        onSuccessAsync: @escaping (Success) async throws -> T,
+        onFailureAsync: @escaping (Failure) async throws -> T
+    ) async rethrows -> T {
         switch self {
         case .success(let value):
-            return await onSuccessAsync(value)
+            return try await onSuccessAsync(value)
         case .failure(let error):
-            return await onFailureAsync(error)
+            return try await onFailureAsync(error)
         }
     }
     

@@ -6,7 +6,5 @@
 //
 
 protocol NetworkProviderProtocol {
-    func restoreSecrecyChannelAsync() async -> Result<Unit, NetworkFailure>
 
-    func setSecrecyChannelAsUnhealthy()
 }

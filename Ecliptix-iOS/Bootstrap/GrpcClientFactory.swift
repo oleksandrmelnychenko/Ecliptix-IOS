@@ -12,7 +12,7 @@ struct GrpcClientFactory {
     static func createChannel() -> ClientConnection {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         return ClientConnection.insecure(group: group)
-            .connect(host: "192.168.0.112", port: 5051)
+            .connect(host: "localhost", port: 5051)
     }
 
     static func makeClients(channel: ClientConnection) -> (

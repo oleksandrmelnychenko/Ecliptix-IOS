@@ -35,7 +35,6 @@ final class AppSettingsService {
     public func setSettings(
         _ settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
     ) -> Result<Unit, InternalServiceApiFailure> {
-            
         do {
             let data = try settings.serializedData()
             let result = storage.store(key: key, data: data)

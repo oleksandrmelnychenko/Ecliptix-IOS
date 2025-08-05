@@ -54,7 +54,14 @@ final class ReceiveStreamRpcService {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.yield(.failure(.unexpectedError("Error during stream processing: \(error)", inner: error)))
+                    let message: String
+                    if let grpcStatus = error as? GRPCStatus {
+                        message = grpcStatus.message ?? grpcStatus.description
+                    } else {
+                        message = error.localizedDescription
+                    }
+                    
+                    continuation.yield(.failure(.unexpectedError(message, inner: error)))
                     continuation.finish()
                 }
             }

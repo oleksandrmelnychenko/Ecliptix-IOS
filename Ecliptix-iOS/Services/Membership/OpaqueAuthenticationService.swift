@@ -40,8 +40,7 @@ struct OpaqueAuthenticationService {
     ) async -> Result<Data, InternalValidationFailure> {
         return await createOpaqueService()
             .flatMapAsync { opaqueService in
-                await OpaqueProtocolService.createOprfRequest(password: passwordData)
-                    .mapOpaqueFailure()
+                await OpaqueProtocolService.createOprfRequest(password: passwordData).mapOpaqueFailure()
                     .flatMapAsync { oprfData in
                         return await RequestPipeline.runAsync(
                             requestResult: RequestBuilder.buildSignInInitRequest(
@@ -52,7 +51,7 @@ struct OpaqueAuthenticationService {
                             serviceType: .opaqueSignInInitRequest,
                             flowType: .single,
                             cancellationToken: CancellationToken(),
-                            networkProvider: self.networkProvider,
+                            networkProvider: networkProvider,
                             parseAndValidate: { (response: Ecliptix_Proto_Membership_OpaqueSignInInitResponse) in
                                 guard response.result == .succeeded else {
                                     return .failure(InternalValidationFailure.networkError(response.message))
@@ -102,7 +101,7 @@ struct OpaqueAuthenticationService {
             serviceType: .opaqueSignInCompleteRequest,
             flowType: .single,
             cancellationToken: CancellationToken(),
-            networkProvider: self.networkProvider,
+            networkProvider: networkProvider,
             parseAndValidate: { (response: Ecliptix_Proto_Membership_OpaqueSignInFinalizeResponse) in
                 guard response.result == .succeeded else {
                     return .failure(.networkError(response.message))

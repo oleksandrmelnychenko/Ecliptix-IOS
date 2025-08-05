@@ -54,7 +54,7 @@ final class VerificationCodeViewModel: ObservableObject {
         isLoading = false
         errorMessage = nil
 
-        await sendVerificationCode()
+        await sendVerificationCode(code: code)
         
         isLoading = false
     }
@@ -86,83 +86,69 @@ final class VerificationCodeViewModel: ObservableObject {
         type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum
     ) async {
         let cancellationToken = CancellationToken()
-    
-        await RequestBuilder.buildInitiateVerificationRequest(networkProvider: networkController, phoneNumberIdentifier: phoneNumberIdentifier, type: type)
-            .prepareSerializedRequest(pubKeyExchangeType: .dataCenterEphemeralConnect)
-            .flatMapAsync({ (request, connectId) in
-                await self.networkController.executeServiceAction(
-                    connectId: connectId,
-                    serviceType: .initiateVerification,
-                    plainBuffer: request,
-                    flowType: .receiveStream,
-                    onSuccessCallback: { [weak self] payload in
-                        guard let self else {
-                            return .failure(.unexpectedError("Self is nil"))
-                        }
-    
-                        do {
-                            let timerTick = try Helpers.parseFromBytes(
-                                Ecliptix_Proto_Membership_VerificationCountdownUpdate.self,
-                                data: payload
-                            )
-    
-                            if timerTick.alreadyVerified {
-                            }
-    
-                            if timerTick.status == .failed {
-                            }
-                            
-                            if timerTick.status == .expired {
-                                // redirect to Phone verification view
-                            }
-                            
-                            if timerTick.status == .maxAttemptsReached {
-                                // redirect to Phone verification view
-                            }
-                            
-                            if timerTick.status == .notFound {
-                            }
-                            
-                            
-                            if self.verificationSessionIdentifier == nil {
-                                self.verificationSessionIdentifier = try Helpers.fromDataToGuid(timerTick.sessionIdentifier)
-                            }
-    
-                            await MainActor.run {
-                                self.secondsRemaining = Int(timerTick.secondsRemaining)
-                                self.remainingTime = Self.formatRemainingTime(timerTick.secondsRemaining)
-                            }
-    
-                            return .success(.value)
-                        } catch {
-                            debugPrint("Error parsing verification countdown: \(error)")
-                            return .failure(.unexpectedError("Failed to parse countdown", inner: error))
-                        }
-                    },
-                    token: cancellationToken
-                ).mapNetworkFailure()
-            })
-            .Match(
-                onSuccess: { _ in
-                    
+
+        let stream = RequestPipeline.runStream(
+            requestResult: RequestBuilder.buildInitiateVerificationRequest(
+                networkProvider: networkController,
+                phoneNumberIdentifier: phoneNumberIdentifier,
+                type: type
+            ),
+            pubKeyExchangeType: .dataCenterEphemeralConnect,
+            serviceType: .initiateVerification,
+            cancellationToken: cancellationToken,
+            networkProvider: networkController,
+            parseAndValidate: { (response: Ecliptix_Proto_Membership_VerificationCountdownUpdate) in
+                .success(response)
+            }
+        )
+
+        for await result in stream {
+            await result.MatchAsync(
+                onSuccessAsync: { response in
+                    if response.alreadyVerified {
+                        // обробка
+                    }
+
+                    switch response.status {
+                    case .failed, .expired, .maxAttemptsReached:
+                        
+                        break
+                    case .notFound:
+                        
+                        break
+                    default:
+                        break
+                    }
+
+                    if self.verificationSessionIdentifier == nil {
+                        self.verificationSessionIdentifier = try? Helpers.fromDataToGuid(response.sessionIdentifier)
+                    }
+
+                    await MainActor.run {
+                        self.secondsRemaining = Int(response.secondsRemaining)
+                        self.remainingTime = Self.formatRemainingTime(response.secondsRemaining)
+                    }
                 },
-                onFailure: { error in
-                    self.errorMessage = error.message
-                    self.showCodeError = true
-                }
-            )
+                onFailureAsync: { error in
+                    await MainActor.run {
+                        self.errorMessage = error.message
+                        self.showCodeError = true
+                    }
+                })
+        }
     }
 
-    private func sendVerificationCode() async {        
+    private func sendVerificationCode(code: String) async {
         _ = await RequestPipeline.run(
             requestResult: RequestBuilder.buildSendOtpRequest(
                 networkProvider: networkController,
-                otpCode: combinedCode.replacingOccurrences(of: Self.emptySign, with: "")),
+                otpCode: code
+            ),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
             serviceType: .verifyOtp,
             flowType: .single,
             cancellationToken: CancellationToken(),
-            networkProvider: self.networkController,
+            networkProvider: networkController,
             parseAndValidate: { (response: Ecliptix_Proto_Membership_VerifyCodeResponse) in
                 guard response.result != .invalidOtp else {
                     return .failure(.networkError(response.message))

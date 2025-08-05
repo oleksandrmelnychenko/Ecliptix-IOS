@@ -15,11 +15,12 @@ final class PasswordSetupViewModel: ObservableObject {
     
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var showPasswordValidationErrors: Bool = true
+    @Published var showPasswordValidationErrors: Bool = false
     @Published var showConfirmationPasswordValidationErrors: Bool = true
     @Published private(set) var passwordValidationErrors: [PasswordValidationError] = []
     @Published private(set) var confirmPasswordValidationErrors: [PasswordValidationError] = []
     @Published var shouldNavigateToPassPhase: Bool = false
+    @Published private(set) var passwordStrength: PasswordStrengthType = .invalid
     
     private let passwordValidator = PasswordValidator()
     private let networkController: NetworkProvider
@@ -53,6 +54,9 @@ final class PasswordSetupViewModel: ObservableObject {
     public func insertSecureKeyChars(indext: Int, chars: String) {
         do {
             try self.secureKeyBuffer.insert(index: indext, text: chars)
+            if !showPasswordValidationErrors {
+                showPasswordValidationErrors = true
+            }
             updatePasswordValidation()
         }
         catch {
@@ -98,9 +102,11 @@ final class PasswordSetupViewModel: ObservableObject {
             try secureKeyBuffer.withSecureBytes { bytes in
                 password = String(data: bytes, encoding: .utf8) ?? ""
                 passwordValidationErrors = passwordValidator.validate(password).errors
+                passwordStrength = PasswordStrengthEstimator.estimate(password: password)
             }
         } catch {
             passwordValidationErrors = []
+            passwordStrength = .invalid
             self.errorMessage = "Error during reading password"
             return
         }

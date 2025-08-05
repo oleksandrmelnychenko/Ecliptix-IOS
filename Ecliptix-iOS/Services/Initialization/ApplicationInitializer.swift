@@ -49,13 +49,11 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
             
             let connectId = try connectIdResult.unwrap()
             
-            let registrationResult = await self.registerDeviceAsync(connectId: connectId, settings: &settings)
+            let registrationResult = await networkProvider.registerDeviceAsync(connectId: connectId, settings: settings)
             guard registrationResult.isOk else {
                 Logger.error("Device registration failed: \(try registrationResult.unwrapErr())", category: "AppInit")
                 return false
             }
-
-            AppSettingsService.shared.setSettings(settings)
             
             Logger.info("Application initialized successfully", category: "AppInit")
             
@@ -73,9 +71,7 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         isNewInstance: Bool
     ) async -> Result<UInt32, NetworkFailure> {
         do {
-            let connectId = NetworkProvider.computeUniqueConnectId(
-                applicationInstanceSettings: settings,
-                pubKeyExchangeType: .dataCenterEphemeralConnect)
+            let connectId = AppSettingsService.computeUniqueConnectId(settings: settings, pubKeyExchangeType: .dataCenterEphemeralConnect)
             
             if !isNewInstance {
                 let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
@@ -116,45 +112,5 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         } catch {
             return .failure(.unexpectedError("An unhandled error occurred while ensuring the secrecy channel", inner: error))
         }
-    }
-    
-    private func registerDeviceAsync(
-        connectId: UInt32,
-        settings: inout Ecliptix_Proto_AppDevice_ApplicationInstanceSettings
-    ) async -> Result<Unit, InternalValidationFailure> {
-        return await RequestPipeline.run(
-            requestResult: RequestBuilder.buildRegisterAppDeviceRequest(settings: settings),
-            pubKeyExchangeType: .dataCenterEphemeralConnect,
-            serviceType: .registerAppDevice,
-            flowType: .single,
-            cancellationToken: CancellationToken(),
-            networkProvider: self.networkProvider,
-            parseAndValidate: { (response: Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply) in
-                                
-                guard response.status == .successAlreadyExists || response.status == .successNewRegistration else {
-                    return .failure(.networkError("Error during registration Device: \(response.status)"))
-                }
-                
-                return .success(response)
-            }
-        )
-        .Match(
-            onSuccess: { response in
-                do {
-                    let appServerInstanceId = try Helpers.fromDataToGuid(response.uniqueID)
-                    
-                    
-                    settings.systemDeviceIdentifier = appServerInstanceId.uuidString
-                    settings.serverPublicKey = response.serverPublicKey
-                    
-                    Logger.info("Device successfully registered with server ID: \(appServerInstanceId)", category: "AppInit")
-                    
-                    return .success(.value)
-                } catch {
-                    return .failure(.internalServiceApi("Failed to parse reply", inner: error))
-                }
-            },
-            onFailure: { error in .failure(error) }
-        )
     }
 }
