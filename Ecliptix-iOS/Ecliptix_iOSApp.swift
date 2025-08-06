@@ -15,7 +15,6 @@ struct Ecliptix_iOSApp: App {
     @StateObject private var localizationService: LocalizationService
     @StateObject private var wizardViewModel: WizardViewModel
     
-//    private let establishConnectionExecutor: ApplicationInitializer
     
     init() {
         ApplicationBootstrap.configure()
@@ -37,25 +36,6 @@ struct Ecliptix_iOSApp: App {
         ))
     }
     
-//    var body: some Scene {
-//        WindowGroup {
-//            NavigationStack(path: $navigationService.path) {
-//                WelcomeView()
-//                    .navigationDestination(for: AppRoute.self) { route in
-//                        ViewFactory.view(for: route)
-//                    }
-//            }
-//            .environmentObject(navigationService)
-//            .environmentObject(localizationService)
-//            .task {
-//                guard !didInitialize else { return }
-//                didInitialize = true
-//                
-//                _ = await establishConnectionExecutor.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
-//            }
-//        }
-//    }
-    
     var body: some Scene {
         WindowGroup {
             NavigationStack(path: $navigationService.path) {
@@ -66,4 +46,10 @@ struct Ecliptix_iOSApp: App {
             .environmentObject(wizardViewModel)
         }
     }
+    
+//    var body: some Scene {
+//        WindowGroup {
+//            ChatsOverviewView()
+//        }
+//    }
 }
