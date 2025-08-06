@@ -101,7 +101,8 @@ final class PasswordSetupViewModel: ObservableObject {
         do {
             try secureKeyBuffer.withSecureBytes { bytes in
                 password = String(data: bytes, encoding: .utf8) ?? ""
-                passwordValidationErrors = passwordValidator.validate(password).errors
+                let passwordValidations = passwordValidator.validate(password)
+                self.passwordValidationErrors = passwordValidations.errors + passwordValidations.suggestions
                 passwordStrength = PasswordStrengthEstimator.estimate(password: password)
             }
         } catch {
@@ -121,8 +122,8 @@ final class PasswordSetupViewModel: ObservableObject {
             errorMessage = "Failed to create password manager."
             return
         }
-        
-        _ = self.passwordManager!.checkPasswordCompliance(password, policy: PasswordPolicy.standard)
+        /*self.passwordManager!.checkPasswordCompliance(password, policy: PasswordPolicy.standard)*/
+        _ = Result<[PasswordValidationError], EcliptixProtocolFailure>.success([])
             .flatMap { validationErrors in
                 if !validationErrors.isEmpty {
                     passwordValidationErrors = validationErrors

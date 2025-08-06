@@ -40,9 +40,6 @@ struct PasswordValidator: FieldValidating {
                 errors.append(error)
             }
         }
-        if !errors.isEmpty {
-            return (errors, [])
-        }
         
         var suggestions: [PasswordValidationError] = []
 
@@ -51,11 +48,8 @@ struct PasswordValidator: FieldValidating {
                 suggestions.append(suggestion)
             }
         }
-        if !suggestions.isEmpty {
-            return (errors, suggestions)
-        }
         
-        return ([], [])
+        return (errors, suggestions)
     }
     
     // MARK: - Validation Rules

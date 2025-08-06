@@ -26,6 +26,10 @@ struct VerificationCodeView: View {
         AuthScreenContainer(
             spacing: 24,
             canGoBack: self.navigation.canGoBack(),
+            showCustomAlert: self.$viewModel.showAlert,
+            customAlertTitle: self.$viewModel.alertTitle,
+            customAlertMessage: self.$viewModel.alertMessage,
+            customAlertAction: self.navigation.pop,
             content: {
             AuthViewHeader(
                 viewTitle: Strings.Authentication.SignUp.VerificationCodeEntry.title,

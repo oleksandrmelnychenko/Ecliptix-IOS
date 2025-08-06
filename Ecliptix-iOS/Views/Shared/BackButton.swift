@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct BackButton: View {
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var navigation: NavigationService
     
     var body: some View {
-        Button(action: { dismiss() }) {
+        Button(action: { navigation.pop() }) {
             Image("BackArrow")
                 .resizable()
                 .scaledToFit()

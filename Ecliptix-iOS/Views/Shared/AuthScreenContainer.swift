@@ -20,17 +20,30 @@ struct AuthScreenContainer<Content: View>: View {
     @State private var showLanguageAlert = false
     @State private var suggestedLanguage: SupportedLanguage?
     
+    @Binding var showCustomAlert: Bool
+    @Binding var customAlertTitle: String?
+    @Binding var customAlertMessage: String?
+    let customAlertAction: (() -> Void)?
+    
     @StateObject private var networkMonitor = NetworkMonitor()
     @EnvironmentObject var localizationService: LocalizationService
     
     init(
         spacing: CGFloat = 0,
         canGoBack: Bool = false,
+        showCustomAlert: Binding<Bool> = .constant(false),
+        customAlertTitle: Binding<String?> = .constant(nil),
+        customAlertMessage: Binding<String?> = .constant(nil),
+        customAlertAction: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) {
-        self.content = content()
+        self._showCustomAlert = showCustomAlert
+        self._customAlertTitle = customAlertTitle
+        self._customAlertMessage = customAlertMessage
+        self.customAlertAction = customAlertAction
         self.spacing = spacing
         self.canGoBack = canGoBack
+        self.content = content()
     }
     
     var body: some View {
@@ -66,19 +79,33 @@ struct AuthScreenContainer<Content: View>: View {
                 )
                 .navigationBarBackButtonHidden(true)
             }
+            
+            if showCustomAlert {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation {
+                            showCustomAlert = false
+                        }
+                    }
 
-//            .toolbar {
-//                if canGoBack {
-//                    ToolbarItem(placement: .navigationBarLeading) {
-//                        BackButton()
-//                    }
-//                }
-//                
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    LanguageMenu()
-//                }
-//            }
-//            .zIndex(0)
+                CustomAlertView(
+                    title: customAlertTitle ?? "Title",
+                    message: customAlertMessage ?? "Message",
+                    onConfirm: {
+                        // Handle confirm
+                        customAlertAction?()
+                        
+                        showCustomAlert = false
+                    },
+                    onCancel: {
+                        // Handle cancel
+                        showCustomAlert = false
+                    }
+                )
+                .transition(.scale)
+                .zIndex(100)
+            }
             
             if showConnectionView {
                 Color.clear

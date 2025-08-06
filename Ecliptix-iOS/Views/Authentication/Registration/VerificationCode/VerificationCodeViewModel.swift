@@ -21,6 +21,10 @@ final class VerificationCodeViewModel: ObservableObject {
     @Published var remainingTime: String = "00:00"
     @Published var showCodeError: Bool = false
     
+    @Published var showAlert: Bool = false
+    @Published var alertTitle: String?
+    @Published var alertMessage: String?
+    
     @Published var shouldNavigateToPasswordSetUp: Bool = false
     @Published var authFlow: AuthFlow
 
@@ -111,6 +115,9 @@ final class VerificationCodeViewModel: ObservableObject {
 
                     switch response.status {
                     case .failed, .expired, .maxAttemptsReached:
+                        self.showAlert = true
+                        self.alertTitle = "Warning"
+                        self.alertMessage = response.message
                         
                         break
                     case .notFound:
