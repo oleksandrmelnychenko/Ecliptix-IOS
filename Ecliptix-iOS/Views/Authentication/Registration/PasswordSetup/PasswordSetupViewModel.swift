@@ -102,6 +102,7 @@ final class PasswordSetupViewModel: ObservableObject {
             try secureKeyBuffer.withSecureBytes { bytes in
                 password = String(data: bytes, encoding: .utf8) ?? ""
                 let passwordValidations = passwordValidator.validate(password)
+                
                 self.passwordValidationErrors = passwordValidations.errors + passwordValidations.suggestions
                 passwordStrength = PasswordStrengthEstimator.estimate(password: password)
             }
@@ -112,53 +113,30 @@ final class PasswordSetupViewModel: ObservableObject {
             return
         }
         
-        do {
-            self.passwordManager = self.passwordManager == nil
-                ? try PasswordManager.create().unwrap()
-                : self.passwordManager!
-        }
-        catch {
-            // Log this error
-            errorMessage = "Failed to create password manager."
+        if !passwordValidationErrors.isEmpty {
             return
         }
-        /*self.passwordManager!.checkPasswordCompliance(password, policy: PasswordPolicy.standard)*/
-        _ = Result<[PasswordValidationError], EcliptixProtocolFailure>.success([])
-            .flatMap { validationErrors in
-                if !validationErrors.isEmpty {
-                    passwordValidationErrors = validationErrors
-                    
-                    return .success(Unit.value)
-                }
-                else {
-                    if self.confirmSecureKeyBuffer.length == 0 {
-                        self.confirmPasswordValidationErrors = [.required]
-                        return .success(Unit.value)
-                    }
-                    
-                    do {
-                        try confirmSecureKeyBuffer.withSecureBytes { bytes in
-                            confirmPassword = String(data: bytes, encoding: .utf8) ?? ""
-                        }
-                    } catch {
-                        passwordValidationErrors = []
-                        self.errorMessage = "Error during reading password"
-                        return .success(Unit.value)
-                    }
-                    
-                    if password != confirmPassword {
-                        confirmPasswordValidationErrors = [.mismatchPasswords]
-                        return .success(Unit.value)
-                    } else {
-                        confirmPasswordValidationErrors = []
-                        return .success(Unit.value)
-                    }
-                }
+        
+        if self.confirmSecureKeyBuffer.length == 0 {
+            self.confirmPasswordValidationErrors = [.required]
+            return
+        }
+        
+        do {
+            try confirmSecureKeyBuffer.withSecureBytes { bytes in
+                confirmPassword = String(data: bytes, encoding: .utf8) ?? ""
             }
-            .mapError { error in
-                self.errorMessage = error.message
-                return error
-            }
+        } catch {
+            passwordValidationErrors = []
+            self.errorMessage = "Error during reading password"
+            return
+        }
+        
+        if password != confirmPassword {
+            confirmPasswordValidationErrors = [.mismatchPasswords]
+        } else {
+            confirmPasswordValidationErrors = []
+        }
     }
 
     func submitPassword() async {

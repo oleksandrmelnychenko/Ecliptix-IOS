@@ -42,11 +42,12 @@ struct FieldInput<ErrorType: ValidationError>: View {
                 .padding(.top, 15)
                 .padding(.bottom, 10)
             
-            if let strength = passwordStrength {
-                PasswordStrengthBar(strength: strength)
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 4)
-            }
+//            if let strength = passwordStrength {
+//                PasswordStrengthBar(strength: strength)
+//                    .padding(.horizontal, 8)
+//                    .padding(.bottom, 4)
+//            }
+                
 
             VStack(alignment: .leading, spacing: 4) {
                 if self.showValidationErrors, let firstError = validationErrors.first {
@@ -76,7 +77,7 @@ struct FieldInput<ErrorType: ValidationError>: View {
                         Text(self.hintText)
                         Spacer()
                     }
-                    .foregroundColor(Color("Tips.Color"))
+                    .foregroundColor(passwordStrengthColor)
                 }
             }
             .font(.subheadline)
@@ -92,6 +93,18 @@ struct FieldInput<ErrorType: ValidationError>: View {
                 .shadow(color: shadowColor, radius: shadowRadius)
                 .animation(.easeInOut(duration: 0.25), value: animationTrigger)
         )
+    }
+    
+    private var passwordStrengthColor: Color {
+        if showValidationErrors, let strength = passwordStrength {
+            return Color("PasswordStrength.\(strength.styleKey)")
+        }
+        
+        if showValidationErrors && !validationErrors.isEmpty {
+            return Color("Validation.Error")
+        }
+        
+        return Color("Tips.Color")
     }
 
     private var animationTrigger: Bool {
@@ -168,6 +181,7 @@ struct PasswordStrengthBar: View {
                     .fill(color)
                     .frame(width: geometry.size.width * width, height: 6)
                     .cornerRadius(3)
+                    .animation(.easeInOut(duration: 0.4), value: strength)
             }
         }
         .frame(height: 6)

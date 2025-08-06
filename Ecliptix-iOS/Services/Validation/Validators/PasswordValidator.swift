@@ -12,6 +12,8 @@ struct PasswordValidator: FieldValidating {
     private static let maxLength: Int = 21
     private static let minCharClasses: Int = 2
     private static let minTotalEntropyBits: Double = 30
+    
+    private let policy: PasswordPolicy = PasswordPolicy.standard
         
     func validate(_ value: String) -> (errors: [PasswordValidationError], suggestions: [PasswordValidationError]) {
         let validationRules: [(String) -> PasswordValidationError?] = [
@@ -30,7 +32,10 @@ struct PasswordValidator: FieldValidating {
             checkSequentialPattern,
             checkExcessiveRepeats,
             checkInsufficientCharacterDiversity,
-            checkContainsAppNameVariant
+            checkContainsAppNameVariant,
+            checkMissingSpecialCharacter,
+            checkUnallowedCharactersWithSpecials,
+            checkUnallowedCharactersAlphanumericOnly
         ]
 
         var errors: [PasswordValidationError] = []
@@ -104,6 +109,36 @@ struct PasswordValidator: FieldValidating {
 
     private func checkContainsAppNameVariant(_ password: String) -> PasswordValidationError? {
         return PasswordAppNameCheck.containsAppNameVariant(password) ? .containsAppName : nil
+    }
+    
+    private func checkMissingSpecialCharacter(_ password: String) -> PasswordValidationError? {
+        guard policy.requireSpecialChar, !policy.allowedSpecialChars.isEmpty else { return nil }
+
+        if !PasswordCharacterDiversity.containsAny(fromSpecialChars: policy.allowedSpecialChars, in: password) {
+            return .noSpecialCharacter(policy.allowedSpecialChars)
+        }
+
+        return nil
+    }
+
+    private func checkUnallowedCharactersWithSpecials(_ password: String) -> PasswordValidationError? {
+        guard policy.enforceAllowedCharsOnly, !policy.allowedSpecialChars.isEmpty else { return nil }
+
+        if !PasswordCharacterDiversity.containsOnlyAllowedCharacters(password, allowedSpecials: policy.allowedSpecialChars) {
+            return .unallowedCharactersWithSpecials
+        }
+
+        return nil
+    }
+
+    private func checkUnallowedCharactersAlphanumericOnly(_ password: String) -> PasswordValidationError? {
+        guard policy.enforceAllowedCharsOnly, policy.allowedSpecialChars.isEmpty else { return nil }
+
+        if !PasswordCharacterDiversity.containsOnlyAlphanumeric(password) {
+            return .unallowedCharactersAlphanumericOnly
+        }
+
+        return nil
     }
     
     private func calculateTotalShannonEntropy(_ string: String) -> Double {
