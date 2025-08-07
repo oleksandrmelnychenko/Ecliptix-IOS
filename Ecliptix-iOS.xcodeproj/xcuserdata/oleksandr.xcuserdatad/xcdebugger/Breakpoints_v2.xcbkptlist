@@ -14,8 +14,8 @@
             filePath = "Ecliptix-iOS/Views/Authentication/WizardViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "35"
-            endingLineNumber = "35"
+            startingLineNumber = "28"
+            endingLineNumber = "28"
             landmarkName = "start()"
             landmarkType = "7">
          </BreakpointContent>
@@ -126,25 +126,9 @@
             filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "31"
-            endingLineNumber = "31"
+            startingLineNumber = "39"
+            endingLineNumber = "39"
             landmarkName = "initializeAsync(defaultSystemSettings:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "3A1AD7C1-32BA-4A10-B7D9-86622332CB92"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ecliptix-iOS/Views/Authentication/WizardViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
-            landmarkName = "start()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -535,22 +519,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "38593A25-0A82-43B2-9DFB-C11609B416D8"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "96"
-            endingLineNumber = "96"
-            landmarkName = "ensureSecrecyChannelAsync(settings:isNewInstance:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "9BF43E9C-739B-430C-9971-41304EA9EC00"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -610,6 +578,36 @@
             endingLineNumber = "60"
             landmarkName = "handlePhoneNumberSubmission(serviceType:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "783E1B76-8D9D-4165-857D-EC368A2184D8 - e202d0767f9fe2a5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.PhoneNumberViewModel.handlePhoneNumberSubmission(serviceType: Ecliptix_iOS.RpcServiceType) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Views/Authentication/Registration/PhoneNumber/PhoneNumberViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "60"
+                  endingLineNumber = "60">
+               </Location>
+               <Location
+                  uuid = "783E1B76-8D9D-4165-857D-EC368A2184D8 - a6ec9e72e84626a3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.PhoneNumberViewModel.handlePhoneNumberSubmission(serviceType: Ecliptix_iOS.RpcServiceType) async -&gt; ()"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Views/Authentication/Registration/PhoneNumber/PhoneNumberViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "60"
+                  endingLineNumber = "60">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -700,8 +698,8 @@
             filePath = "Ecliptix-iOS/Core/Network/SessionRecovery/SessionProvider.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "85"
-            endingLineNumber = "85"
+            startingLineNumber = "104"
+            endingLineNumber = "104"
             landmarkName = "initiateEcliptixProtocolSystem(applicationInstanceSettings:connectId:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -838,14 +836,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "89159530-B09A-4DA3-BCFE-CD46717E18D6"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Shared/AuthScreenContainer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "97"
-            endingLineNumber = "97"
+            startingLineNumber = "96"
+            endingLineNumber = "96"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -886,14 +884,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "96EEF9A4-F865-471A-8F76-F030196F664B"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Shared/AuthScreenContainer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "103"
-            endingLineNumber = "103"
+            startingLineNumber = "102"
+            endingLineNumber = "102"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -918,14 +916,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "EC92FCF4-3A67-4182-A188-C2968E9E889F"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Views/Shared/AuthScreenContainer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "99"
-            endingLineNumber = "99"
+            startingLineNumber = "98"
+            endingLineNumber = "98"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -982,14 +980,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "365AC5E3-A548-4D72-A457-AA14A9F62678"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "26"
-            endingLineNumber = "26"
+            startingLineNumber = "24"
+            endingLineNumber = "24"
             landmarkName = "signUpAsync(securePassword:)"
             landmarkType = "7">
             <Locations>
@@ -1034,8 +1032,8 @@
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "54"
-            endingLineNumber = "54"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
             landmarkName = "executeSignUpFlowAsync(membershipUniqueId:passwordData:)"
             landmarkType = "7">
             <Locations>
@@ -1073,38 +1071,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "43BB126F-0A47-4E98-9143-208AA8CEB856"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ecliptix-iOS/Core/Network/RequestHelper/RequestBuilder.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "91"
-            endingLineNumber = "91"
-            landmarkName = "buildRegistrationInitRequest(passwordData:oprfRequest:passwordManager:verificationSessionId:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "9D0D2867-9F3B-42F2-990F-61C0384B4301"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ecliptix-iOS/Core/Network/RequestHelper/RequestBuilder.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "103"
-            endingLineNumber = "103"
-            landmarkName = "buildRegistrationInitRequest(passwordData:oprfRequest:passwordManager:verificationSessionId:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "A6C1FBD7-DB19-4075-9470-332B309D6902"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -1112,9 +1078,277 @@
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "70"
-            endingLineNumber = "70"
+            startingLineNumber = "66"
+            endingLineNumber = "66"
             landmarkName = "executeSignUpFlowAsync(membershipUniqueId:passwordData:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4D4595B2-1181-4785-8409-451F79B04AAB"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Logger/Logger.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
+            landmarkName = "logDirectory"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B56A45A7-E374-44DC-BAC7-FDC2705B119F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Logger/Logger.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "101"
+            endingLineNumber = "101"
+            landmarkName = "write(line:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "86EFDD72-A18D-4916-9562-6FA63C761606"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Logger/Logger.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "98"
+            endingLineNumber = "98"
+            landmarkName = "write(line:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FBA3E94A-5438-4E70-B85D-0C7E8DD16517"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Services/Initialization/ApplicationInitializer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
+            landmarkName = "initializeAsync(defaultSystemSettings:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "79A4212B-632C-4E22-B24B-7C40261876EE"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Logger/Logger.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
+            landmarkName = "log(_:_:category:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D67F803E-7BF6-4A51-AB45-DE1F3BC88C25"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Views/ViewModelBase.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "14"
+            endingLineNumber = "14"
+            landmarkName = "computeConnectId(pubKeyExchangeType:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "53D37A1C-6C5C-4CEE-9D75-F47FA3682181"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RequestHelper/RequestBuilder.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "30"
+            endingLineNumber = "30"
+            landmarkName = "buildValidationPhoneNumberRequest(networkProvider:phoneNumber:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AC120833-3457-4819-BD67-4AF314D06EDC"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RequestHelper/RequestBuilder.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "197"
+            endingLineNumber = "197"
+            landmarkName = "buildAppDeviceIdentifier(networkProvider:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "09CEC065-5FCE-48FE-88B7-D4B49D5B61D2"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
+            landmarkName = "registerDeviceAsync(connectId:settings:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "576AAE43-3899-4F56-B121-71EF85E3D749"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "78"
+            endingLineNumber = "78"
+            landmarkName = "registerDeviceAsync(connectId:settings:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "576AAE43-3899-4F56-B121-71EF85E3D749 - bcb7c7aaa5871726"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () throws -&gt; Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings in closure #2 (Ecliptix_iOS.Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply) -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, Ecliptix_iOS.InternalValidationFailure&gt; in Ecliptix_iOS.NetworkProvider.registerDeviceAsync(connectId: Swift.UInt32, settings: Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "78"
+                  endingLineNumber = "78">
+               </Location>
+               <Location
+                  uuid = "576AAE43-3899-4F56-B121-71EF85E3D749 - bcb7c7aaa5871726"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () throws -&gt; Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings in closure #2 (Ecliptix_iOS.Ecliptix_Proto_AppDevice_AppDeviceRegisteredStateReply) -&gt; Swift.Result&lt;Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, Ecliptix_iOS.InternalValidationFailure&gt; in Ecliptix_iOS.NetworkProvider.registerDeviceAsync(connectId: Swift.UInt32, settings: Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "78"
+                  endingLineNumber = "78">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D9BB1F83-F79A-4EB5-BE39-DEA375188184"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
+            landmarkName = "registerDeviceAsync(connectId:settings:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "33B627D9-6EFD-4B01-9C3E-E2432FC9331E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
+            landmarkName = "registerDeviceAsync(connectId:settings:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "33B627D9-6EFD-4B01-9C3E-E2432FC9331E - 7945dcf7b0f00072"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.NetworkProvider.registerDeviceAsync(connectId: Swift.UInt32, settings: Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64">
+               </Location>
+               <Location
+                  uuid = "33B627D9-6EFD-4B01-9C3E-E2432FC9331E - 90ea0b8ef8a9bc70"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.NetworkProvider.registerDeviceAsync(connectId: Swift.UInt32, settings: Ecliptix_iOS.Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
+                  moduleName = "Ecliptix-iOS.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Core/Network/Providers/NetworkProvider.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D0E26087-EBAC-4651-B9EB-2D2035102205"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Ecliptix-iOS/Core/Network/RequestHelper/RequestPipeline.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "32"
+            endingLineNumber = "32"
+            landmarkName = "run(requestResult:pubKeyExchangeType:serviceType:flowType:cancellationToken:networkProvider:parseAndValidate:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

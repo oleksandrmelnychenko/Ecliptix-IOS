@@ -53,23 +53,39 @@ struct ChatView: View {
 
             Divider()
             
-            HStack {
-                TextField("Повідомлення...", text: $messageText)
-                    .textFieldStyle(.roundedBorder)
+            HStack(spacing: 8) {
+                Button {
+                    print("Add attachment tapped")
+                } label: {
+                    Image(systemName: "plus.circle")
+                       .font(.system(size: 22))
+                       .foregroundColor(.blue)
+                }
+
+                
+                TextField("Message...", text: $messageText)
+                    .padding(10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .disableAutocorrection(true)
 
                 Button(action: {
                     sendMessage()
                 }) {
                     Image(systemName: "paperplane.fill")
                         .rotationEffect(.degrees(45))
+                        .foregroundColor(.blue)
+                        .font(.system(size: 22))
                 }
                 .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .padding(.leading, 8)
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color(.systemBackground))
         }
         .navigationTitle(chatName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
     }
     
     private func sendMessage() {

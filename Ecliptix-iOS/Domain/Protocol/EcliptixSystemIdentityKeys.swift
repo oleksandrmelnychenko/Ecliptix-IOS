@@ -68,7 +68,7 @@ final class EcliptixSystemIdentityKeys {
             let idSk = try self.identityX25519SecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
             let spSk = try self.signedPreKeySecretKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap()
             
-            var opkProtos: [Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret] = self.oneTimePreKeysInternal.compactMap { opk in
+            let opkProtos: [Ecliptix_Proto_KeyMaterials_OneTimePreKeySecret] = self.oneTimePreKeysInternal.compactMap { opk in
                 guard let opkSkBytes = try? opk.privateKeyHandle.readBytes(length: Constants.x25519PrivateKeySize).unwrap() else {
                     return nil
                 }
