@@ -48,13 +48,12 @@ struct PassPhaseRegisterView: View {
                     }
                 }
 
-//                Color.clear.frame(height: 60)
                 KeyButton(systemImage: "faceid") { viewModel.getPassPhaseFromFaceId() }
                 KeyButton(title: "0") { viewModel.append("0") }
                 KeyButton(systemImage: "delete.left") { viewModel.removeLast() }
             }
             .padding(.horizontal, 40)
-            .padding(.top, 150)
+            .padding(.top, 40)
         })
     }
 }
