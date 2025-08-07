@@ -37,12 +37,33 @@ final class SessionProvider: SessionRecoveryStrategy {
         self.isSessionConsiderdHealthy = false
     }
     
-    func establishSession(settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -> Result<UInt32, NetworkFailure> {
+    func establishSession(
+        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
+        shouldBeRecovered: Bool
+    ) async -> Result<UInt32, NetworkFailure> {
         do {
             let connectId = AppSettingsService.computeUniqueConnectId(
                 settings: settings,
                 pubKeyExchangeType: .dataCenterEphemeralConnect
             )
+            
+            if shouldBeRecovered {
+                let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
+
+                if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
+                    let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
+                    let restoreResult = await self.restoreSecrecyChannel(
+                        ecliptixSecrecyChannelState: state,
+                        applicationInstanceSettings: settings)
+
+                    if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
+                        Logger.info("Successfully restored and synchronized secrecy channel \(connectId)", category: "AppInit")
+                        return .success(connectId)
+                    }
+
+                    Logger.warning("Failed to restore secrecy channel or it was out of sync. A new channel will be established", category: "AppInit")
+                }
+            }
             
             await withCheckedContinuation { continuation in
                 Task {
@@ -70,9 +91,7 @@ final class SessionProvider: SessionRecoveryStrategy {
             return .failure(.unexpectedError("An unhandled error occurred while ensuring the secrecy channel", inner: error))
         }
     }
-    
 
-    
     func restoreSecrecyChannelAsync() async -> Result<Unit, NetworkFailure> {
         await sessionLock.restoreSecrecyChannelAsync()
     }

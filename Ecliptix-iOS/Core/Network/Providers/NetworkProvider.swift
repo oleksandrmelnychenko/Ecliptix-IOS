@@ -35,9 +35,9 @@ final class NetworkProvider: NetworkProviderProtocol {
                 guard let self else { return }
                 
                 if serviceType == .registerAppDevice {
-                    _ = await self.sessionProvider.establishSession(settings: settings)
+                    _ = await self.sessionProvider.establishSession(settings: settings, shouldBeRecovered: false)
                 } else {
-                    _ = await self.recoverSession(settings: settings)
+                    _ = await self.recoverSession(settings: settings, shouldBeRecovered: false)
                 }
             }
         )
@@ -74,7 +74,7 @@ final class NetworkProvider: NetworkProviderProtocol {
                 return .success(response)
             }
         ).flatMap { response in
-            Result<Unit, InternalValidationFailure>.Try({
+            Result<Ecliptix_Proto_AppDevice_ApplicationInstanceSettings, InternalValidationFailure>.Try({
                 let appServerInstanceId = try Helpers.fromDataToGuid(response.uniqueID)
                 
                 var newSettings = Ecliptix_Proto_AppDevice_ApplicationInstanceSettings()
@@ -84,12 +84,13 @@ final class NetworkProvider: NetworkProviderProtocol {
                 newSettings.systemDeviceIdentifier = appServerInstanceId.uuidString
                 newSettings.serverPublicKey = response.serverPublicKey
 
-                AppSettingsService.shared.setSettings(newSettings)
-
-                return .value
+                return newSettings
             }, errorMapper: {
                 .internalServiceApi("Failed to process registration response", inner: $0)
             })
+        }.flatMap { newSettings in
+            AppSettingsService.shared.setSettings(newSettings)
+                .mapInternalServiceApiFailure()
         }
     }
     
@@ -103,21 +104,11 @@ final class NetworkProvider: NetworkProviderProtocol {
         )
     }
     
-    func initiateEcliptixProtocolSystem(
-        applicationInstanceSettings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
-        connectId: UInt32
-    ) async {
-        return await self.sessionProvider.initiateEcliptixProtocolSystem(applicationInstanceSettings: applicationInstanceSettings, connectId: connectId)
-    }
-    
-    func establishSecrecyChannel(
-        connectId: UInt32
-    ) async -> Result<Ecliptix_Proto_KeyMaterials_EcliptixSessionState, NetworkFailure> {
-        return await self.sessionProvider.establishSecrecyChannel(connectId: connectId)
-    }
-    
-    private func recoverSession(settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings) async -> Result<Unit, InternalValidationFailure> {
-        return await self.sessionProvider.establishSession(settings: settings)
+    public func recoverSession(
+        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
+        shouldBeRecovered: Bool
+    ) async -> Result<Unit, InternalValidationFailure> {
+        return await self.sessionProvider.establishSession(settings: settings, shouldBeRecovered: shouldBeRecovered)
             .mapNetworkFailure()
             .flatMapAsync { connectId in
                 return await self.registerDeviceAsync(connectId: connectId, settings: settings)

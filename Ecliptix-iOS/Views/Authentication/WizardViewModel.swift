@@ -8,13 +8,8 @@
 import Foundation
 import Combine
 
-enum WizardStep {
-    case onboarding
-    case loading
-}
-
 final class WizardViewModel: ObservableObject {
-    @Published var step: WizardStep = .loading
+    @Published var step: AuthenticationUserState = .notInitialized
     
     private let connectionService: ApplicationInitializer
     private var hasStarted = false
@@ -29,9 +24,11 @@ final class WizardViewModel: ObservableObject {
     func start() async {
         guard !hasStarted else { return }
         hasStarted = true
+                
+        let initializedResult = await connectionService.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
         
-        step = .onboarding
-        
-        _ = await connectionService.initializeAsync(defaultSystemSettings: DefaultSystemSettings())
+        _ = await connectionService.retriveUserState().map { authUserState in
+            step = .notInitialized
+        }
     }
 }

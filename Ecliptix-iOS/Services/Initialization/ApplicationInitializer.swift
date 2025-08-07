@@ -7,6 +7,14 @@
 
 import Foundation
 
+enum AuthenticationUserState {
+    case verifiedOtp
+    case confirmedPasswords
+    case passphraseSet
+    
+    case notInitialized
+}
+
 final class ApplicationInitializer: ApplicationInitializerProtocol {
     private let networkProvider: NetworkProvider
     private let secureStorageProvider: SecureStorageProviderProtocol
@@ -25,92 +33,59 @@ final class ApplicationInitializer: ApplicationInitializerProtocol {
         self.systemEvents = systemEvents
     }
     
-    public func initializeAsync(defaultSystemSettings: DefaultSystemSettings) async -> Bool {
+    func initializeAsync(defaultSystemSettings: DefaultSystemSettings) async -> Result<Unit, InternalValidationFailure> {
         
         do {
             self.systemEvents.publish(.new(.initializing))
             
             let settingsResult = self.secureStorageProvider.initApplicationInstanceSettings()
             guard settingsResult.isOk else {
-                Logger.error("Failed to get or create application instance settings: \(try! settingsResult.unwrapErr())", category: "AppInit")
+                Logger.error("Failed to get or create application instance settings: \(try settingsResult.unwrapErr())", category: "AppInit")
                 self.systemEvents.publish(.new(.fatalError))
-                return false
+                return .failure(.internalServiceApi("Failed to get or create application instance settings", inner: (try settingsResult.unwrapErr())))
             }
             
             let result = try settingsResult.unwrap()
-            var settings = result.settings
-            let isNewInstance = result.isNewInstance
-
-            let connectIdResult = await self.ensureSecrecyChannelAsync(settings: settings, isNewInstance: isNewInstance)
-            guard connectIdResult.isOk else {
-                Logger.error("Failed to establish or restore secrecy channel: \(try connectIdResult.unwrapErr())", category: "AppInit")
-                return false
-            }
             
-            let connectId = try connectIdResult.unwrap()
-            
-            let registrationResult = await networkProvider.registerDeviceAsync(connectId: connectId, settings: settings)
-            guard registrationResult.isOk else {
-                Logger.error("Device registration failed: \(try registrationResult.unwrapErr())", category: "AppInit")
-                return false
+//            try await Task.sleep(nanoseconds: 60 * 1_000_000_000)
+                    
+            let recoveredSession = await networkProvider.recoverSession(settings: result.settings, shouldBeRecovered: !result.isNewInstance)
+            guard recoveredSession.isOk else {
+                Logger.error("Error during recovering session: \(try recoveredSession.unwrapErr())", category: "AppInit")
+                return .failure(.internalServiceApi("Error during recovering session", inner: (try recoveredSession.unwrapErr())))
             }
             
             Logger.info("Application initialized successfully", category: "AppInit")
             
             self.systemEvents.publish(.new(.running))
-            return true
-            
+            return .success(.value)
         } catch {
             Logger.error("An unhandled error occurred during application initialization: \(error)", category: "AppInit")
-            return false
+            return .failure(.unknown("An unhandled error occurred during application initialization", inner: error))
         }
     }
     
-    public func ensureSecrecyChannelAsync(
-        settings: Ecliptix_Proto_AppDevice_ApplicationInstanceSettings,
-        isNewInstance: Bool
-    ) async -> Result<UInt32, NetworkFailure> {
-        do {
-            let connectId = AppSettingsService.computeUniqueConnectId(settings: settings, pubKeyExchangeType: .dataCenterEphemeralConnect)
-            
-            if !isNewInstance {
-                let storedStateResult = self.secureStorageProvider.tryGetByKey(key: String(connectId))
+    func retriveUserState() async -> Result<AuthenticationUserState, InternalValidationFailure> {
+        return AppSettingsService.shared.getSettings()
+            .mapInternalServiceApiFailure()
+            .flatMap { settings in
+                let authenticationUserState = combineAuthenticationUserState(with: settings.membership.creationStatus)
                 
-                
-                if storedStateResult.isOk, let data = try? storedStateResult.unwrap() {
-                    let state = try Ecliptix_Proto_KeyMaterials_EcliptixSessionState(serializedBytes: data)
-                    let restoreResult = await self.networkProvider.restoreSecrecyChannel(
-                        ecliptixSecrecyChannelState: state,
-                        applicationInstanceSettings: settings)
-                    
-                    if restoreResult.isOk, let isSuccessedRestored = try? restoreResult.unwrap(), isSuccessedRestored == true {
-                        Logger.info("Successfully restored and synchronized secrecy channel \(connectId)", category: "AppInit")
-                        return .success(connectId)
-                    }
-                    
-                    Logger.warning("Failed to restore secrecy channel or it was out of sync. A new channel will be established", category: "AppInit")
-                }
+                return .success(authenticationUserState)
             }
-            
-            await self.networkProvider.initiateEcliptixProtocolSystem(applicationInstanceSettings: settings, connectId: connectId)
-            let establishResult = await self.networkProvider.establishSecrecyChannel(connectId: connectId)
-            
-            guard establishResult.isOk else {
-                return .failure(try establishResult.unwrapErr())
-            }
-            
-            let secrecyChannelState = try establishResult.unwrap()
-            let storeResult = secureStorageProvider.store(key: String(connectId), data: try secrecyChannelState.serializedData())
-            
-            switch storeResult {
-            case .success:
-                Logger.info("Successfully established new secrecy channel \(connectId)", category: "AppInit")
-                return .success(connectId)
-            case .failure(let error):
-                return .failure(.unexpectedError("An unhandled error occurred while storing the secrecy channel state", inner: error))
-            }
-        } catch {
-            return .failure(.unexpectedError("An unhandled error occurred while ensuring the secrecy channel", inner: error))
+    }
+    
+    private func combineAuthenticationUserState(
+        with creationStatus: Ecliptix_Proto_Membership_Membership.CreationStatus
+    ) -> AuthenticationUserState {
+        switch creationStatus {
+        case .otpVerified: return .verifiedOtp
+        case .secureKeySet: return .confirmedPasswords
+        case .passphraseSet: return .passphraseSet
+        case .UNRECOGNIZED(_): return .notInitialized
         }
     }
+    
+    
+
 }

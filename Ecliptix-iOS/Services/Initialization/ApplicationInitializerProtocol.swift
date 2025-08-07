@@ -6,5 +6,5 @@
 //
 
 protocol ApplicationInitializerProtocol {
-    func initializeAsync(defaultSystemSettings: DefaultSystemSettings) async -> Bool
+    func initializeAsync(defaultSystemSettings: DefaultSystemSettings) async -> Result<Unit, InternalValidationFailure>
 }
