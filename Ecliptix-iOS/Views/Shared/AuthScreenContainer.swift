@@ -57,13 +57,12 @@ struct AuthScreenContainer<Content: View>: View {
                     LanguageMenu()
                 }
                 .padding()
-//                .background(.ultraThinMaterial)
                 .zIndex(10)
                 
                 ScrollView {
                     VStack(spacing: spacing) {
                         Logo()
-                            .padding(.top, 15)
+//                            .padding(.top, 15)
                         
                         content
 
