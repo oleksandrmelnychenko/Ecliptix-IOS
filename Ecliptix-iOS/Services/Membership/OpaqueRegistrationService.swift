@@ -9,12 +9,10 @@ import Foundation
 
 struct OpaqueRegistrationService {
     private let networkProvider: NetworkProvider
-    private let passwordManager: PasswordManager
     private let authFlow: AuthFlow
     
-    init(networkProvider: NetworkProvider, passwordManager: PasswordManager, authFlow: AuthFlow) {
+    init(networkProvider: NetworkProvider, authFlow: AuthFlow) {
         self.networkProvider = networkProvider
-        self.passwordManager = passwordManager
         self.authFlow = authFlow
     }
     
@@ -56,9 +54,7 @@ struct OpaqueRegistrationService {
             .flatMapAsync { oprfData in
                 return await RequestPipeline.runAsync(
                     requestResult: RequestBuilder.buildRegistrationInitRequest(
-                        passwordData: passwordData,
                         oprfRequest: oprfData.oprfRequest,
-                        passwordManager: self.passwordManager,
                         verificationSessionId: membershipUniqueId
                     ),
                     pubKeyExchangeType: .dataCenterEphemeralConnect,
@@ -93,9 +89,7 @@ struct OpaqueRegistrationService {
             .flatMapAsync { oprfData in
                 return await RequestPipeline.runAsync(
                     requestResult: RequestBuilder.buildRecoverySecureKeyInitRequest(
-                        passwordData: passwordData,
                         oprfRequest: oprfData.oprfRequest,
-                        passwordManager: self.passwordManager,
                         verificationSessionId: membershipUniqueId
                     ),
                     pubKeyExchangeType: .dataCenterEphemeralConnect,

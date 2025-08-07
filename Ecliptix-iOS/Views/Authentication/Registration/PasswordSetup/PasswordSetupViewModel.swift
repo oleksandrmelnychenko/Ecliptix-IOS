@@ -31,7 +31,6 @@ final class PasswordSetupViewModel: ObservableObject {
     private lazy var authService: OpaqueRegistrationService = {
         return OpaqueRegistrationService(
             networkProvider: self.networkController,
-            passwordManager: self.passwordManager!,
             authFlow: self.authFlow
         )
     }()

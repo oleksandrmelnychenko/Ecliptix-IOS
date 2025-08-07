@@ -79,32 +79,15 @@ struct RequestBuilder {
     }
     
     static func buildRegistrationInitRequest(
-        passwordData: Data,
         oprfRequest: Data,
-        passwordManager: PasswordManager,
         verificationSessionId: Data
     ) -> Result<Ecliptix_Proto_Membership_OprfRegistrationInitRequest, InternalValidationFailure> {
         
-        return Result<Data, InternalValidationFailure>.success(passwordData)
-            .flatMap { _ in
-                
-                guard let passwordString = String(data: passwordData, encoding: .utf8) else {
-                    return .failure(.invalidValue("Password contains invalid characters for string conversion."))
-                }
-
-                return .success(passwordString)
-            }
-            .flatMap { passwordString in
-                passwordManager.hashPassword(passwordString)
-                    .mapEcliptixProtocolFailure()
-                    .mapNetworkFailure()
-            }
-            .map { _ in
-                var request = Ecliptix_Proto_Membership_OprfRegistrationInitRequest()
-                request.membershipIdentifier = verificationSessionId
-                request.peerOprf = oprfRequest
-                return request
-            }
+        var request = Ecliptix_Proto_Membership_OprfRegistrationInitRequest()
+        request.membershipIdentifier = verificationSessionId
+        request.peerOprf = oprfRequest
+        
+        return .success(request)
     }
     
     static func buildRegistrationCompleteRequest(
@@ -131,34 +114,14 @@ struct RequestBuilder {
     }
     
     static func buildRecoverySecureKeyInitRequest(
-        passwordData: Data,
         oprfRequest: Data,
-        passwordManager: PasswordManager,
         verificationSessionId: Data
     ) -> Result<Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest, InternalValidationFailure> {
-        return Result<String, InternalValidationFailure>.Try({
-            guard let passwordString = String(data: passwordData, encoding: .utf8) else {
-                throw InternalValidationFailure.invalidValue("Password contains invalid characters for string conversion.")
-            }
-            return passwordString
-        }, errorMapper: { error in
-            if let failure = error as? InternalValidationFailure {
-                return failure
-            } else {
-                return .internalServiceApi("Failed to convert password to string", inner: error)
-            }
-        })
-        .flatMap { passwordString in
-            passwordManager.hashPassword(passwordString)
-                .mapEcliptixProtocolFailure()
-                .mapNetworkFailure()
-        }
-        .map { _ in
-            var request = Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest()
-            request.membershipIdentifier = verificationSessionId
-            request.peerOprf = oprfRequest
-            return request
-        }
+        var request = Ecliptix_Proto_Membership_OprfRecoverySecureKeyInitRequest()
+        request.membershipIdentifier = verificationSessionId
+        request.peerOprf = oprfRequest
+        
+        return .success(request)
     }
     
     static func buildRecoverySecureKeyCompleteRequest(
