@@ -8,6 +8,7 @@
 import Foundation
 import GRPC
 import SwiftProtobuf
+import NIO
 
 final class UnaryRpcService {
     private let membershipClient: Ecliptix_Proto_Membership_MembershipServicesAsyncClient
@@ -87,8 +88,6 @@ final class UnaryRpcService {
         systemEvents: SystemEventsProtocol,
         cancellation: CancellationToken
     ) async throws -> Result<Ecliptix_Proto_CipherPayload, NetworkFailure> {
-        
-        
         return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.authClient.validatePhoneNumber(payload)
         }
@@ -137,6 +136,9 @@ final class UnaryRpcService {
         return await Self.executeGrpcCallAsync(networkEvents: networkEvents, systemEvents: systemEvents) {
             try await self.membershipClient.opaqueSignInInitRequest(payload)
         }
+        
+        
+//        currentRequest = self.membershipClient.opaqueSignInInitRequest(payload)
     }
 
     private func opaqueSignInCompleteRequestAsync(

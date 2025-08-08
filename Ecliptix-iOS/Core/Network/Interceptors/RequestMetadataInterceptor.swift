@@ -37,6 +37,6 @@ final class RequestMetadataInterceptor<Request, Response>: ClientInterceptor<Req
             context.send(.metadata(headers), promise: promise)
         } else {
             context.send(part, promise: promise)
-        }
+        }            
     }
 }

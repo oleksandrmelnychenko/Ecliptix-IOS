@@ -104,9 +104,20 @@ struct VerificationCodeView: View {
                     }
                 }
             )
+                
+            PrimaryButton(
+                title: "Cancel",
+                isEnabled: viewModel.secondsRemaining > 0,
+                isLoading: viewModel.isLoading,
+                style: .light,
+                action: viewModel.cancelVerification
+            )
         })
         .onAppear {
             viewModel.startValidation()
+        }
+        .onDisappear {
+            viewModel.cancelVerification()
         }
         .onChange(of: viewModel.combinedCode) {_, newValue in
             let isComplete = !newValue.contains(VerificationCodeViewModel.emptySign)

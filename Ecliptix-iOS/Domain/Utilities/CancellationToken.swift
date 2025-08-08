@@ -5,15 +5,26 @@
 //  Created by Oleksandr Melnechenko on 09.06.2025.
 //
 
-public class CancellationToken {
+import Foundation
+
+public class CancellationToken: @unchecked Sendable {
     private var isCancelled = false
+    private let queue = DispatchQueue(label: "CancellationTokenQueue")
+
     func cancel() {
-        isCancelled = true
+        queue.sync { isCancelled = true }
     }
+
     func throwIfCancelled() throws {
-        if isCancelled {
-            throw CancellationError()
+        try queue.sync {
+            if isCancelled {
+                throw CancellationError()
+            }
         }
     }
-    var cancelled: Bool { isCancelled }
+
+    var cancelled: Bool {
+        queue.sync { isCancelled }
+    }
 }
+

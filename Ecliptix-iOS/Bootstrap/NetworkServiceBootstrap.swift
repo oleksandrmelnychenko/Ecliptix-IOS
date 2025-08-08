@@ -11,13 +11,16 @@ enum NetworkServiceBootstrap {
     static func setupNetworkController(channel: ClientConnection) {
         let clients = GrpcClientFactory.makeClients(channel: channel)
 
+        let secureStoreProvider = try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
+        let rpcMetaDataProvider = try! ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
+        
         let unaryRpcService = UnaryRpcService(
             membershipClient: clients.membership,
             appDeviceClient: clients.appDevice,
             authClient: clients.auth
         )
 
-        let receiveStreamExecutor = ReceiveStreamRpcService(client: clients.auth)
+        let receiveStreamExecutor = ReceiveStreamRpcService(client: clients.auth, rpcMetaDataProvider: rpcMetaDataProvider)
         let keyExchangeExecutor = SecrecyChannelRpcService(appDeviceServiceActionsClient: clients.appDevice)
 
         let manager = RpcServiceManager(
@@ -26,11 +29,6 @@ enum NetworkServiceBootstrap {
             secrecyChannelRpcService: keyExchangeExecutor,
             networkEvents: try! ServiceLocator.shared.resolve(NetworkEventsProtocol.self),
             systemEvents: try! ServiceLocator.shared.resolve(SystemEventsProtocol.self))
-
-        
-        
-        let secureStoreProvider = try! ServiceLocator.shared.resolve(SecureStorageProviderProtocol.self)
-        let rpcMetaDataProvider = try! ServiceLocator.shared.resolve(RpcMetaDataProviderProtocol.self)
         
         let sessionProvider = SessionProvider(
             rpcMetaDataProvider: rpcMetaDataProvider,

@@ -33,6 +33,9 @@ final class VerificationCodeViewModel: ObservableObject {
     private var phoneNumberIdentifier: Data
     private var verificationSessionIdentifier: UUID? = nil
     
+    private var verificationTask: Task<Void, Error>? = nil
+    private var cancellationToken: CancellationToken?
+    
     init(phoneNumberIdentifier: Data, authFlow: AuthFlow) {
         self.phoneNumberIdentifier = phoneNumberIdentifier
         
@@ -42,9 +45,11 @@ final class VerificationCodeViewModel: ObservableObject {
     
     func startValidation() {
         Task {
-            await self.initiateVerification(
-                phoneNumberIdentifier: self.phoneNumberIdentifier,
-                type: .sendOtp)
+            verificationTask = Task {
+                await self.initiateVerification(
+                    phoneNumberIdentifier: self.phoneNumberIdentifier,
+                    type: .sendOtp)
+            }
         }
     }
 
@@ -89,7 +94,7 @@ final class VerificationCodeViewModel: ObservableObject {
         phoneNumberIdentifier: Data,
         type: Ecliptix_Proto_Membership_InitiateVerificationRequest.TypeEnum
     ) async {
-        let cancellationToken = CancellationToken()
+        cancellationToken = CancellationToken()
 
         let stream = RequestPipeline.runStream(
             requestResult: RequestBuilder.buildInitiateVerificationRequest(
@@ -99,7 +104,7 @@ final class VerificationCodeViewModel: ObservableObject {
             ),
             pubKeyExchangeType: .dataCenterEphemeralConnect,
             serviceType: .initiateVerification,
-            cancellationToken: cancellationToken,
+            cancellationToken: cancellationToken!,
             networkProvider: networkController,
             parseAndValidate: { (response: Ecliptix_Proto_Membership_VerificationCountdownUpdate) in
                 .success(response)
@@ -194,5 +199,15 @@ final class VerificationCodeViewModel: ObservableObject {
         let minutes = seconds / 60
         let seconds = seconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    func cancelVerification() {
+//        verificationTask?.cancel()
+        
+        self.cancellationToken!.cancel()
+
+        self.secondsRemaining = 0
+        self.errorMessage = nil
+        self.isLoading = false
     }
 }
