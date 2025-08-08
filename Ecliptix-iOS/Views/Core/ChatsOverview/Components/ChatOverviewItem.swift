@@ -9,21 +9,10 @@
 import SwiftUI
 
 struct ChatOverviewItem: View {
-    private var chatName: String
-    private var lastMessage: String
-    private var unreadMessagesCount: Int
-    private var lastMessageDate: Date
+    private let chat: Chat
     
-    init(
-        chatName: String,
-        lastMessage: String,
-        unreadMessagesCount: Int,
-        lastMessageDate: Date
-    ) {
-        self.chatName = chatName
-        self.lastMessage = lastMessage
-        self.unreadMessagesCount = unreadMessagesCount
-        self.lastMessageDate = lastMessageDate
+    init(chat: Chat) {
+        self.chat = chat
     }
     
     var body: some View {
@@ -35,9 +24,9 @@ struct ChatOverviewItem: View {
                 .clipShape(Circle())
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(self.chatName)
+                Text(self.chat.name)
                     .bold(true)
-                Text(self.lastMessage)
+                Text(self.chat.lastMessage)
                     .foregroundColor(.gray)
                     .lineLimit(1)
             }
@@ -45,10 +34,10 @@ struct ChatOverviewItem: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text(Self.timeFormatter.string(from: lastMessageDate))
+                Text(Self.timeFormatter.string(from: self.chat.lastDate))
                    .font(.caption)
                    .foregroundColor(.gray)
-                Text("\(self.unreadMessagesCount)")
+                Text("\(self.chat.unread)")
                     .font(.caption2)
                     .padding(6)
                     .background(Circle().fill(Color.blue))
@@ -56,8 +45,6 @@ struct ChatOverviewItem: View {
             }
             
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal)
     }
     
     private static let timeFormatter: DateFormatter = {
@@ -68,9 +55,7 @@ struct ChatOverviewItem: View {
 }
 
 #Preview {
-    ChatOverviewItem(
-        chatName: "Chat Name",
-        lastMessage: "This is my last message",
-        unreadMessagesCount: 200,
-        lastMessageDate: Date())
+    let demoChat = Chat(id: 1, name: "Chat Name", lastMessage: "This is my last message", unread: 200, lastDate: Date())
+    
+    ChatOverviewItem(chat: demoChat)
 }

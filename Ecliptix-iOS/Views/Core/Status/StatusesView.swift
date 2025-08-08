@@ -10,7 +10,7 @@ import SwiftUI
 struct StatusesView: View {
     var body: some View {
         NavigationStack {
-            Text("Статуси")
+            Text("Status")
                 .navigationTitle("Status")
         }
     }
