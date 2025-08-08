@@ -57,7 +57,7 @@ struct ChatsOverviewView: View {
             .navigationBarTitleDisplayMode(.large)
 
             // Hide tab bar in selecting mode
-            .toolbar(mode == .selecting ? .hidden : .visible, for: .tabBar)
+            .toolbar(mode == .selecting ? .hidden : .automatic, for: .tabBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })

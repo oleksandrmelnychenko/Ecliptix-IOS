@@ -27,6 +27,8 @@ struct ChatRow: View {
         } else {
             NavigationLink(destination: ChatView(chatName: chat.name)) {
                 ChatOverviewItem(chat: chat)
+                    .frame(maxWidth: .infinity, alignment: .leading) 
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }

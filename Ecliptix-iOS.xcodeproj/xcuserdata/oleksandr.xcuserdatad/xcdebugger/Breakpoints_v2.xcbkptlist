@@ -584,7 +584,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D394AAC8-79C3-4096-9C9B-7EC2098FDF49"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueAuthenticationService.swift"
@@ -594,36 +594,6 @@
             endingLineNumber = "31"
             landmarkName = "signInAsync(mobileNumber:securePassword:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "D394AAC8-79C3-4096-9C9B-7EC2098FDF49 - f4aecaebc0b2cc0a"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.OpaqueAuthenticationService.signInAsync(mobileNumber: Swift.String, securePassword: Ecliptix_iOS.SecureTextBuffer) async -&gt; Swift.Result&lt;Foundation.Data, Ecliptix_iOS.InternalValidationFailure&gt;"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Membership/OpaqueAuthenticationService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "31"
-                  endingLineNumber = "31">
-               </Location>
-               <Location
-                  uuid = "D394AAC8-79C3-4096-9C9B-7EC2098FDF49 - a7ce4cb9aa0b1008"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.OpaqueAuthenticationService.signInAsync(mobileNumber: Swift.String, securePassword: Ecliptix_iOS.SecureTextBuffer) async -&gt; Swift.Result&lt;Foundation.Data, Ecliptix_iOS.InternalValidationFailure&gt;"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Membership/OpaqueAuthenticationService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "31"
-                  endingLineNumber = "31">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -950,7 +920,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "439368F1-9EA8-4DB1-9A04-2CE8C5CC77C5"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
@@ -960,43 +930,13 @@
             endingLineNumber = "52"
             landmarkName = "executeSignUpFlowAsync(membershipUniqueId:passwordData:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "439368F1-9EA8-4DB1-9A04-2CE8C5CC77C5 - dd66e53f2eca4e0"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for Ecliptix_iOS.OpaqueRegistrationService.executeSignUpFlowAsync(membershipUniqueId: Foundation.Data, passwordData: Foundation.Data) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "52"
-                  endingLineNumber = "52">
-               </Location>
-               <Location
-                  uuid = "439368F1-9EA8-4DB1-9A04-2CE8C5CC77C5 - f364f52f5115e8e2"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Ecliptix_iOS.OpaqueRegistrationService.executeSignUpFlowAsync(membershipUniqueId: Foundation.Data, passwordData: Foundation.Data) async -&gt; Swift.Result&lt;Ecliptix_iOS.Unit, Ecliptix_iOS.InternalValidationFailure&gt;"
-                  moduleName = "Ecliptix-iOS.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/oleksandr/Desktop/Projects/Ecliptix-iOS/Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "52"
-                  endingLineNumber = "52">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "A6C1FBD7-DB19-4075-9470-332B309D6902"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Ecliptix-iOS/Services/Membership/OpaqueRegistrationService.swift"
