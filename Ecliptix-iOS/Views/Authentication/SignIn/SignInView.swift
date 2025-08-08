@@ -30,6 +30,7 @@ struct SignInView: View {
                 viewTitle: Strings.Authentication.SignIn.title,
                 viewDescription: Strings.Authentication.SignIn.description
             )
+            .accessibility(identifier: "authViewHeader")
             
             Group {
                 FieldInput<PhoneValidationError>(
@@ -43,6 +44,9 @@ struct SignInView: View {
                             placeholder: Strings.Authentication.SignIn.mobilePlaceholder,
                             isFocused: $isPhoneFocused
                         )
+                        .accessibility(identifier: "phoneNumberInputField")
+                        .accessibilityLabel(Text(Strings.Authentication.SignIn.mobilePlaceholder))
+                        .accessibilityHint(Text(Strings.Authentication.SignIn.mobileHint))
                     }
                 )
                 .onChange(of: viewModel.phoneNumber) { _, _ in
@@ -68,11 +72,13 @@ struct SignInView: View {
                             },
                             isFocused: $isPasswordFocused
                         )
+                        .accessibility(identifier: "passwordInputField")
                     }
                 )
             }
             
             FormErrorText(error: viewModel.errorMessage)
+                .accessibility(identifier: "formErrorText")
                         
             VStack {
                 PrimaryButton(
@@ -86,6 +92,7 @@ struct SignInView: View {
                         }
                     }
                 )
+                .accessibility(identifier: "continueButton")
                 
                 PrimaryButton(
                     title: Strings.Authentication.SignIn.accountRecovery,
@@ -94,6 +101,7 @@ struct SignInView: View {
                     style: .light,
                     action: viewModel.forgotPasswordTapped
                 )
+                .accessibility(identifier: "accountRecoveryButton")
             }
         }
         .onChange(of: viewModel.shouldNavigateToRecoveryPassword) { _, shouldNavigate in

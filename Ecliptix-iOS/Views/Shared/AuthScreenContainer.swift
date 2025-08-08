@@ -62,7 +62,6 @@ struct AuthScreenContainer<Content: View>: View {
                 ScrollView {
                     VStack(spacing: spacing) {
                         Logo()
-//                            .padding(.top, 15)
                         
                         content
 

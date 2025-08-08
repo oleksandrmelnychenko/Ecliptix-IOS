@@ -23,6 +23,7 @@ struct SecurePasswordField: UIViewRepresentable {
         textField.delegate = context.coordinator
         textField.autocorrectionType = .no
         textField.autocapitalizationType = .none
+        textField.font = UIFont.preferredFont(forTextStyle: .title3)
         context.coordinator.textField = textField
         return textField
     }
