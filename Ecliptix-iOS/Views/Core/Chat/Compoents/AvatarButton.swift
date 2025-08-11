@@ -23,3 +23,9 @@ struct AvatarButton: View {
         }
     }
 }
+
+#Preview {
+    AvatarButton(size: 36, onTap: {
+        print("Avatar was tapped")
+    })
+}

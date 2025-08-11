@@ -18,11 +18,25 @@ struct ChatTitleButton: View {
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 2) {
-                Text(title).font(.headline).bold()
-                Text(subtitle).font(.caption).foregroundColor(.gray)
+                Text(title)
+                    .font(.headline)
+                    .bold()
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
     }
+}
+
+#Preview {
+    ChatTitleButton(
+        title: "Demo Title",
+        subtitle: "demo subtitles",
+        onTap: {
+            print("Chat title was tapped")
+        }
+    )
 }

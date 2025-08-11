@@ -51,3 +51,21 @@ struct InputBar: View {
         .background(Color(.systemBackground))
     }
 }
+
+#Preview {
+    @Previewable @State var previewText = "Demo text"
+    InputBar(
+        text: $previewText,
+        onSend: {
+            print("On send")
+        },
+        onChoosePhoto: {
+            print("On choose photo")
+        },
+        onTakePhoto: {
+            print("On take photo")
+        },
+        onAttachFile: {
+            print("On attach file")
+        })
+}

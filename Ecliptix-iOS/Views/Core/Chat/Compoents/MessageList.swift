@@ -16,6 +16,8 @@ struct MessageList: View {
     var onForward: (ChatMessage) -> Void = { _ in }
     var onCopy: (ChatMessage) -> Void = { _ in }
     var onDelete: (ChatMessage) -> Void = { _ in }
+    var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
+    var spaceName: String = "chatScroll"
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -25,15 +27,15 @@ struct MessageList: View {
                         HStack {
                             if msg.isSentByUser { Spacer() }
 
-                            TextMessage(message: msg)
-                                .contentShape(RoundedRectangle(cornerRadius: 12))
-                                .contextMenu {
-                                    Button { onReply(msg) }   label: { Label("Reply",   systemImage: "arrowshape.turn.up.left") }
-                                    Button { onForward(msg) } label: { Label("Forward", systemImage: "arrowshape.turn.up.right") }
-                                    Button { onCopy(msg) }    label: { Label("Copy",    systemImage: "doc.on.doc") }
-                                    Button(role: .destructive) { onDelete(msg) } label: { Label("Delete",  systemImage: "trash") }
-                                }
-                                .padding(.horizontal, 4)
+                            MessageBubble(
+                                message: msg,
+                                onReply: onReply,
+                                onForward: onForward,
+                                onCopy: onCopy,
+                                onDelete: onDelete,
+                                spaceName: spaceName,
+                                onLongPressWithFrame: onLongPressWithFrame
+                            )
 
                             if !msg.isSentByUser { Spacer() }
                         }
@@ -46,7 +48,23 @@ struct MessageList: View {
                 if let last = messages.last { proxy.scrollTo(last.id, anchor: .bottom) }
             }
         }
+        .coordinateSpace(name: spaceName)
     }
 }
 
 
+
+#Preview {
+    @Previewable @State var messages: [ChatMessage] = [
+        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
+        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true)
+    ]
+    
+    MessageList(
+        messages: $messages,
+        onReply: { _ in },
+        onForward: { _ in },
+        onCopy: { _ in },
+        onDelete: { _ in }
+    )
+}
