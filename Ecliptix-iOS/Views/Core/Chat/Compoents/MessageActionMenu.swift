@@ -18,44 +18,37 @@ struct MessageActionMenu: View {
     var onDismiss: () -> Void
 
     var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                VStack(spacing: 14) {
-                    HStack(alignment: .center, spacing: 4) {
-                        Image(systemName: "checkmark")
-                        Text("read today at 18:00")
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 18)
-                    .font(.caption2)
-                    .foregroundColor(.primary)
-                    
-                    Divider()
-                        .frame(width: 210, height: 6)
-                        .overlay(.lightButtonBackground)
-                    
-                    item("arrowshape.turn.up.left", "Reply", action: onReply)
-                    item("arrowshape.turn.up.right", "Forward", action: onForward)
-                    item("doc.on.doc", "Copy", action: onCopy)
-                    item("trash", "Delete", showDivider: false, tint: .red, action: onDelete)
-                    
-                    Divider()
-                        .frame(width: 210, height: 6)
-                        .overlay(.lightButtonBackground)
-                    
-                    item("checkmark.circle", "Select", showDivider: false, action: onReply)
-                }
-                .padding(.vertical, 10)
-                .frame(width: 210)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerSize: .init(width: 14, height: 14)))
-                .shadow(color: .black.opacity(0.3), radius: 10, y: 6)
+        VStack(spacing: 14) {
+            HStack(alignment: .center, spacing: 4) {
+                Image(systemName: "checkmark")
+                Text("read today at 18:00")
+                
+                Spacer()
             }
+            .padding(.horizontal, 18)
+            .font(.caption2)
+            .foregroundColor(.primary)
+            
+            Divider()
+                .frame(width: 210, height: 6)
+                .overlay(.lightButtonBackground)
+            
+            item("arrowshape.turn.up.left", "Reply", action: onReply)
+            item("arrowshape.turn.up.right", "Forward", action: onForward)
+            item("doc.on.doc", "Copy", action: onCopy)
+            item("trash", "Delete", showDivider: false, tint: .red, action: onDelete)
+            
+            Divider()
+                .frame(width: 210, height: 6)
+                .overlay(.lightButtonBackground)
+            
+            item("checkmark.circle", "Select", showDivider: false, action: onReply)
         }
-        .onTapGesture { onDismiss() }
-        .accessibilityElement(children: .contain)
+        .padding(.vertical, 10)
+        .frame(width: 210)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerSize: .init(width: 14, height: 14)))
+        .shadow(color: .black.opacity(0.3), radius: 10, y: 6)
     }
 
     private func item(

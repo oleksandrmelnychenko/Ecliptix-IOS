@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-private struct BubbleFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        value = nextValue()
-    }
-}
-
 struct MessageBubble: View {
     let message: ChatMessage
     var onReply: (ChatMessage) -> Void
@@ -45,11 +38,6 @@ struct MessageBubble: View {
             }
     }
 }
-
-
-
-
-
 
 #Preview("Incoming") {
     MessageBubble(

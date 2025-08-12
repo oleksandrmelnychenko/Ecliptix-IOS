@@ -48,9 +48,10 @@ struct TextMessage: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
         .background(
-            ChatBubbleShape(isFromCurrentUser: message.isSentByUser,
-                            showTail: isLastInGroup,
-                            cornerRadius: r)
+            ChatBubbleShape(
+                isFromCurrentUser: message.isSentByUser,
+                showTail: isLastInGroup,
+                cornerRadius: r)
                 .fill(fill)
         )
         .frame(maxWidth: UIScreen.main.bounds.width * 0.8,
@@ -70,7 +71,7 @@ struct TextMessage: View {
         if let tw = textWidth { measuredTextWidth = tw }
         if let tw = timeWidth { measuredTimeWidth = tw }
 
-        let maxWidth = UIScreen.main.bounds.width * 0.8 - 24 // враховуємо padding
+        let maxWidth = UIScreen.main.bounds.width * 0.8 - 24
         needsExtraPadding = (measuredTextWidth + measuredTimeWidth + 4) > maxWidth
     }
 }
@@ -84,40 +85,6 @@ private struct TimeWidthKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
-
-
-//struct TextMessage: View {
-//    let message: ChatMessage
-//    let isLastInGroup: Bool
-//    private let r: CGFloat = 16
-//
-//    private var fill: Color { message.isSentByUser ? .blue : .white }
-//    private var text: Color { message.isSentByUser ? .white : .primary }
-//    private var timeText: String { "20:20" }
-//
-//    var body: some View {
-//        Text(message.text)
-//            .fixedSize(horizontal: false, vertical: true)
-//            .foregroundColor(text)
-//            .padding(.vertical, 8)
-//            .padding(.horizontal, 12)
-//            .padding(.bottom, 4)
-//            .overlay(
-//                Text(timeText)
-//                    .font(.caption2)
-//                    .foregroundColor(text.opacity(0.9))
-//                    .padding(.trailing, 6), alignment: .bottomTrailing
-//            )
-//            .background(
-//                ChatBubbleShape(isFromCurrentUser: message.isSentByUser,
-//                                showTail: isLastInGroup,
-//                                cornerRadius: r)
-//                    .fill(fill)
-//            )
-//            .frame(maxWidth: UIScreen.main.bounds.width * 0.9, alignment: message.isSentByUser ? .trailing : .leading)
-//            .contentShape(Rectangle())
-//    }
-//}
 
 #Preview("Income") {
     TextMessage(

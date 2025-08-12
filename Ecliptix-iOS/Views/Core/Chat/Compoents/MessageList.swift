@@ -25,16 +25,20 @@ private struct HeightReporter: View {
 
 struct MessageList: View {
     @Binding var messages: [ChatMessage]
-    var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
+    var onLongPressWithFrame: (ChatMessage, Bool, CGRect) -> Void = { _,_,_ in }
     var spaceName: String = "chatScroll"
 
+    
+    private let groupGap: TimeInterval = 5 * 60
+    private let calendar = Calendar.current
+    
     @State private var contentHeight: CGFloat = 0
 
     var body: some View {
-        GeometryReader { viewport in              // get visible height
+        GeometryReader { viewport in
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(messages.enumerated()), id: \.element.id) { idx, msg in
                             HStack {
                                 if msg.isSentByUser { Spacer() }
@@ -47,12 +51,15 @@ struct MessageList: View {
                                     onDelete: { _ in },
                                     spaceName: spaceName,
                                     isLastInGroup: isLastInGroup(idx, in: messages),
-                                    onLongPressWithFrame: onLongPressWithFrame
+                                    onLongPressWithFrame: { m, frame in
+                                        onLongPressWithFrame(m, isLastInGroup(idx, in: messages), frame)      
+                                    }
                                 )
 
                                 if !msg.isSentByUser { Spacer() }
                             }
                             .id(msg.id)
+                            .padding(.top, spacingAbove(idx, in: messages))
                         }
                     }
                     .padding(.horizontal)
@@ -76,65 +83,55 @@ struct MessageList: View {
 
     private func scrollToBottom(_ proxy: ScrollViewProxy) {
         guard let last = messages.last else { return }
-        // Keep newest visible when content grows
-        withAnimation(.easeOut(duration: 0.2)) {
-            proxy.scrollTo(last.id, anchor: .bottom)
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(last.id, anchor: .bottom)
+            }
         }
     }
     
+    private func isSameGroup(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
+        guard a.isSentByUser == b.isSentByUser else { return false }
+        guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else { return false }
+        let gap = b.createdAt.timeIntervalSince(a.createdAt)
+        return gap <= groupGap
+    }
+    
     private func isLastInGroup(_ i: Int, in messages: [ChatMessage]) -> Bool {
-        // останній у всьому списку — завжди останній у групі
         guard i + 1 < messages.count else { return true }
+        return !isSameGroup(messages[i], messages[i + 1])
+    }
 
-        let cur  = messages[i]
-        let next = messages[i + 1]
-
-        // інший відправник -> нова група
-        if cur.isSentByUser != next.isSentByUser { return true }
-
-        return false
+    private func spacingAbove(_ i: Int, in messages: [ChatMessage]) -> CGFloat {
+        guard i > 0 else { return 0 }
+        return isSameGroup(messages[i - 1], messages[i]) ? 2 : 8
     }
 }
 
-//@Binding var messages: [ChatMessage]
-//var onReply: (ChatMessage) -> Void = { _ in }
-//var onForward: (ChatMessage) -> Void = { _ in }
-//var onCopy: (ChatMessage) -> Void = { _ in }
-//var onDelete: (ChatMessage) -> Void = { _ in }
-//var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
-//var spaceName: String = "chatScroll"
-
-//MessageBubble(
-//    message: msg,
-//    onReply: onReply,
-//    onForward: onForward,
-//    onCopy: onCopy,
-//    onDelete: onDelete,
-//    spaceName: spaceName,
-//    onLongPressWithFrame: onLongPressWithFrame
-//)
-
 #Preview {
-    @Previewable @State var messages: [ChatMessage] = [
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true),
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true),
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true),
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true),
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true),
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true)
-    ]
-    
-    MessageList(
-        messages: $messages
-//        onReply: { _ in },
-//        onForward: { _ in },
-//        onCopy: { _ in },
-//        onDelete: { _ in }
-    )
+    @Previewable @State var messages: [ChatMessage] = {
+        let now = Date()
+        return [
+            .init(text: "Привіт!", isSentByUser: false, createdAt: now.addingTimeInterval(-60*30)),
+            .init(text: "Як справи?", isSentByUser: false, createdAt: now.addingTimeInterval(-60*29)),
+
+            .init(text: "Все добре! А ти?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*27)),
+            .init(text: "Чим займаєшся?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*26)),
+
+            .init(text: "Та нормально.", isSentByUser: false, createdAt: now.addingTimeInterval(-60*16)),
+
+            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
+            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
+
+            .init(text: "Добре, гарної прогулянки!", isSentByUser: false, createdAt: now),
+            
+            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
+            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
+            
+            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*7)),
+            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*6)),
+        ]
+    }()
+
+    MessageList(messages: $messages)
 }

@@ -1,3 +1,11 @@
+//
+//  ReplyPreview.swift
+//  Ecliptix-iOS
+//
+//  Created by Oleksandr Melnechenko on 12.08.2025.
+//
+
+
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers

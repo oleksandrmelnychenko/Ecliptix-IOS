@@ -1,37 +1,114 @@
+//
+//  ContextMenuOverlay.swift
+//  Ecliptix-iOS
+//
+//  Created by Oleksandr Melnechenko on 12.08.2025.
+//
+
+
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
 
 struct ContextMenuOverlay: View {
+    @Binding var textMessage: TextMessage
+    var onReply: (ChatMessage) -> Void
+    var onForward: (ChatMessage) -> Void
+    var onCopy: (ChatMessage) -> Void
+    var onDelete: (ChatMessage) -> Void
+    
     var body: some View {
-        ZStack {
-            // бекдроп: матеріал + легкий діммер
-            Color.clear
-                .background(.ultraThinMaterial)
-                .overlay(Color.black.opacity(0.08))
-                .ignoresSafeArea()
-                .onTapGesture { withAnimation(.spring()) { menuTarget = nil } }
+        VStack(spacing: 10) {
+            HStack {
+                if textMessage.message.isSentByUser {
+                    Spacer()
+                    textMessage
+                        .shadow(radius: 6, y: 3)
+                        .padding(.trailing, 16)
+                } else {
+                    textMessage
+                        .shadow(radius: 6, y: 3)
+                        .padding(.leading, 16)
+                    Spacer()
+                }
+            }
             
-            // клон бульбашки — рівно поверх оригіналу
-            TextMessage(message: t.message, isLastInGroup: false)
-                .scaleEffect(1.03)
-                .shadow(radius: 6, y: 3)
-                .position(x: bubble.midX, y: bubble.midY)
-                .allowsHitTesting(false)  // тільки для виду
-                .zIndex(2)
-            
-            // меню — під бульбашкою
-            MessageActionMenu(
-                onReply:  { replyingTo = t.message; menuTarget = nil },
-                onForward:{ forward(t.message);     menuTarget = nil },
-                onCopy:   { UIPasteboard.general.string = t.message.text; menuTarget = nil },
-                onDelete: { delete(t.message);      menuTarget = nil },
-                onDismiss:{ withAnimation(.spring()) { menuTarget = nil } }
-            )
-            .frame(width: menuSize.width, height: menuSize.height)
-            .position(x: centerX, y: centerY)
-            .transition(.scale.combined(with: .opacity))
-            .zIndex(3)
+            HStack {
+                if textMessage.message.isSentByUser {
+                    Spacer()
+                    MessageActionMenu(
+                        onReply:  { onReply(textMessage.message) },
+                        onForward:{ onForward(textMessage.message) },
+                        onCopy:   { UIPasteboard.general.string = textMessage.message.text },
+                        onDelete: { onDelete(textMessage.message) },
+                        onDismiss:{ }
+                    )
+                    .padding(.trailing, 16)
+                } else {
+                    MessageActionMenu(
+                        onReply:  { onReply(textMessage.message) },
+                        onForward:{ onForward(textMessage.message) },
+                        onCopy:   { UIPasteboard.general.string = textMessage.message.text },
+                        onDelete: { onDelete(textMessage.message) },
+                        onDismiss:{ }
+                    )
+                    .padding(.leading, 16)
+                    Spacer()
+                }
+            }
         }
+    }
+}
+
+
+#Preview("Outcome") {
+    @Previewable @State var textMessage: TextMessage = {
+        let now = Date()
+        let msg = ChatMessage(
+            text: "Preview bubble with context menu",
+            isSentByUser: true,
+            createdAt: now,
+            updatedAt: now
+        )
+        let textMessage = TextMessage(message: msg, isLastInGroup: true)
+        return textMessage
+    }()
+
+    HStack {
+        Spacer()
+        
+        ContextMenuOverlay(
+            textMessage: $textMessage,
+            onReply:  { _ in },
+            onForward:{ _ in },
+            onCopy:   { _ in },
+            onDelete: { _ in }
+        )
+    }
+}
+
+#Preview("Income") {
+    @Previewable @State var textMessage: TextMessage = {
+        let now = Date()
+        let msg = ChatMessage(
+            text: "Preview bubble with context menu",
+            isSentByUser: true,
+            createdAt: now,
+            updatedAt: now
+        )
+        let textMessage = TextMessage(message: msg, isLastInGroup: true)
+        return textMessage
+    }()
+
+    HStack {
+        ContextMenuOverlay(
+            textMessage: $textMessage,
+            onReply:  { _ in },
+            onForward:{ _ in },
+            onCopy:   { _ in },
+            onDelete: { _ in }
+        )
+        
+        Spacer()
     }
 }
