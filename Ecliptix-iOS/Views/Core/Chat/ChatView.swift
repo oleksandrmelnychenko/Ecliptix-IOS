@@ -10,6 +10,8 @@ import PhotosUI
 import UniformTypeIdentifiers
 
 struct ChatView: View {
+    @Environment(\.dismiss) private var dismiss
+    
     let chatName: String
 
     // Attachments state
@@ -30,19 +32,38 @@ struct ChatView: View {
     @State private var showChatInfo = false
     @State private var messageText: String = ""
     @State private var messages: [ChatMessage] = [
-        .init(id: UUID(), text: "Привіт!", isSentByUser: false),
-        .init(id: UUID(), text: "Привіт! Як справи?", isSentByUser: true)
+        .init(id: UUID(), text: "Hi!", isSentByUser: false),
+        .init(id: UUID(), text: "Hi! How are you?", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 2", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 2", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 3", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 3", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 4", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 4", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 5", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 5", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 6", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 6", isSentByUser: true),
+//        .init(id: UUID(), text: "Привіт! 7", isSentByUser: false),
+//        .init(id: UUID(), text: "Привіт! Як справи? 7", isSentByUser: true),
     ]
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
+            ChatHeader(
+                chatName: chatName,
+                onBack: {
+                    dismiss()
+                },
+                onInfo: {
+                    showChatInfo = true
+                }
+            )
+            .zIndex(10)
+            
             VStack(spacing: 0) {
                 MessageList(
                     messages: $messages,
-                    onReply: { replyingTo = $0 },
-                    onForward: { forward($0) },
-                    onCopy: { UIPasteboard.general.string = $0.text },
-                    onDelete: { delete($0) },
                     onLongPressWithFrame: { msg, frame in
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
@@ -54,7 +75,6 @@ struct ChatView: View {
 
                 Divider()
 
-                // (опційно) прев’ю відповіді
                 if let replying = replyingTo {
                     ReplyPreview(message: replying) { replyingTo = nil }
                 }
@@ -66,55 +86,52 @@ struct ChatView: View {
                     onTakePhoto: { showCamera = true },
                     onAttachFile: { showDocumentPicker = true }
                 )
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial)
             }
+            .padding(.top, 30)
+
 
             if let t = menuTarget {
-                GeometryReader { g in
-                    let bubble = t.frame
-                    let menuSize = CGSize(width: 280, height: 56)
-                    let margin: CGFloat = 10
-
-                    // вибираємо: зверху чи знизу від бульбашки
-                    let placeAbove = bubble.maxY + margin + menuSize.height > g.size.height
-                    let centerY = placeAbove
-                        ? (bubble.minY - margin - menuSize.height / 2)
-                        : (bubble.maxY + margin + menuSize.height / 2)
-
-                    let inset: CGFloat = 12
-                    let minX = inset + menuSize.width / 2
-                    let maxX = g.size.width - inset - menuSize.width / 2
-                    let centerX = min(max(bubble.midX, minX), maxX)
-
-                    Color.black.opacity(0.25)
+                ZStack {
+                    Color.clear
+                        .background(.ultraThinMaterial)
+                        .overlay(Color.black.opacity(0.08))
                         .ignoresSafeArea()
                         .onTapGesture { withAnimation(.spring()) { menuTarget = nil } }
 
-                    MessageActionMenu(
-                        onReply:  { replyingTo = t.message; menuTarget = nil },
-                        onForward:{ forward(t.message);     menuTarget = nil },
-                        onCopy:   { UIPasteboard.general.string = t.message.text; menuTarget = nil },
-                        onDelete: { delete(t.message);      menuTarget = nil },
-                        onDismiss:{ withAnimation(.spring()) { menuTarget = nil } }
-                    )
-                    .frame(width: menuSize.width, height: menuSize.height)
-                    .position(x: centerX, y: centerY)
+                    HStack {
+                        if (t.message.isSentByUser) {
+                            Spacer()
+                        }
+                        
+                        VStack {
+                            TextMessage(message: t.message, isLastInGroup: false)
+                                .scaleEffect(1.05)
+                                .shadow(radius: 4)
+                            
+                            Spacer()
+                            
+                            MessageActionMenu(
+                                onReply:  { replyingTo = t.message; menuTarget = nil },
+                                onForward:{ forward(t.message);     menuTarget = nil },
+                                onCopy:   { UIPasteboard.general.string = t.message.text; menuTarget = nil },
+                                onDelete: { delete(t.message);      menuTarget = nil },
+                                onDismiss:{ withAnimation(.spring()) { menuTarget = nil } }
+                            )
+                        }
+                        
+                        if (!t.message.isSentByUser) {
+                            Spacer()
+                        }
+                    }
                     .transition(.scale.combined(with: .opacity))
                 }
             }
         }
         .toolbar(.hidden, for: .tabBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                ChatTitleButton(
-                    title: chatName,
-                    subtitle: "last seen today at 15:34",
-                    onTap: { showChatInfo = true }
-                )
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                AvatarButton(size: 36) { showChatInfo = true }
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showChatInfo) { ChatInfoView(chatName: chatName) }
         .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhoto)
         .sheet(isPresented: $showCamera) { Text("Camera not implemented") }
@@ -127,6 +144,11 @@ struct ChatView: View {
                 print("Document selection error: \(error.localizedDescription)")
             }
         }
+        .background(
+            Image("ChatBackground")
+                .resizable(resizingMode: .tile)
+                .interpolation(.none)
+        )
     }
 
     private func sendMessage() {
@@ -172,3 +194,5 @@ struct ReplyPreview: View {
         .background(Color(.systemGray6))
     }
 }
+
+

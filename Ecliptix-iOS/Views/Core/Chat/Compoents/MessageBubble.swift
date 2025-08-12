@@ -21,19 +21,20 @@ struct MessageBubble: View {
     var onCopy: (ChatMessage) -> Void
     var onDelete: (ChatMessage) -> Void
     var spaceName: String = "chatScroll"
+    var isLastInGroup: Bool = true
     var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
 
     @State private var frameInScroll: CGRect = .zero
 
     var body: some View {
-        TextMessage(message: message)
+        TextMessage(message: message, isLastInGroup: isLastInGroup)
             .background(
                 GeometryReader { geo in
                     Color.clear
                         .onAppear {
                             frameInScroll = geo.frame(in: .named(spaceName))
                         }
-                        .onChange(of: geo.frame(in: .named(spaceName))) { new in
+                        .onChange(of: geo.frame(in: .named(spaceName))) { _, new in
                             frameInScroll = new
                         }
                 }

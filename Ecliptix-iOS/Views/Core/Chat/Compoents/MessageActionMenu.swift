@@ -21,34 +21,79 @@ struct MessageActionMenu: View {
         VStack {
             Spacer()
             HStack {
-                Spacer()
-                HStack(spacing: 18) {
+                VStack(spacing: 14) {
+                    HStack(alignment: .center, spacing: 4) {
+                        Image(systemName: "checkmark")
+                        Text("read today at 18:00")
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 18)
+                    .font(.caption2)
+                    .foregroundColor(.primary)
+                    
+                    Divider()
+                        .frame(width: 210, height: 6)
+                        .overlay(.lightButtonBackground)
+                    
                     item("arrowshape.turn.up.left", "Reply", action: onReply)
                     item("arrowshape.turn.up.right", "Forward", action: onForward)
                     item("doc.on.doc", "Copy", action: onCopy)
-                    item("trash", "Delete", tint: .red, action: onDelete)
+                    item("trash", "Delete", showDivider: false, tint: .red, action: onDelete)
+                    
+                    Divider()
+                        .frame(width: 210, height: 6)
+                        .overlay(.lightButtonBackground)
+                    
+                    item("checkmark.circle", "Select", showDivider: false, action: onReply)
                 }
-                .padding(.horizontal, 18)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial, in: Capsule())
-                .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
-                Spacer()
+                .frame(width: 210)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerSize: .init(width: 14, height: 14)))
+                .shadow(color: .black.opacity(0.3), radius: 10, y: 6)
             }
-            .padding(.bottom, 24)
         }
         .onTapGesture { onDismiss() }
         .accessibilityElement(children: .contain)
     }
 
-    private func item(_ sf: String, _ title: String, tint: Color = .primary, action: @escaping () -> Void) -> some View {
+    private func item(
+        _ sf: String,
+        _ title: String,
+        showDivider: Bool = true,
+        tint: Color = .primary,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: { action(); onDismiss() }) {
-            VStack(spacing: 4) {
-                Image(systemName: sf)
-                Text(title).font(.caption2)
+            VStack {
+                HStack(spacing: 4) {
+                    Text(title)
+                    
+                    Spacer()
+                    
+                    Image(systemName: sf)
+                }
+                .foregroundColor(tint)
+                .padding(.horizontal, 18)
+                
+                if showDivider {
+                    Divider()
+                }
             }
-            .foregroundColor(tint)
-            .frame(width: 52)
+            
         }
+        
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    MessageActionMenu(
+        onReply: {},
+        onForward: {},
+        onCopy: {},
+        onDelete: {},
+        onDismiss: {}
+    )
 }

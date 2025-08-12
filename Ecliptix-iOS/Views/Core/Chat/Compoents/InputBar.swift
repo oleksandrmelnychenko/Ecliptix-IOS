@@ -17,6 +17,13 @@ struct InputBar: View {
     var onTakePhoto: () -> Void
     var onAttachFile: () -> Void
 
+    @State private var trailingMode: TrailingMode = .mic
+    private var hasText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    enum TrailingMode { case mic, camera
+        mutating func toggle() { self = (self == .mic) ? .camera : .mic }
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             Menu {
@@ -27,30 +34,50 @@ struct InputBar: View {
                 Image(systemName: "plus.circle")
                     .font(.system(size: 22))
                     .foregroundColor(.blue)
-                    .padding(8)
                     .contentShape(Rectangle())
                     .accessibilityLabel("Add attachment")
             }
 
-            TextField("Message...", text: $text)
-                .padding(10)
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .disableAutocorrection(true)
+            HStack {
+                TextField("Message...", text: $text)
+                    .disableAutocorrection(true)
+                    .submitLabel(.send)
+                    .onSubmit {
+                        if hasText { onSend() }
+                    }
 
-            Button(action: onSend) {
-                Image(systemName: "paperplane.fill")
-                    .rotationEffect(.degrees(45))
-                    .foregroundColor(.blue)
-                    .font(.system(size: 22))
+                Image(systemName: "document")
             }
-            .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .padding(10)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+
+            // Trailing action
+            Group {
+                if hasText {
+                    Button(action: onSend) {
+                        Image(systemName: "paperplane.fill")
+                            .rotationEffect(.degrees(45))
+                    }
+                    .accessibilityLabel("Send")
+                } else {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            trailingMode.toggle()
+                        }
+                    } label: {
+                        Image(systemName: trailingMode == .mic ? "microphone" : "circle.square")
+                    }
+                    .accessibilityLabel(trailingMode == .mic ? "Microphone" : "Camera")
+                }
+            }
+            .foregroundColor(.blue)
+            .font(.system(size: 22))
+            .transition(.scale.combined(with: .opacity))
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
     }
 }
+
 
 #Preview {
     @Previewable @State var previewText = "Demo text"

@@ -14,6 +14,7 @@ struct MessageMenuOverlay: View {
     var onForward: (ChatMessage) -> Void
     var onCopy: (ChatMessage) -> Void
     var onDelete: (ChatMessage) -> Void
+    var isLastInGroup: Bool = false
     var onDismiss: () -> Void
 
     var body: some View {
@@ -23,7 +24,7 @@ struct MessageMenuOverlay: View {
                 .onTapGesture { onDismiss() }
 
             VStack(spacing: 8) {
-                TextMessage(message: message)
+                TextMessage(message: message, isLastInGroup: isLastInGroup)
                     .scaleEffect(1.05)
                     .shadow(radius: 4)
 

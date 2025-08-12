@@ -15,8 +15,8 @@ struct ChatsOverviewView: View {
     @State private var visibleChats: [Chat] = []
     @State private var currentPage = 1
     
-    private let pageSize = 200
-    private let totalChats = 200_000
+    private let pageSize = 50
+    private let totalChats = 200
     
     private func chat(for id: Int) -> Chat {
         .init(
@@ -57,7 +57,7 @@ struct ChatsOverviewView: View {
             .navigationBarTitleDisplayMode(.large)
 
             // Hide tab bar in selecting mode
-            .toolbar(mode == .selecting ? .hidden : .automatic, for: .tabBar)
+//            .toolbar(mode == .selecting ? .hidden : .automatic, for: .tabBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })
