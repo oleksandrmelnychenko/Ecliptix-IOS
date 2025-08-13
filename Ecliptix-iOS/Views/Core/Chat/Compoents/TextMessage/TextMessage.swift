@@ -16,15 +16,14 @@ struct TextMessage: View {
     let r: CGFloat = 16
 
     private var fill: Color { message.isSentByUser ? .blue : .white }
-    private var text: Color { message.isSentByUser ? .white : .primary }
-    private var timeText: String { "20:20" }
+    private var textColor: Color { message.isSentByUser ? .white : .primary }
 
-    @State private var needsExtraPadding = false
+    
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 4) {
+        HStack(alignment: .bottom, spacing: 6) {
             Text(message.text)
-                .foregroundColor(text)
+                .foregroundColor(textColor)
                 .fixedSize(horizontal: false, vertical: true)
                 .background(
                     GeometryReader { geo in
@@ -33,16 +32,7 @@ struct TextMessage: View {
                     }
                 )
 
-            Text(timeText)
-                .font(.caption2)
-                .foregroundColor(text.opacity(0.9))
-                .background(
-                    GeometryReader { geo in
-                        Color.clear
-                            .preference(key: TimeWidthKey.self, value: geo.size.width)
-                    }
-                )
-                .padding(.bottom, -6)
+            TimestampBadge(date: Date(), status: message.status, tint: textColor)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -64,6 +54,7 @@ struct TextMessage: View {
         }
     }
 
+    @State private var needsExtraPadding = false
     @State private var measuredTextWidth: CGFloat = 0
     @State private var measuredTimeWidth: CGFloat = 0
 
@@ -85,6 +76,7 @@ private struct TimeWidthKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
+
 
 #Preview("Income") {
     TextMessage(

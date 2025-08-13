@@ -9,10 +9,6 @@ import SwiftUI
 
 struct MessageBubble: View {
     let message: ChatMessage
-    var onReply: (ChatMessage) -> Void
-    var onForward: (ChatMessage) -> Void
-    var onCopy: (ChatMessage) -> Void
-    var onDelete: (ChatMessage) -> Void
     var spaceName: String = "chatScroll"
     var isLastInGroup: Bool = true
     var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
@@ -40,40 +36,22 @@ struct MessageBubble: View {
 }
 
 #Preview("Incoming") {
-    MessageBubble(
-        message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false),
-        onReply: { _ in },
-        onForward: { _ in },
-        onCopy: { _ in },
-        onDelete: { _ in }
-    )
+    MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false))
 }
 
 #Preview("Outgoing") {
-    MessageBubble(
-        message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true),
-        onReply: { _ in },
-        onForward: { _ in },
-        onCopy: { _ in },
-        onDelete: { _ in }
-    )
+    MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true))
 }
 
 #Preview("Both") {
     VStack(spacing: 12) {
         HStack {
-            MessageBubble(
-                message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false),
-                onReply: { _ in }, onForward: { _ in }, onCopy: { _ in }, onDelete: { _ in }
-            )
+            MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false))
             Spacer()
         }
         HStack {
             Spacer()
-            MessageBubble(
-                message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true),
-                onReply: { _ in }, onForward: { _ in }, onCopy: { _ in }, onDelete: { _ in }
-            )
+            MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true))
         }
     }
 }

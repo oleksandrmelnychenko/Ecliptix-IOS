@@ -16,9 +16,13 @@ struct ContextMenuOverlay: View {
     var onForward: (ChatMessage) -> Void
     var onCopy: (ChatMessage) -> Void
     var onDelete: (ChatMessage) -> Void
-    
+
+    var anchored: Bool = false
+
     var body: some View {
         VStack(spacing: 10) {
+            if !anchored { Spacer() }
+
             HStack {
                 if textMessage.message.isSentByUser {
                     Spacer()
@@ -32,16 +36,18 @@ struct ContextMenuOverlay: View {
                     Spacer()
                 }
             }
-            
+
             HStack {
                 if textMessage.message.isSentByUser {
                     Spacer()
                     MessageActionMenu(
+                        status: Text("read today at 18:00"),
                         onReply:  { onReply(textMessage.message) },
                         onForward:{ onForward(textMessage.message) },
                         onCopy:   { UIPasteboard.general.string = textMessage.message.text },
                         onDelete: { onDelete(textMessage.message) },
-                        onDismiss:{ }
+                        onDismiss:{ },
+                        onEdit:   { }
                     )
                     .padding(.trailing, 16)
                 } else {
@@ -59,6 +65,7 @@ struct ContextMenuOverlay: View {
         }
     }
 }
+
 
 
 #Preview("Outcome") {

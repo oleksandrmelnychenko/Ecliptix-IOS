@@ -16,11 +16,14 @@ struct InputBar: View {
     var onChoosePhoto: () -> Void
     var onTakePhoto: () -> Void
     var onAttachFile: () -> Void
+    var onSendLocation: () -> Void
+    var onSendContact: () -> Void
 
     @State private var trailingMode: TrailingMode = .mic
     private var hasText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
-    enum TrailingMode { case mic, camera
+    enum TrailingMode {
+        case mic, camera
         mutating func toggle() { self = (self == .mic) ? .camera : .mic }
     }
 
@@ -29,10 +32,12 @@ struct InputBar: View {
             Menu {
                 Button("Choose Photo", action: onChoosePhoto)
                 Button("Take Photo", action: onTakePhoto)
+                Button("Send Location", action: onSendLocation)
+                Button("Send Contact", action: onSendContact)
                 Button("Attach Document", action: onAttachFile)
             } label: {
                 Image(systemName: "plus.circle")
-                    .font(.system(size: 22))
+                    .font(.title)
                     .foregroundColor(.blue)
                     .contentShape(Rectangle())
                     .accessibilityLabel("Add attachment")
@@ -94,5 +99,11 @@ struct InputBar: View {
         },
         onAttachFile: {
             print("On attach file")
+        },
+        onSendLocation: {
+            print("On send Location")
+        },
+        onSendContact: {
+            print("On send Contact")
         })
 }
