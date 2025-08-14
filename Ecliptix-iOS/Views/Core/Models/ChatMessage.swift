@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum ChatMessageStatus {
+enum MessageStatus {
     case sending
     case sent
     case delivered
@@ -16,13 +16,13 @@ enum ChatMessageStatus {
     case failed(Error?)
 }
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id: UUID
-    let text: String
-    let isSentByUser: Bool
-    let createdAt: Date
+    var text: String
+    var isSentByUser: Bool
+    var createdAt: Date
     var updatedAt: Date?
-    var status: ChatMessageStatus
+    var status: MessageStatus
 
     init(
         id: UUID = UUID(),
@@ -30,7 +30,7 @@ struct ChatMessage: Identifiable {
         isSentByUser: Bool,
         createdAt: Date = Date(),
         updatedAt: Date? = nil,
-        status: ChatMessageStatus = .sending
+        status: MessageStatus = .sending
     ) {
         self.id = id
         self.text = text
@@ -38,6 +38,10 @@ struct ChatMessage: Identifiable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.status = status
+    }
+    
+    static func ==(lhs: ChatMessage, rhs: ChatMessage) -> Bool {
+        lhs.id == rhs.id
     }
 }
 

@@ -10,7 +10,7 @@ import Foundation
 
 struct TimestampBadge: View {
     let date: Date
-    let status: ChatMessageStatus
+    let status: MessageStatus
     let tint: Color
 
     var body: some View {

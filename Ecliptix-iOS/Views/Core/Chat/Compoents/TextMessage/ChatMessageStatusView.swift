@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ChatMessageStatusView: View {
-    private var status: ChatMessageStatus
+    private var status: MessageStatus
     
-    init(status: ChatMessageStatus) {
+    init(status: MessageStatus) {
         self.status = status
     }
     

@@ -11,7 +11,7 @@ import PhotosUI
 import UniformTypeIdentifiers
 
 struct TextMessage: View {
-    let message: ChatMessage
+    @Binding var message: ChatMessage
     let isLastInGroup: Bool
     let r: CGFloat = 16
 
@@ -80,12 +80,12 @@ private struct TimeWidthKey: PreferenceKey {
 
 #Preview("Income") {
     TextMessage(
-        message: .init(id: UUID(), text: "Hello, world!", isSentByUser: false), isLastInGroup: true)
+        message: .constant(.init(id: UUID(), text: "Hello, world!", isSentByUser: false)), isLastInGroup: true)
 }
 
 #Preview("Outcome") {
     TextMessage(
-        message: .init(id: UUID(), text: "Hi", isSentByUser: true), isLastInGroup: true)
+        message: .constant(.init(id: UUID(), text: "Hi", isSentByUser: true)), isLastInGroup: true)
     .padding()
 }
 
@@ -93,7 +93,7 @@ private struct TimeWidthKey: PreferenceKey {
     VStack {
         Spacer()
         TextMessage(
-            message: .init(id: UUID(), text: "Hi this is a very long message to see how it behaves behaves behaves behaves behaves behaves behaves behaves behaves", isSentByUser: true), isLastInGroup: true)
+            message: .constant(.init(id: UUID(), text: "Hi this is a very long message to see how it behaves behaves behaves behaves behaves behaves behaves behaves behaves", isSentByUser: true)), isLastInGroup: true)
     }
     .padding(.horizontal)
 }
