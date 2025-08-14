@@ -25,20 +25,26 @@ private struct HeightReporter: View {
 
 struct MessageList: View {
     @Binding var messages: [ChatMessage]
-        var onLongPressWithFrame: (ChatMessage, Bool, CGRect) -> Void = { _,_,_ in }
-        var spaceName: String = "chatScroll"
+    var onLongPressWithFrame: (ChatMessage, Bool, CGRect) -> Void = { _,_,_ in }
+    var spaceName: String = "chatScroll"
 
-        var bottomAnchorId: String = "chat-bottom"
-        var onBottomVisibilityChange: (Bool) -> Void = { _ in }
+    var bottomAnchorId: String = "chat-bottom"
+    var onBottomVisibilityChange: (Bool) -> Void = { _ in }
 
-        var grouping: Grouping = .default()
+    var grouping: Grouping = .default()
 
-        var body: some View {
-            GeometryReader { viewport in
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(messages.enumerated()), id: \.element.id) { idx, msg in
+    var body: some View {
+        GeometryReader { viewport in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(daySections(from: messages), id: \.date) { section in
+                            DateSeparator(date: section.date)
+
+                            ForEach(section.items, id: \.message.id) { item in
+                                let idx = item.index
+                                let msg = item.message
+
                                 HStack {
                                     if msg.isSentByUser { Spacer() }
 
@@ -56,57 +62,78 @@ struct MessageList: View {
                                 .id(msg.id)
                                 .padding(.top, grouping.spacingAbove(idx, messages))
                             }
-
-                            Color.clear
-                                .frame(height: 1)
-                                .id(bottomAnchorId)
-                                .onAppear { onBottomVisibilityChange(true) }
-                                .onDisappear { onBottomVisibilityChange(false) }
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom)
-                        .frame(minHeight: viewport.size.height, alignment: .bottom)
+
+                        Color.clear
+                            .frame(height: 1)
+                            .id(bottomAnchorId)
+                            .onAppear { onBottomVisibilityChange(true) }
+                            .onDisappear { onBottomVisibilityChange(false) }
                     }
-                    .onAppear { scrollToBottom(proxy) }
-                    .onChange(of: messages.count) { scrollToBottom(proxy) }
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                    .frame(minHeight: viewport.size.height, alignment: .bottom)
                 }
-            }
-            .coordinateSpace(name: spaceName)
-        }
-
-        struct Grouping {
-            let isSameGroup: (_ a: ChatMessage, _ b: ChatMessage) -> Bool
-            let isLastInGroup: (_ i: Int, _ messages: [ChatMessage]) -> Bool
-            let spacingAbove: (_ i: Int, _ messages: [ChatMessage]) -> CGFloat
-
-            static func `default`(groupGap: TimeInterval = 5 * 60, calendar: Calendar = .current) -> Grouping {
-                func same(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
-                    guard a.isSentByUser == b.isSentByUser else { return false }
-                    guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else { return false }
-                    let gap = b.createdAt.timeIntervalSince(a.createdAt)
-                    return gap <= groupGap
-                }
-                return Grouping(
-                    isSameGroup: same,
-                    isLastInGroup: { i, msgs in
-                        guard i + 1 < msgs.count else { return true }
-                        return !same(msgs[i], msgs[i + 1])
-                    },
-                    spacingAbove: { i, msgs in
-                        guard i > 0 else { return 0 }
-                        return same(msgs[i - 1], msgs[i]) ? 2 : 8
-                    }
-                )
+                .onAppear { scrollToBottom(proxy) }
+                .onChange(of: messages.count) { scrollToBottom(proxy) }
             }
         }
+        .coordinateSpace(name: spaceName)
+    }
 
-        private func scrollToBottom(_ proxy: ScrollViewProxy) {
-            DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo(bottomAnchorId, anchor: .bottom)
+    private func daySections(from messages: [ChatMessage])
+    -> [(date: Date, items: [(index: Int, message: ChatMessage)])] {
+        let cal = Calendar.current
+        let enumerated = Array(messages.enumerated())
+
+        var buckets: [Date: [(Int, ChatMessage)]] = [:]
+        buckets.reserveCapacity(8)
+
+        for (i, msg) in enumerated {
+            let day = cal.startOfDay(for: msg.createdAt)
+            buckets[day, default: []].append((i, msg))
+        }
+
+        let dates = buckets.keys.sorted()
+        return dates.map { day in
+            let items = (buckets[day] ?? []).sorted { $0.0 < $1.0 }
+            return (date: day, items: items.map { (index: $0.0, message: $0.1) })
+        }
+    }
+
+    struct Grouping {
+        let isSameGroup: (_ a: ChatMessage, _ b: ChatMessage) -> Bool
+        let isLastInGroup: (_ i: Int, _ messages: [ChatMessage]) -> Bool
+        let spacingAbove: (_ i: Int, _ messages: [ChatMessage]) -> CGFloat
+
+        static func `default`(groupGap: TimeInterval = 5 * 60, calendar: Calendar = .current) -> Grouping {
+            func same(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
+                guard a.isSentByUser == b.isSentByUser else { return false }
+                guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else { return false }
+                let gap = b.createdAt.timeIntervalSince(a.createdAt)
+                return gap <= groupGap
+            }
+            return Grouping(
+                isSameGroup: same,
+                isLastInGroup: { i, msgs in
+                    guard i + 1 < msgs.count else { return true }
+                    return !same(msgs[i], msgs[i + 1])
+                },
+                spacingAbove: { i, msgs in
+                    guard i > 0 else { return 0 }
+                    return same(msgs[i - 1], msgs[i]) ? 2 : 8
                 }
+            )
+        }
+    }
+
+    private func scrollToBottom(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(bottomAnchorId, anchor: .bottom)
             }
         }
+    }
 }
 
 #Preview {

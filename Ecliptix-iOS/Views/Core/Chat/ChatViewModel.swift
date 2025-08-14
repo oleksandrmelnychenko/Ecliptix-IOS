@@ -33,69 +33,7 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Init
     init(seed: [ChatMessage] = []) {
-        self.messages = [
-            // Група 1 (інший користувач, щільно)
-            .init(text: "Привіт! 👋",                  isSentByUser: false, createdAt: Date().addingTimeInterval(-60*180)),
-            .init(text: "Є хвилинка поговорити?",      isSentByUser: false, createdAt: Date().addingTimeInterval(-60*179)),
-            .init(text: "Потрібна порада",             isSentByUser: false, createdAt: Date().addingTimeInterval(-60*177)),
-
-            // Група 2 (я, близько)
-            .init(text: "Привіт! Звісно 🙂",           isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*175)),
-            .init(text: "Про що саме?",                isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*174)),
-
-            // Група 3 (інший, після 20 хв — нова група)
-            .init(text: "Думаю переписати UI чату",    isSentByUser: false, createdAt: Date().addingTimeInterval(-60*154)),
-
-            // Група 4 (я, близько)
-            .init(text: "Класна ідея!",                isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*153)),
-            .init(text: "Можемо почати з бульбашок",   isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*152)),
-
-            // Група 5 (інший, +2 год — нова група)
-            .init(text: "Додав хвостик до бульбашки",  isSentByUser: false, createdAt: Date().addingTimeInterval(-60*120)),
-            .init(text: "Поглянь, ок?",                isSentByUser: false, createdAt: Date().addingTimeInterval(-60*119)),
-
-            // Група 6 (я)
-            .init(text: "Виглядає добре 👍",           isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*117)),
-            .init(text: "Трохи підкручу криву Безьє",  isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*116)),
-            .init(text: "І буде супер",                isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*115)),
-
-            // Група 7 (інший, +1 год — нова група)
-            .init(text: "Що з відступами між групами?",isSentByUser: false, createdAt: Date().addingTimeInterval(-60*60)),
-
-            // Група 8 (я)
-            .init(text: "Зробив 2pt всередині групи",  isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*59)),
-            .init(text: "І 8pt між групами",           isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*58)),
-
-            // Група 9 (інший, 13 хв — нова група)
-            .init(text: "Супер. А час поруч із текстом?", isSentByUser: false, createdAt: Date().addingTimeInterval(-60*45)),
-            .init(text: "Як у Telegram",                isSentByUser: false, createdAt: Date().addingTimeInterval(-60*44)),
-
-            // Група 10 (я)
-            .init(text: "Так, міряю ширину",           isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*30)),
-            .init(text: "Якщо не вміщується — вниз",   isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*29)),
-
-            // Група 11 (інший)
-            .init(text: "Тепер б хотів градієнт фонового екрану", isSentByUser: false, createdAt: Date().addingTimeInterval(-60*15)),
-
-            // Група 12 (я)
-            .init(text: "Додав легкий зверху-вниз",    isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*14)),
-            .init(text: "Пасує до теми",               isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*10)),
-            .init(text: "Ледь помітний",               isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*9)),
-
-            // Група 13 (інший)
-            .init(text: "Чудово, дякую!",              isSentByUser: false, createdAt: Date().addingTimeInterval(-60*5)),
-            .init(text: "Ще підкоригую колір",         isSentByUser: false, createdAt: Date().addingTimeInterval(-60*4)),
-
-            // Група 14 (я)
-            .init(text: "Ок, пінгани якщо що",         isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*3)),
-            .init(text: "Готово 👌",                   isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*2)),
-
-            // Група 15 (інший)
-            .init(text: "Бачу. Все працює!",           isSentByUser: false, createdAt: Date().addingTimeInterval(-60*1)),
-
-            // Останнє (я)
-            .init(text: "🔥 Тоді зливаю в main",        isSentByUser: true,  createdAt: Date())
-        ]
+        self.messages = Seed.makeMessages(days: 20)
     }
 
     // MARK: - Actions
@@ -123,6 +61,11 @@ final class ChatViewModel: ObservableObject {
     
     func startForwarding(_ msg: ChatMessage) {
         forwardingMessage = msg
+    }
+    
+    func edit(_ msg: ChatMessage) {
+        self.editing = msg
+        messageText = msg.text
     }
     
     func copy(_ msg: ChatMessage) {
@@ -156,5 +99,64 @@ final class ChatViewModel: ObservableObject {
     func spacingAbove(index i: Int) -> CGFloat {
         guard i > 0 else { return 0 }
         return isSameGroup(messages[i - 1], messages[i]) ? 2 : 8
+    }
+}
+
+
+private enum Seed {
+    static func makeMessages(days: Int = 14) -> [ChatMessage] {
+        let cal = Calendar.current
+        let todayStart = cal.startOfDay(for: Date())
+
+        func at(daysAgo: Int, hour: Int, minute: Int) -> Date {
+            // базовий день -N від сьогодні 00:00, далі додаємо хвилини
+            let day = cal.date(byAdding: .day, value: -daysAgo, to: todayStart)!
+            return cal.date(byAdding: .minute, value: hour * 60 + minute, to: day)!
+        }
+
+        let otherTexts = [
+            "Привіт! 👋", "Є хвилинка поговорити?", "Потрібна порада", "Гоу оновимо UI?",
+            "Додав хвостик до бульбашки", "Поглянь, ок?", "Що з відступами між групами?",
+            "Супер. А час поруч із текстом?", "Як у Telegram", "Чудово, дякую!", "Ще підкоригую колір"
+        ]
+        let myTexts = [
+            "Привіт! Звісно 🙂", "Про що саме?", "Класна ідея!", "Можемо почати з бульбашок",
+            "Виглядає добре 👍", "Трохи підкручу криву Безьє", "І буде супер",
+            "Так, міряю ширину", "Якщо не вміщується — вниз", "Додав легкий зверху-вниз",
+            "Пасує до теми", "Ледь помітний", "Ок, пінгани якщо що", "Готово 👌",
+            "🔥 Тоді зливаю в main"
+        ]
+
+        var out: [ChatMessage] = []
+        var iOther = 0, iMe = 0
+
+        for d in stride(from: days, through: 0, by: -1) {
+            let count = 2 + (d % 4)
+            var sentByUser = (d % 2 != 0)
+
+            for i in 0..<count {
+                let hour = 9 + ((i * 3 + d) % 11)
+                let minute = (i * 13 + d * 7) % 60
+
+                let text: String
+                if sentByUser {
+                    text = myTexts[iMe % myTexts.count]; iMe += 1
+                } else {
+                    text = otherTexts[iOther % otherTexts.count]; iOther += 1
+                }
+
+                out.append(
+                    ChatMessage(
+                        text: text,
+                        isSentByUser: sentByUser,
+                        createdAt: at(daysAgo: d, hour: hour, minute: minute)
+                    )
+                )
+
+                sentByUser.toggle()
+            }
+        }
+
+        return out.sorted { $0.createdAt < $1.createdAt }
     }
 }

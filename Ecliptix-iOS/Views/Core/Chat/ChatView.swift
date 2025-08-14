@@ -74,7 +74,7 @@ struct ChatView: View {
                 onForward:{ vm.startForwarding($0) },
                 onCopy: { vm.copy($0) },
                 onDelete: { vm.delete($0) },
-                onEdit: { vm.editing = $0 }
+                onEdit: { vm.edit($0) }
             )
         }
     }
