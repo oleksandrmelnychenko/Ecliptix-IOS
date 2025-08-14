@@ -51,11 +51,6 @@ struct MessageList: View {
 
                                 HStack {
                                     if isSelecting {
-//                                        Button(action: onToggleSelect) {
-//                                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-//                                                .font(.title3)
-//                                                .foregroundColor(isSelected ? .blue : .gray)
-//                                        }
                                         SelectionButton(
                                             selected: isSelected(msg.id),
                                             action: { onToggleSelect(msg.id) }
@@ -63,9 +58,9 @@ struct MessageList: View {
                                     }
                                     
                                     if msg.isSentByUser { Spacer() }
-
+                                    
                                     MessageBubble(
-                                        message: msg,
+                                        message: $messages[idx],
                                         spaceName: spaceName,
                                         isLastInGroup: grouping.isLastInGroup(idx, messages),
                                         onLongPressWithFrame: { m, frame in
@@ -163,22 +158,7 @@ struct MessageList: View {
     }
 }
 
-private struct SelectionButton: View {
-    let selected: Bool
-    let action: () -> Void
 
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .font(.title3)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(selected ? Color.accentColor : Color.secondary)
-                .frame(width: 28, height: 28) // стабільний хіт-таргет
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
 
 //#Preview {
 //    @Previewable @State var messages: [ChatMessage] = {

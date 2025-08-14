@@ -87,7 +87,7 @@ struct ContextMenuOverlay: View {
             createdAt: now,
             updatedAt: now
         )
-        let textMessage = TextMessage(message: msg, isLastInGroup: true)
+        let textMessage = TextMessage(message: .constant(msg), isLastInGroup: true)
         return textMessage
     }()
 
@@ -114,7 +114,7 @@ struct ContextMenuOverlay: View {
             createdAt: now,
             updatedAt: now
         )
-        let textMessage = TextMessage(message: msg, isLastInGroup: true)
+        let textMessage = TextMessage(message: .constant(msg), isLastInGroup: true)
         return textMessage
     }()
 

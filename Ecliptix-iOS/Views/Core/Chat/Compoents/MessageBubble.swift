@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// Bound preference FrameInSpaceKey tried to update multiple times per frame.
 private struct FrameInSpaceKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
@@ -32,7 +33,7 @@ private func nearlyEqual(_ a: CGRect, _ b: CGRect, eps: CGFloat = 0.5) -> Bool {
 }
 
 struct MessageBubble: View {
-    let message: ChatMessage
+    @Binding var message: ChatMessage
     var spaceName: String = "chatScroll"
     var isLastInGroup: Bool = true
     var onLongPressWithFrame: (ChatMessage, CGRect) -> Void = { _, _ in }
@@ -40,7 +41,7 @@ struct MessageBubble: View {
     @State private var frameInScroll: CGRect = .zero
 
     var body: some View {
-        TextMessage(message: message, isLastInGroup: isLastInGroup)
+        TextMessage(message: $message, isLastInGroup: isLastInGroup)
             .background(
                 GeometryReader { geo in
                     let rect = geo.frame(in: .named(spaceName))
@@ -64,22 +65,22 @@ struct MessageBubble: View {
 
 
 #Preview("Incoming") {
-    MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false))
+    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false)))
 }
 
 #Preview("Outgoing") {
-    MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true))
+    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true)))
 }
 
 #Preview("Both") {
     VStack(spacing: 12) {
         HStack {
-            MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false))
+            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false)))
             Spacer()
         }
         HStack {
             Spacer()
-            MessageBubble(message: ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true))
+            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true)))
         }
     }
 }

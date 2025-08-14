@@ -58,7 +58,7 @@ struct MenuBackdropOverlay: View {
     ) -> some View {
         ContextMenuOverlay(
             textMessage: .constant(
-                TextMessage(message: t.message, isLastInGroup: t.isLastInGroup)
+                TextMessage(message: .constant(t.message), isLastInGroup: t.isLastInGroup)
             ),
             onReply:  { _ in onReply(t.message);  menuTarget = nil },
             onForward:{ _ in onForward(t.message); menuTarget = nil },
