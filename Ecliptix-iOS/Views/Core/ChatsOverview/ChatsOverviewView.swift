@@ -52,7 +52,6 @@ struct ChatsOverviewView: View {
                                 if allowsMultipleSelection || mode == .selecting {
                                     toggle(chat.id)
                                 } else {
-                                    // одразу віддаємо вибір і закриваємося зверху через onPick
                                     onPick([chat])
                                 }
                             }

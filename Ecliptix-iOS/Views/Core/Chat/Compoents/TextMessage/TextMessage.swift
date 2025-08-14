@@ -32,7 +32,7 @@ struct TextMessage: View {
                     }
                 )
 
-            TimestampBadge(date: Date(), status: message.status, tint: textColor)
+            TimestampBadge(date: message.updatedAt ?? message.createdAt, status: message.status, tint: textColor)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)

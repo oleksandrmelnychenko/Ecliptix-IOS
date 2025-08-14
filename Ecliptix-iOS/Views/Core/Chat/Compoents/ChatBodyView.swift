@@ -15,19 +15,42 @@ struct ChatBodyView: View {
         ScrollViewReader { proxy in
             ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 0) {
+//                    MessageList(
+//                        messages: $vm.messages,
+//                        onLongPressWithFrame: { msg, isLast, frame in
+//                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+//                            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+//                                menuTarget = (msg, isLast, frame)
+//                            }
+//                        },
+//                        spaceName: vm.scrollSpace,
+//                        bottomAnchorId: vm.bottomAnchorId,
+//                        onBottomVisibilityChange: { visible in
+//                            vm.setBottomVisible(visible)
+//                        }
+//                    )
+                    
                     MessageList(
                         messages: $vm.messages,
                         onLongPressWithFrame: { msg, isLast, frame in
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-                                menuTarget = (msg, isLast, frame)
+                            if vm.isSelecting {
+                                vm.toggleSelection(msg.id)
+                            } else {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                                    menuTarget = (msg, isLast, frame)
+                                }
                             }
                         },
                         spaceName: vm.scrollSpace,
                         bottomAnchorId: vm.bottomAnchorId,
                         onBottomVisibilityChange: { visible in
                             vm.setBottomVisible(visible)
-                        }
+                        },
+                        onToggleSelect: { vm.toggleSelection($0) },
+                        isSelected: { vm.selected.contains($0) },
+                        isSelecting: vm.isSelecting,
+                        
                     )
                     .padding(.top, 20)
                     .onChange(of: vm.messages.count) {
@@ -48,22 +71,32 @@ struct ChatBodyView: View {
                         EditPreview(message: editing) { vm.editing = nil }
                     }
 
-                    InputBar(
-                        text: $vm.messageText,
-                        onSend: {
-                            vm.send()
-                            if !vm.isAtBottom {
-                                withAnimation(.easeOut(duration: 0.22)) {
-                                    proxy.scrollTo(vm.bottomAnchorId, anchor: .bottom)
-                                }
-                            }
-                        },
-                        onChoosePhoto: { vm.showPhotoPicker = true },
-                        onTakePhoto:   { vm.showCamera = true },
-                        onAttachFile:  { vm.showDocumentPicker = true },
-                        onSendLocation:  {  },
-                        onSendContact:  {  }
-                    )
+                    Group {
+                        if vm.isSelecting {
+                            BottomMenu(
+                                onDelete: vm.deleteSelected,
+                                onSend: {},
+                                onForward: vm.forwardSelected
+                            )
+                        } else {
+                            InputBar(
+                                text: $vm.messageText,
+                                onSend: {
+                                    vm.send()
+                                    if !vm.isAtBottom {
+                                        withAnimation(.easeOut(duration: 0.22)) {
+                                            proxy.scrollTo(vm.bottomAnchorId, anchor: .bottom)
+                                        }
+                                    }
+                                },
+                                onChoosePhoto: { vm.showPhotoPicker = true },
+                                onTakePhoto:   { vm.showCamera = true },
+                                onAttachFile:  { vm.showDocumentPicker = true },
+                                onSendLocation:  {  },
+                                onSendContact:  {  }
+                            )
+                        }
+                    }
                     .padding(.horizontal)
                     .padding(.vertical, 6)
                     .background(.ultraThinMaterial)

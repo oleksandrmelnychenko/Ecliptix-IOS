@@ -77,7 +77,6 @@ struct InputBar: View {
                 }
             }
             .foregroundColor(.blue)
-            .font(.system(size: 22))
             .transition(.scale.combined(with: .opacity))
         }
     }

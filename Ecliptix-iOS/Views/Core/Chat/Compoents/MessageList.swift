@@ -31,7 +31,11 @@ struct MessageList: View {
     var bottomAnchorId: String = "chat-bottom"
     var onBottomVisibilityChange: (Bool) -> Void = { _ in }
 
-    var grouping: Grouping = .default()
+    var grouping: Grouping = .standart()
+    
+    var onToggleSelect: (_ id: UUID) -> Void
+    var isSelected: (_ id: UUID) -> Bool
+    var isSelecting: Bool
 
     var body: some View {
         GeometryReader { viewport in
@@ -46,6 +50,18 @@ struct MessageList: View {
                                 let msg = item.message
 
                                 HStack {
+                                    if isSelecting {
+//                                        Button(action: onToggleSelect) {
+//                                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+//                                                .font(.title3)
+//                                                .foregroundColor(isSelected ? .blue : .gray)
+//                                        }
+                                        SelectionButton(
+                                            selected: isSelected(msg.id),
+                                            action: { onToggleSelect(msg.id) }
+                                        )
+                                    }
+                                    
                                     if msg.isSentByUser { Spacer() }
 
                                     MessageBubble(
@@ -56,6 +72,9 @@ struct MessageList: View {
                                             onLongPressWithFrame(m, grouping.isLastInGroup(idx, messages), frame)
                                         }
                                     )
+                                    .onTapGesture {
+                                        if isSelecting { onToggleSelect(msg.id) }
+                                    }
 
                                     if !msg.isSentByUser { Spacer() }
                                 }
@@ -106,13 +125,21 @@ struct MessageList: View {
         let isLastInGroup: (_ i: Int, _ messages: [ChatMessage]) -> Bool
         let spacingAbove: (_ i: Int, _ messages: [ChatMessage]) -> CGFloat
 
-        static func `default`(groupGap: TimeInterval = 5 * 60, calendar: Calendar = .current) -> Grouping {
+        static func standart(groupGap: TimeInterval = 5 * 60, calendar: Calendar = .current) -> Grouping {
+            
             func same(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
-                guard a.isSentByUser == b.isSentByUser else { return false }
-                guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else { return false }
+                guard a.isSentByUser == b.isSentByUser else {
+                    return false
+                }
+                
+                guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else {
+                    return false
+                }
+                
                 let gap = b.createdAt.timeIntervalSince(a.createdAt)
                 return gap <= groupGap
             }
+            
             return Grouping(
                 isSameGroup: same,
                 isLastInGroup: { i, msgs in
@@ -136,30 +163,47 @@ struct MessageList: View {
     }
 }
 
-#Preview {
-    @Previewable @State var messages: [ChatMessage] = {
-        let now = Date()
-        return [
-            .init(text: "Привіт!", isSentByUser: false, createdAt: now.addingTimeInterval(-60*30)),
-            .init(text: "Як справи?", isSentByUser: false, createdAt: now.addingTimeInterval(-60*29)),
+private struct SelectionButton: View {
+    let selected: Bool
+    let action: () -> Void
 
-            .init(text: "Все добре! А ти?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*27)),
-            .init(text: "Чим займаєшся?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*26)),
-
-            .init(text: "Та нормально.", isSentByUser: false, createdAt: now.addingTimeInterval(-60*16)),
-
-            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
-            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
-
-            .init(text: "Добре, гарної прогулянки!", isSentByUser: false, createdAt: now),
-            
-            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
-            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
-            
-            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*7)),
-            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*6)),
-        ]
-    }()
-
-    MessageList(messages: $messages)
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                .frame(width: 28, height: 28) // стабільний хіт-таргет
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
 }
+
+//#Preview {
+//    @Previewable @State var messages: [ChatMessage] = {
+//        let now = Date()
+//        return [
+//            .init(text: "Привіт!", isSentByUser: false, createdAt: now.addingTimeInterval(-60*30)),
+//            .init(text: "Як справи?", isSentByUser: false, createdAt: now.addingTimeInterval(-60*29)),
+//
+//            .init(text: "Все добре! А ти?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*27)),
+//            .init(text: "Чим займаєшся?", isSentByUser: true, createdAt: now.addingTimeInterval(-60*26)),
+//
+//            .init(text: "Та нормально.", isSentByUser: false, createdAt: now.addingTimeInterval(-60*16)),
+//
+//            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
+//            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
+//
+//            .init(text: "Добре, гарної прогулянки!", isSentByUser: false, createdAt: now),
+//            
+//            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*15)),
+//            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*14)),
+//            
+//            .init(text: "Чудово 👍", isSentByUser: true, createdAt: now.addingTimeInterval(-60*7)),
+//            .init(text: "Йду гуляти.", isSentByUser: true, createdAt: now.addingTimeInterval(-60*6)),
+//        ]
+//    }()
+//
+//    MessageList(messages: $messages)
+//}

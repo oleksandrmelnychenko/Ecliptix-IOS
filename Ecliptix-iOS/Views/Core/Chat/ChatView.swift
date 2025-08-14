@@ -23,9 +23,9 @@ struct ChatView: View {
     var body: some View {
         ZStack(alignment: .top) {
             ChatHeader(
+                vm: vm,
                 chatName: chatName,
-                onBack: { dismiss() },
-                onInfo: { vm.showChatInfo = true }
+                onBack: { dismiss() }
             )
             .zIndex(10)
 
@@ -74,7 +74,8 @@ struct ChatView: View {
                 onForward:{ vm.startForwarding($0) },
                 onCopy: { vm.copy($0) },
                 onDelete: { vm.delete($0) },
-                onEdit: { vm.edit($0) }
+                onEdit: { vm.edit($0) },
+                onSelect: { vm.beginSelection(with: $0.id) }
             )
         }
     }

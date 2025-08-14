@@ -11,30 +11,56 @@ import PhotosUI
 import UniformTypeIdentifiers
 
 struct ChatHeader: View {
+    let vm: ChatViewModel
     let chatName: String
     var onBack: () -> Void
-    var onInfo: () -> Void
 
     var body: some View {
-        HStack {
-            Button(action: onBack) {
-                HStack(spacing: 0) {
-                    Image(systemName: "chevron.backward")
-                        .font(.title)
-                        .bold()
+        Group {
+            if vm.isSelecting {
+                HStack {
+                    Button(
+                        action: {},
+                        label: {
+                            Text("Clear Chat")
+                        }
+                    )
                     
-                    Text("Back")
+                    Spacer()
+                    
+                    Text("\(vm.selectionCount) Selected")
+
+                    Spacer()
+                    
+                    Button(
+                        action: {},
+                        label: {
+                            Text("Cancel")
+                        }
+                    )
+                }
+            } else {
+                HStack {
+                    Button(action: onBack) {
+                        HStack(spacing: 0) {
+                            Image(systemName: "chevron.backward")
+                                .font(.title)
+                                .bold()
+                            
+                            Text("Back")
+                        }
+                    }
+                    
+                    ChatTitleButton(
+                        title: chatName,
+                        subtitle: "last seen today at 15:34",
+                        onTap: { vm.showChatInfo = true }
+                    )
+                    .frame(maxWidth: .infinity)
+                    
+                    AvatarButton(size: 36, onTap: { vm.showChatInfo = true })
                 }
             }
-
-            ChatTitleButton(
-                title: chatName,
-                subtitle: "last seen today at 15:34",
-                onTap: onInfo
-            )
-            .frame(maxWidth: .infinity)
-
-            AvatarButton(size: 36, onTap: onInfo)
         }
         .padding(.horizontal)
         .padding(.bottom, 4)
@@ -44,12 +70,10 @@ struct ChatHeader: View {
 
 #Preview {
     ChatHeader(
+        vm: ChatViewModel(),
         chatName: "Demo chat",
         onBack: {
             print("on back tapped")
-        },
-        onInfo: {
-            print("on info tapped")
         }
     )
 }

@@ -21,7 +21,7 @@ struct ChatMessage: Identifiable {
     let text: String
     let isSentByUser: Bool
     let createdAt: Date
-    let updatedAt: Date
+    var updatedAt: Date?
     var status: ChatMessageStatus
 
     init(
@@ -29,7 +29,7 @@ struct ChatMessage: Identifiable {
         text: String,
         isSentByUser: Bool,
         createdAt: Date = Date(),
-        updatedAt: Date = Date(),
+        updatedAt: Date? = nil,
         status: ChatMessageStatus = .sending
     ) {
         self.id = id

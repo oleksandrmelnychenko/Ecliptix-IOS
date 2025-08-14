@@ -16,6 +16,9 @@ final class ChatViewModel: ObservableObject {
     @Published var editing: ChatMessage? = nil
     @Published var forwardingMessage: ChatMessage? = nil
     @Published var isAtBottom: Bool = true
+    @Published var isSelecting = false
+    @Published var selected: Set<UUID> = []
+    @Published var forwardingBatch: [ChatMessage]? = nil
 
     // UI sheets / pickers
     @Published var showChatInfo = false
@@ -25,6 +28,8 @@ final class ChatViewModel: ObservableObject {
     @Published var selectedPhoto: PhotosPickerItem? = nil
     @Published var selectedDocumentURL: URL? = nil
 
+    var selectionCount: Int { selected.count }
+    
     // MARK: - Constants
     let scrollSpace = "chatScroll"
     let bottomAnchorId = "chat-bottom"
@@ -74,6 +79,34 @@ final class ChatViewModel: ObservableObject {
 
     func delete(_ msg: ChatMessage) {
         messages.removeAll { $0.id == msg.id }
+    }
+    
+    func beginSelection(with id: UUID) {
+        isSelecting = true
+        selected = [id]
+    }
+    
+    func toggleSelection(_ id: UUID) {
+        if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
+        if selected.isEmpty { isSelecting = false }
+    }
+    
+    func clearSelection() {
+        selected.removeAll()
+        isSelecting = false
+    }
+    
+    func deleteSelected() {
+        guard !selected.isEmpty else { return }
+        messages.removeAll { selected.contains($0.id) }
+        clearSelection()
+    }
+
+    func forwardSelected() {
+        guard !selected.isEmpty else { return }
+        forwardingBatch = messages.filter { selected.contains($0.id) }
+        isSelecting = false
+        selected.removeAll()
     }
 
     @MainActor

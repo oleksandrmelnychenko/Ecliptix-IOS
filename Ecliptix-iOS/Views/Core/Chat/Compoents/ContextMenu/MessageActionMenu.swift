@@ -20,6 +20,7 @@ struct MessageActionMenu: View {
     var onDelete: () -> Void
     var onDismiss: () -> Void
     var onEdit: (() -> Void)? = nil
+    var onSelect: () -> Void
 
     var body: some View {
         VStack(spacing: 14) {
@@ -54,7 +55,7 @@ struct MessageActionMenu: View {
                 .frame(width: 210, height: 6)
                 .overlay(.lightButtonBackground)
             
-            ContextMenuItem(sf: "checkmark.circle", title: "Select", showDivider: false, action: onReply)
+            ContextMenuItem(sf: "checkmark.circle", title: "Select", showDivider: false, action: onSelect)
         }
         .padding(.vertical, 10)
         .frame(width: 210)
@@ -70,6 +71,7 @@ struct MessageActionMenu: View {
         onForward: {},
         onCopy: {},
         onDelete: {},
-        onDismiss: {}
+        onDismiss: {},
+        onSelect: {}
     )
 }
