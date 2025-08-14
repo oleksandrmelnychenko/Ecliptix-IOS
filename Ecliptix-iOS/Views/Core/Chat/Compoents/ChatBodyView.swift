@@ -39,9 +39,13 @@ struct ChatBodyView: View {
                     }
 
                     Divider()
-
+                    
                     if let replying = vm.replyingTo {
                         ReplyPreview(message: replying) { vm.replyingTo = nil }
+                    }
+                    
+                    if let editing = vm.editing {
+                        EditPreview(message: editing) { vm.editing = nil }
                     }
 
                     InputBar(

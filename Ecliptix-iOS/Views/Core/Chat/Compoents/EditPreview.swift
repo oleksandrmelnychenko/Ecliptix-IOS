@@ -1,16 +1,13 @@
 //
-//  ReplyPreview.swift
+//  EditPreview.swift
 //  Ecliptix-iOS
 //
-//  Created by Oleksandr Melnechenko on 12.08.2025.
+//  Created by Oleksandr Melnechenko on 14.08.2025.
 //
 
-
 import SwiftUI
-import PhotosUI
-import UniformTypeIdentifiers
 
-struct ReplyPreview: View {
+struct EditPreview: View {
     let message: ChatMessage
     var onCancel: () -> Void
 
@@ -19,7 +16,7 @@ struct ReplyPreview: View {
             Button(action: {
                 
             }, label: {
-                Image(systemName: "arrowshape.turn.up.left")
+                Image(systemName: "pencil")
                     .font(.title3)
                     .foregroundStyle(.blue)
             })
@@ -29,7 +26,7 @@ struct ReplyPreview: View {
                 .overlay(.blue)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Replying to")
+                Text("Edit Message")
                     .font(.caption)
                     .foregroundColor(.gray)
                 Text(message.text)
@@ -50,9 +47,7 @@ struct ReplyPreview: View {
 }
 
 #Preview {
-    VStack {
-        ReplyPreview(
-            message:  .init(text: "Якщо не вміщується — вниз",   isSentByUser: true,  createdAt: Date().addingTimeInterval(-60*29)),
-            onCancel: {})
-    }
+    EditPreview(
+        message: .init(text: "Якщо не вміщується — вниз", isSentByUser: true, createdAt: Date().addingTimeInterval(-60*29)),
+        onCancel: {})
 }

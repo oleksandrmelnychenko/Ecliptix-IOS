@@ -35,6 +35,25 @@ struct ChatView: View {
         .toolbar(.hidden, for: .tabBar)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $vm.showChatInfo) { ChatInfoView(chatName: chatName) }
+        .sheet(item: $vm.forwardingMessage) { msg in
+            ChatsOverviewView(
+                allowsMultipleSelection: true,
+                
+                onPick: { chats in
+                    chats.forEach {
+                        vm.forward(msg, to: .init(
+                            id: $0.id,
+                            name: $0.name,
+                            lastMessage: $0.lastMessage,
+                            unread: $0.unread,
+                            lastDate: $0.lastDate)
+                        )
+                    }
+                    vm.forwardingMessage = nil
+                },
+                onCancel: { vm.forwardingMessage = nil }
+            )
+        }
         .photosPicker(isPresented: $vm.showPhotoPicker, selection: $vm.selectedPhoto)
         .sheet(isPresented: $vm.showCamera) { Text("Camera not implemented") }
         .fileImporter(isPresented: $vm.showDocumentPicker, allowedContentTypes: [.item]) { result in
@@ -51,10 +70,11 @@ struct ChatView: View {
         .overlay {
             MenuBackdropOverlay(
                 menuTarget: $menuTarget,
-                onReply:  { vm.replyingTo = $0 },
-                onForward:{ vm.forward($0) },
-                onCopy:   { UIPasteboard.general.string = $0.text },
-                onDelete: { vm.delete($0) }
+                onReply: { vm.replyingTo = $0 },
+                onForward:{ vm.startForwarding($0) },
+                onCopy: { vm.copy($0) },
+                onDelete: { vm.delete($0) },
+                onEdit: { vm.editing = $0 }
             )
         }
     }

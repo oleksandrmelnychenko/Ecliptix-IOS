@@ -16,7 +16,7 @@ struct MainTabView: View {
                     Text("Status")
                 }
             
-            ChatsOverviewView()
+            ChatsOverviewView(onPick: {_ in })
                 .tabItem {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                     Text("Chats")

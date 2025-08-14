@@ -16,6 +16,7 @@ struct ContextMenuOverlay: View {
     var onForward: (ChatMessage) -> Void
     var onCopy: (ChatMessage) -> Void
     var onDelete: (ChatMessage) -> Void
+    var onEdit: ((ChatMessage) -> Void)?
 
     var anchored: Bool = false
 
@@ -44,10 +45,16 @@ struct ContextMenuOverlay: View {
                         status: Text("read today at 18:00"),
                         onReply:  { onReply(textMessage.message) },
                         onForward:{ onForward(textMessage.message) },
-                        onCopy:   { UIPasteboard.general.string = textMessage.message.text },
+                        onCopy:   { onCopy(textMessage.message) },
                         onDelete: { onDelete(textMessage.message) },
-                        onDismiss:{ },
-                        onEdit:   { }
+                        onDismiss: { },
+                        onEdit: {
+                            if let handler = self.onEdit {
+                                handler(textMessage.message)
+                            } else {
+                                print("On Edit is not implemented")
+                            }
+                        }
                     )
                     .padding(.trailing, 16)
                 } else {
@@ -56,7 +63,7 @@ struct ContextMenuOverlay: View {
                         onForward:{ onForward(textMessage.message) },
                         onCopy:   { UIPasteboard.general.string = textMessage.message.text },
                         onDelete: { onDelete(textMessage.message) },
-                        onDismiss:{ }
+                        onDismiss: { }
                     )
                     .padding(.leading, 16)
                     Spacer()

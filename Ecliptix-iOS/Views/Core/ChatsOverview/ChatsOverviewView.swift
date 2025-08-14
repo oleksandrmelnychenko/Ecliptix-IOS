@@ -7,8 +7,11 @@
 
 import SwiftUI
 
-// MARK: - Main
 struct ChatsOverviewView: View {
+    var allowsMultipleSelection: Bool = true
+    var onPick: ([Chat]) -> Void
+    var onCancel: () -> Void = {}
+
     @State private var searchText = ""
     @State private var mode: ChatsMode = .browsing
     @State private var selected: Set<Int> = []
@@ -27,6 +30,10 @@ struct ChatsOverviewView: View {
             lastDate: Date().addingTimeInterval(TimeInterval(-id * 60))
         )
     }
+
+    private var selectedChats: [Chat] {
+        visibleChats.filter { selected.contains($0.id) }
+    }
     
     var body: some View {
         NavigationStack {
@@ -42,7 +49,12 @@ struct ChatsOverviewView: View {
                                 mode: mode,
                                 isSelected: selected.contains(chat.id)
                             ) {
-                                toggle(chat.id)
+                                if allowsMultipleSelection || mode == .selecting {
+                                    toggle(chat.id)
+                                } else {
+                                    // одразу віддаємо вибір і закриваємося зверху через onPick
+                                    onPick([chat])
+                                }
                             }
                             .onAppear {
                                 loadMoreIfNeeded(current: chat)
@@ -56,22 +68,43 @@ struct ChatsOverviewView: View {
             .navigationTitle("Chats")
             .navigationBarTitleDisplayMode(.large)
 
-            // Hide tab bar in selecting mode
-//            .toolbar(mode == .selecting ? .hidden : .automatic, for: .tabBar)
             .toolbar {
+                // leading: Cancel
                 ToolbarItem(placement: .topBarLeading) {
-                    ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })
+                    Button("Cancel", action: onCancel)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    if mode == .selecting {
-                        EmptyView()
+
+                // trailing: "Forward (N)" у selection або коли multi-select дозволений
+                ToolbarItem(placement: .topBarLeading) {
+                    if allowsMultipleSelection || mode == .selecting {
+                        Button {
+                            let picks = selectedChats
+                            guard !picks.isEmpty else { return }
+                            onPick(picks)
+                        } label: {
+                            if selected.isEmpty {
+                                Text("Forward")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text("Forward (\(selected.count))")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        .disabled(selected.isEmpty)
                     } else {
                         Button { /* new chat */ } label: {
                             Image(systemName: "square.and.pencil")
                         }
                     }
                 }
+                
+                // center/leading: твій існуючий top menu (опційно)
+                ToolbarItem(placement: .topBarTrailing) {
+                    ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })
+                }
             }
+
+            // нижній тулбар для масових дій — залишаю як у тебе
             .toolbar {
                 if mode == .selecting {
                     SelectionToolbar(
@@ -82,8 +115,12 @@ struct ChatsOverviewView: View {
                     )
                 }
             }
+
             .onAppear {
                 loadPage(reset: true)
+                // якщо шит запущено тільки заради форварду в один чат — залишаємо browsing
+                // якщо точно хочеш мультивибір — можна форснути:
+                if allowsMultipleSelection { mode = .selecting }
             }
             .onChange(of: searchText) {
                 loadPage(reset: true)
@@ -95,6 +132,7 @@ struct ChatsOverviewView: View {
         if reset {
             currentPage = 1
             visibleChats.removeAll()
+            selected.removeAll()
         }
         
         let start = (currentPage - 1) * pageSize
@@ -134,6 +172,7 @@ struct ChatsOverviewView: View {
 }
 
 
+
 #Preview {
-    ChatsOverviewView()
+    ChatsOverviewView(onPick: {_ in })
 }

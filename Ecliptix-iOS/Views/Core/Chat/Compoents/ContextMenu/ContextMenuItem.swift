@@ -23,23 +23,22 @@ struct ContextMenuItem: View {
     }
     
     var body: some View {
-        Button(action: { action() }) {
+        Button(action: action) {
             VStack {
-                HStack(spacing: 4) {
+                HStack {
                     Text(title)
-                    
-                    Spacer()
-                    
+                    Spacer(minLength: 0)
                     Image(systemName: sf)
                 }
                 .foregroundColor(tint)
                 .padding(.horizontal, 18)
-                
+
                 if showDivider {
                     Divider()
                 }
             }
-            
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

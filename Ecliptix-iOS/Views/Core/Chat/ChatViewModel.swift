@@ -13,6 +13,8 @@ final class ChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage]
     @Published var messageText: String = ""
     @Published var replyingTo: ChatMessage? = nil
+    @Published var editing: ChatMessage? = nil
+    @Published var forwardingMessage: ChatMessage? = nil
     @Published var isAtBottom: Bool = true
 
     // UI sheets / pickers
@@ -105,6 +107,7 @@ final class ChatViewModel: ObservableObject {
         messages.append(new)
         messageText = ""
         replyingTo = nil
+        editing = nil
 
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 350_000_000)
@@ -114,8 +117,16 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    func forward(_ msg: ChatMessage) {
-        print("Forward: \(msg.text)")
+    func forward(_ msg: ChatMessage, to chat: Chat) {
+        print("Forward '\(msg.text)' to chat: \(chat.name)")
+    }
+    
+    func startForwarding(_ msg: ChatMessage) {
+        forwardingMessage = msg
+    }
+    
+    func copy(_ msg: ChatMessage) {
+        UIPasteboard.general.string = msg.text
     }
 
     func delete(_ msg: ChatMessage) {
