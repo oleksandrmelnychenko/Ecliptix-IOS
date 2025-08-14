@@ -10,26 +10,12 @@ import SwiftUI
 struct ChatBodyView: View {
     @ObservedObject var vm: ChatViewModel
     @Binding var menuTarget: (message: ChatMessage, isLastInGroup: Bool, frame: CGRect)?
+    @Binding var scrollToBottomTick: Int
 
     var body: some View {
         ScrollViewReader { proxy in
             ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 0) {
-//                    MessageList(
-//                        messages: $vm.messages,
-//                        onLongPressWithFrame: { msg, isLast, frame in
-//                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-//                            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-//                                menuTarget = (msg, isLast, frame)
-//                            }
-//                        },
-//                        spaceName: vm.scrollSpace,
-//                        bottomAnchorId: vm.bottomAnchorId,
-//                        onBottomVisibilityChange: { visible in
-//                            vm.setBottomVisible(visible)
-//                        }
-//                    )
-                    
                     MessageList(
                         messages: $vm.messages,
                         onLongPressWithFrame: { msg, isLast, frame in
@@ -52,7 +38,7 @@ struct ChatBodyView: View {
                         isSelecting: vm.isSelecting,
                         
                     )
-                    .padding(.top, 20)
+//                    .padding(.top, 20)
                     .onChange(of: vm.messages.count) {
                         if vm.isAtBottom {
                             withAnimation(.easeOut(duration: 0.22)) {
@@ -63,43 +49,7 @@ struct ChatBodyView: View {
 
                     Divider()
                     
-                    if let replying = vm.replyingTo {
-                        ReplyPreview(message: replying) { vm.replyingTo = nil }
-                    }
-                    
-                    if let editing = vm.editing {
-                        EditPreview(message: editing) { vm.editing = nil }
-                    }
 
-                    Group {
-                        if vm.isSelecting {
-                            BottomMenu(
-                                onDelete: vm.deleteSelected,
-                                onSend: {},
-                                onForward: vm.forwardSelected
-                            )
-                        } else {
-                            InputBar(
-                                text: $vm.messageText,
-                                onSend: {
-                                    vm.send()
-                                    if !vm.isAtBottom {
-                                        withAnimation(.easeOut(duration: 0.22)) {
-                                            proxy.scrollTo(vm.bottomAnchorId, anchor: .bottom)
-                                        }
-                                    }
-                                },
-                                onChoosePhoto: { vm.showPhotoPicker = true },
-                                onTakePhoto:   { vm.showCamera = true },
-                                onAttachFile:  { vm.showDocumentPicker = true },
-                                onSendLocation:  {  },
-                                onSendContact:  {  }
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 6)
-                    .background(.ultraThinMaterial)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
@@ -108,9 +58,12 @@ struct ChatBodyView: View {
                     jumpThenAnimateToBottom(proxy)
                 }
                 .padding(.trailing, 12)
-                .padding(.bottom, 80)
+                .padding(.bottom, 60)
             }
             .animation(.spring(response: 0.28, dampingFraction: 0.9), value: vm.isAtBottom)
+            .onChange(of: scrollToBottomTick) {
+                jumpThenAnimateToBottom(proxy)
+            }
         }
     }
     

@@ -19,6 +19,7 @@ final class ChatViewModel: ObservableObject {
     @Published var isSelecting = false
     @Published var selected: Set<UUID> = []
     @Published var forwardingBatch: [ChatMessage]? = nil
+    @Published var overlay: ComposerOverlay? = nil
 
     // UI sheets / pickers
     @Published var showChatInfo = false
@@ -38,28 +39,45 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Init
     init(seed: [ChatMessage] = []) {
-        self.messages = Seed.makeMessages(days: 20)
+        self.messages = seed.isEmpty ? Seed.makeMessages(days: 20) : seed
     }
 
     // MARK: - Actions
+    @MainActor
     func send() {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
+        if let editing {
+            updateMessage(id: editing.id) { m in
+                m.text = trimmed
+                m.updatedAt = Date()
+                m.status = .sent
+            }
+            messageText = ""
+            self.editing = nil
+            self.replyingTo = nil
+            clearOverlay()
+            return
+        }
+
         let new = ChatMessage(text: trimmed, isSentByUser: true, status: .sending)
         messages.append(new)
         messageText = ""
-        replyingTo = nil
-        editing = nil
+        clearOverlay()
+        
 
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 350_000_000)
-            if let idx = messages.firstIndex(where: { $0.id == new.id }) {
-                messages[idx].status = .sent
-            }
+            updateMessage(id: new.id) { $0.status = .sent }
         }
     }
 
+    func onReply(_ msg: ChatMessage) {
+        overlay = .reply(msg)
+        replyingTo = msg
+    }
+    
     func forward(_ msg: ChatMessage, to chat: Chat) {
         print("Forward '\(msg.text)' to chat: \(chat.name)")
     }
@@ -69,7 +87,8 @@ final class ChatViewModel: ObservableObject {
     }
     
     func edit(_ msg: ChatMessage) {
-        self.editing = msg
+        overlay = .edit(msg)
+        editing = msg
         messageText = msg.text
     }
     
@@ -79,6 +98,8 @@ final class ChatViewModel: ObservableObject {
 
     func delete(_ msg: ChatMessage) {
         messages.removeAll { $0.id == msg.id }
+        if replyingTo?.id == msg.id { replyingTo = nil }
+        if editing?.id == msg.id { editing = nil }
     }
     
     func beginSelection(with id: UUID) {
@@ -89,6 +110,11 @@ final class ChatViewModel: ObservableObject {
     func toggleSelection(_ id: UUID) {
         if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
         if selected.isEmpty { isSelecting = false }
+    }
+    
+    func clearChat() {
+        clearSelection()
+        messages.removeAll()
     }
     
     func clearSelection() {
@@ -108,12 +134,26 @@ final class ChatViewModel: ObservableObject {
         isSelecting = false
         selected.removeAll()
     }
+    
+    func clearOverlay() {
+        overlay = nil
+    }
 
     @MainActor
     func setBottomVisible(_ visible: Bool) {
         withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
             isAtBottom = visible
         }
+    }
+    
+    @MainActor
+    private func updateMessage(id: UUID, _ mutate: (inout ChatMessage) -> Void) {
+        guard let i = messages.firstIndex(where: { $0.id == id }) else { return }
+        var m = messages[i]
+        mutate(&m)
+        messages[i] = m
+        messages = messages
+        print("Messages: \(Array(messages))")
     }
 
     // MARK: - Grouping helpers 
@@ -135,6 +175,24 @@ final class ChatViewModel: ObservableObject {
     }
 }
 
+
+enum ComposerOverlay: Identifiable, Equatable {
+    case reply(ChatMessage)
+    case edit(ChatMessage)
+
+    var id: UUID {
+        switch self {
+        case .reply(let m): return m.id
+        case .edit(let m):  return m.id
+        }
+    }
+
+    var message: ChatMessage {
+        switch self {
+        case .reply(let m), .edit(let m): return m
+        }
+    }
+}
 
 private enum Seed {
     static func makeMessages(days: Int = 14) -> [ChatMessage] {
