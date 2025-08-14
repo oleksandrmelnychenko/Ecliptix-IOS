@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct SelectionHeader: View {
-    @State var selectionCount: Int
+    @State var selectedCount: Int
     
-    let clearChat: () -> Void
-    let cancel: () -> Void
+    let onClear: () -> Void
+    let onCancel: () -> Void
     
     var body: some View {
         HStack {
             Button(
-                action: clearChat,
+                action: onClear,
                 label: {
                     Text("Clear Chat")
                 }
@@ -24,12 +24,12 @@ struct SelectionHeader: View {
             
             Spacer()
             
-            Text("\(selectionCount) Selected")
+            Text("\(selectedCount) Selected")
 
             Spacer()
             
             Button(
-                action: cancel,
+                action: onCancel,
                 label: {
                     Text("Cancel")
                 }
@@ -39,5 +39,5 @@ struct SelectionHeader: View {
 }
 
 #Preview {
-    SelectionHeader(selectionCount: 100, clearChat: {}, cancel: {})
+    SelectionHeader(selectedCount: 100, onClear: {}, onCancel: {})
 }
