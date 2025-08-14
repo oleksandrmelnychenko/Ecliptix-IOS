@@ -7,23 +7,23 @@
 
 
 import SwiftUI
-import PhotosUI
-import UniformTypeIdentifiers
 
-struct ChatTitleButton: View {
+struct HeaderTitleButton: View {
     let title: String
-    let subtitle: String
-    var onTap: () -> Void
+    let subtitle: String?
+    var action: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: action) {
             VStack(spacing: 2) {
                 Text(title)
                     .font(.headline)
                     .bold()
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
             }
         }
         .buttonStyle(.plain)
@@ -32,10 +32,10 @@ struct ChatTitleButton: View {
 }
 
 #Preview {
-    ChatTitleButton(
+    HeaderTitleButton(
         title: "Demo Title",
         subtitle: "demo subtitles",
-        onTap: {
+        action: {
             print("Chat title was tapped")
         }
     )

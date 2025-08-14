@@ -7,15 +7,13 @@
 
 
 import SwiftUI
-import PhotosUI
-import UniformTypeIdentifiers
 
-struct AvatarButton: View {
+struct HeaderAvatarButton: View {
     let size: CGFloat
-    var onTap: () -> Void
+    var action: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: action) {
             Image(systemName: "person.crop.circle")
                 .resizable()
                 .frame(width: size, height: size)
@@ -25,7 +23,7 @@ struct AvatarButton: View {
 }
 
 #Preview {
-    AvatarButton(size: 36, onTap: {
+    HeaderAvatarButton(size: 36, action: {
         print("Avatar was tapped")
     })
 }
