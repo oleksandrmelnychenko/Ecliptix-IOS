@@ -48,6 +48,7 @@ final class ChatViewModel: ObservableObject {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
+        // 3.1 Редагування
         if let editing {
             updateMessage(id: editing.id) { m in
                 m.text = trimmed
@@ -61,16 +62,32 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
-        let new = ChatMessage(text: trimmed, isSentByUser: true, status: .sending)
+        // 3.2 Нова відправка (з можливим reply)
+        var new = ChatMessage(text: trimmed, isSentByUser: true, status: .sending)
+
+        if case let .reply(target) = overlay {
+            new.replyTo = makeReplyRef(from: target)
+        } else if let target = replyingTo {
+            new.replyTo = makeReplyRef(from: target)
+        }
+
         messages.append(new)
         messageText = ""
-        clearOverlay()
-        
+        clearOverlay()          // обнуляємо overlay/reply
 
+        // емуляція переходу статусу
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 350_000_000)
             updateMessage(id: new.id) { $0.status = .sent }
         }
+    }
+    
+    private func makeReplyRef(from m: ChatMessage) -> ReplyRef {
+        ReplyRef(
+            id: m.id,
+            author: m.isSentByUser ? "You" : "Bot",
+            text: m.text
+        )
     }
 
     func onReply(_ msg: ChatMessage) {
@@ -148,12 +165,7 @@ final class ChatViewModel: ObservableObject {
     
     @MainActor
     private func updateMessage(id: UUID, _ mutate: (inout ChatMessage) -> Void) {
-        guard let i = messages.firstIndex(where: { $0.id == id }) else { return }
-        var m = messages[i]
-        mutate(&m)
-        messages[i] = m
-        messages = messages
-        print("Messages: \(Array(messages))")
+        
     }
 
     // MARK: - Grouping helpers 

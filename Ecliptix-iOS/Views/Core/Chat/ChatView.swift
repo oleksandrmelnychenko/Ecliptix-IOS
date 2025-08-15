@@ -18,8 +18,13 @@ struct ChatView: View {
     
     
     @State private var headerHeight: CGFloat = 0
-    @State private var bottomHeight: CGFloat = 0
-    private var barHeight: CGFloat { max(headerHeight, bottomHeight) + 30 }
+    @State private var bottomBaseHeight: CGFloat = 0
+    
+    private var hasOverlay: Bool { vm.overlay != nil }
+    
+    private var symmetricBar: CGFloat { max(headerHeight, bottomBaseHeight) + 45 }
+    private var headerFrameHeight: CGFloat { symmetricBar }
+    private var bottomFrameHeight: CGFloat { symmetricBar }
 
     init(chatName: String, seed: [ChatMessage] = []) {
         self.chatName = chatName
@@ -38,7 +43,7 @@ struct ChatView: View {
                 onClearChat: {},
                 onCancelSelection: { vm.clearSelection() }
             )
-            .frame(height: barHeight, alignment: .top)
+            .frame(height: headerFrameHeight, alignment: .top)
             .background(
                 GeometryReader { g in
                     Color.clear.preference(key: HeaderHeightKey.self, value: g.size.height)
@@ -47,7 +52,7 @@ struct ChatView: View {
             .zIndex(10)
 
             ChatBodyView(vm: vm, menuTarget: $menuTarget, scrollToBottomTick: $scrollToBottomTick)
-                .padding(.top, barHeight)
+                .padding(.top, headerFrameHeight)
             
 
         }
@@ -66,19 +71,18 @@ struct ChatView: View {
                 onChoosePhoto: { vm.showPhotoPicker = true },
                 onTakePhoto: { vm.showCamera = true },
                 onAttachFile: { vm.showDocumentPicker = true },
-                onSendLocation: {  },
+                onSendLocation: {},
                 onSendContact: {}
             )
-            .frame(height: barHeight)
+            .frame(height: bottomFrameHeight)
             .background(
                 GeometryReader { g in
-                    Color.clear.preference(key: BottomHeightKey.self, value: g.size.height)
+                    Color.clear.preference(key: BottomBaseHeightKey.self, value: g.size.height)
                 }
             )
-            .background(.ultraThinMaterial)
         }
         .onPreferenceChange(HeaderHeightKey.self) { headerHeight = $0 }
-        .onPreferenceChange(BottomHeightKey.self) { bottomHeight = $0 }
+        .onPreferenceChange(BottomBaseHeightKey.self) { bottomBaseHeight = $0 }
         .toolbar(.hidden, for: .tabBar)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $vm.showChatInfo) { ChatInfoView(chatName: chatName) }
@@ -115,31 +119,19 @@ struct ChatView: View {
                 .interpolation(.none)
         )
         .overlay(alignment: .bottom) {
-            if let o = vm.overlay {
-                VStack(spacing: 6) {
-                    switch o {
+            Group {
+                if let overlay = vm.overlay {
+                    switch overlay {
                     case .reply(let m):
-                        ReplyPreview(message: m) { vm.clearOverlay() }
-                            .background(
-                                GeometryReader { g in
-                                    Color.clear.preference(key: BottomHeightKey.self, value: g.size.height)
-                                }
-                            )
-                            .background(.ultraThinMaterial)
+                        ReplyPreview(message: m) { vm.clearOverlay()}
                     case .edit(let m):
                         EditPreview(message: m) { vm.clearOverlay() }
-                            .background(
-                                GeometryReader { g in
-                                    Color.clear.preference(key: BottomHeightKey.self, value: g.size.height)
-                                }
-                            )
-                            .background(.ultraThinMaterial)
                     }
                 }
-                .padding(.bottom, barHeight + 12)
-                .ignoresSafeArea(.container, edges: .bottom)
             }
-
+            .background(.bar)
+            .padding(.bottom, bottomFrameHeight)
+            .ignoresSafeArea(.container, edges: .bottom)
         }
         .overlay {
             MenuBackdropOverlay(
@@ -159,7 +151,7 @@ private struct HeaderHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
-private struct BottomHeightKey: PreferenceKey {
+private struct BottomBaseHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }

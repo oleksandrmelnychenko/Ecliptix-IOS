@@ -56,7 +56,7 @@ struct ChatHeader: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 6)
-            .background(.ultraThinMaterial)
+            .background(.bar)
             .overlay(Divider(), alignment: .bottom)
         }
 }

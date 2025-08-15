@@ -43,9 +43,8 @@ struct ReplyPreview: View {
                 Image(systemName: "xmark.circle.fill").foregroundColor(.gray)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal)
         .padding(.vertical, 6)
-//        .background(.ultraThinMaterial)
     }
 }
 

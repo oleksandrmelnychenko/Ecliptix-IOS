@@ -20,7 +20,7 @@ struct ChatBottom: View {
     let onAttachFile: () -> Void
     let onSendLocation: () -> Void
     let onSendContact: () -> Void
-    
+        
     var body: some View {
         Group {
             if isSelecting {
@@ -43,6 +43,21 @@ struct ChatBottom: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-        .background(.ultraThinMaterial)
+        .background(.bar)
     }
+}
+
+#Preview {
+    ChatBottom(
+        isSelecting: .constant(false),
+        messageText: .constant(""),
+        onDeleteSelected: {},
+        onForwardSelected: {},
+        onSend: {},
+        onChoosePhoto: {},
+        onTakePhoto: {},
+        onAttachFile: {},
+        onSendLocation: {},
+        onSendContact: {}
+    )
 }
