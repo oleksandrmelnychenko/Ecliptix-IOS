@@ -46,7 +46,7 @@ struct ChatBodyView: View {
                         }
                     }
 
-                    Divider()
+//                    Divider()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChatsOverviewView: View {
-    var allowsMultipleSelection: Bool = true
+    var allowsMultipleSelection: Bool = false
     var onPick: ([Chat]) -> Void
     var onCancel: () -> Void = {}
 
@@ -19,7 +19,7 @@ struct ChatsOverviewView: View {
     @State private var currentPage = 1
     
     private let pageSize = 200
-    private let totalChats = 200_000
+    private let totalChats = 200
     
     private func chat(for id: Int) -> Chat {
         .init(
@@ -49,7 +49,7 @@ struct ChatsOverviewView: View {
                                 mode: mode,
                                 isSelected: selected.contains(chat.id)
                             ) {
-                                if allowsMultipleSelection || mode == .selecting {
+                                if allowsMultipleSelection && mode == .selecting {
                                     toggle(chat.id)
                                 } else {
                                     onPick([chat])
@@ -70,12 +70,16 @@ struct ChatsOverviewView: View {
             .toolbar {
                 // leading: Cancel
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel", action: onCancel)
+                    if allowsMultipleSelection && mode == .selecting {
+                        Button("Cancel", action: onCancel)
+                    } else {
+                        ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })
+                    }
                 }
 
                 // trailing: "Forward (N)" у selection або коли multi-select дозволений
                 ToolbarItem(placement: .topBarLeading) {
-                    if allowsMultipleSelection || mode == .selecting {
+                    if allowsMultipleSelection && mode == .selecting {
                         Button {
                             let picks = selectedChats
                             guard !picks.isEmpty else { return }
@@ -91,16 +95,21 @@ struct ChatsOverviewView: View {
                         }
                         .disabled(selected.isEmpty)
                     } else {
+
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    if allowsMultipleSelection && mode == .selecting {
+                        
+                    } else {
                         Button { /* new chat */ } label: {
                             Image(systemName: "square.and.pencil")
                         }
                     }
                 }
                 
-                // center/leading: твій існуючий top menu (опційно)
-                ToolbarItem(placement: .topBarTrailing) {
-                    ChatsTopMenu(mode: $mode, clearSelection: { selected.removeAll() })
-                }
+
             }
 
             // нижній тулбар для масових дій — залишаю як у тебе
