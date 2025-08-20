@@ -55,7 +55,7 @@ struct ChatOverviewItem: View {
 }
 
 #Preview {
-    let demoChat = Chat(id: 1, name: "Chat Name", lastMessage: "This is my last message", unread: 200, lastDate: Date())
+    let demoChat = Chat(id: 1, name: "Chat Name", lastSeenOnline: "last seen recently", lastMessage: "This is my last message", unread: 200, lastDate: Date())
     
     ChatOverviewItem(chat: demoChat)
 }

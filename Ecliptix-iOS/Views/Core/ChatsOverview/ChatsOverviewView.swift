@@ -24,7 +24,7 @@ struct ChatsOverviewView: View {
     private func chat(for id: Int) -> Chat {
         .init(
             id: id,
-            name: "Chat \(id)",
+            name: "Chat \(id)", lastSeenOnline: "last seen recently",
             lastMessage: "Message from chat \(id)",
             unread: id % 10,
             lastDate: Date().addingTimeInterval(TimeInterval(-id * 60))

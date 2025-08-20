@@ -63,7 +63,7 @@ final class ChatViewModel: ObservableObject {
         }
 
         // 3.2 Нова відправка (з можливим reply)
-        var new = ChatMessage(text: trimmed, isSentByUser: true, status: .sending)
+        var new = ChatMessage(text: trimmed, side: .outgoing, time: "16:00", status: .sending)
 
         if case let .reply(target) = overlay {
             new.replyTo = makeReplyRef(from: target)
@@ -85,8 +85,8 @@ final class ChatViewModel: ObservableObject {
     private func makeReplyRef(from m: ChatMessage) -> ReplyRef {
         ReplyRef(
             id: m.id,
-            author: m.isSentByUser ? "You" : "Bot",
-            text: m.text
+            author: m.side == .outgoing ? "You" : "Bot",
+            preview: m.text
         )
     }
 
@@ -170,7 +170,7 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Grouping helpers 
     func isSameGroup(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
-        guard a.isSentByUser == b.isSentByUser else { return false }
+        guard a.side == b.side else { return false }
         guard calendar.isDate(a.createdAt, inSameDayAs: b.createdAt) else { return false }
         let gap = b.createdAt.timeIntervalSince(a.createdAt)
         return gap <= groupGap
@@ -251,7 +251,8 @@ private enum Seed {
                 out.append(
                     ChatMessage(
                         text: text,
-                        isSentByUser: sentByUser,
+                        side: sentByUser ? .outgoing : .incoming,
+                        time: "16:00",
                         createdAt: at(daysAgo: d, hour: hour, minute: minute)
                     )
                 )

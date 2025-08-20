@@ -38,7 +38,6 @@ struct ChatBodyView: View {
                         isSelecting: vm.isSelecting,
                         
                     )
-//                    .padding(.top, 20)
                     .onChange(of: vm.messages.count) {
                         if vm.isAtBottom {
                             withAnimation(.easeOut(duration: 0.22)) {
@@ -48,8 +47,6 @@ struct ChatBodyView: View {
                     }
 
                     Divider()
-                    
-
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 

@@ -75,6 +75,7 @@ struct MenuBackdropOverlay: View {
     }
 
     private func topPadding(for frame: CGRect, in container: CGRect) -> CGFloat {
+        print("topPadding: \(frame.minY + container.minY)")
         return frame.minY + container.minY
     }
 }

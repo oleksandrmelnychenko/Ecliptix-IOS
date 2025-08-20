@@ -11,6 +11,7 @@ import PhotosUI
 struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
     let chatName: String
+    let chatSubtitle: String
 
     @StateObject private var vm: ChatViewModel
     @State private var menuTarget: (message: ChatMessage, isLastInGroup: Bool, frame: CGRect)?
@@ -26,8 +27,13 @@ struct ChatView: View {
     private var headerFrameHeight: CGFloat { symmetricBar }
     private var bottomFrameHeight: CGFloat { symmetricBar }
 
-    init(chatName: String, seed: [ChatMessage] = []) {
+    init(
+        chatName: String,
+        chatSubtitle: String,
+        seed: [ChatMessage] = []
+    ) {
         self.chatName = chatName
+        self.chatSubtitle = chatSubtitle
         _vm = StateObject(wrappedValue: ChatViewModel(seed: seed))
     }
 
@@ -35,7 +41,7 @@ struct ChatView: View {
         ZStack(alignment: .top) {
             ChatHeader(
                 chatName: chatName,
-                subtitle: "last seen recently",
+                subtitle: chatSubtitle,
                 isSelecting: vm.isSelecting,
                 selectedCount: vm.selectionCount,
                 onBack: { dismiss() },
@@ -95,6 +101,7 @@ struct ChatView: View {
                         vm.forward(msg, to: .init(
                             id: $0.id,
                             name: $0.name,
+                            lastSeenOnline: $0.lastSeenOnline,
                             lastMessage: $0.lastMessage,
                             unread: $0.unread,
                             lastDate: $0.lastDate)
@@ -158,5 +165,5 @@ private struct BottomBaseHeightKey: PreferenceKey {
 
 
 #Preview {
-    ChatView(chatName: "Roman")
+    ChatView(chatName: "Roman", chatSubtitle: "last seen recently")
 }

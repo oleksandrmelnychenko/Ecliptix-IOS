@@ -42,13 +42,13 @@ struct MessageBubble: View {
 
     var body: some View {
         TextMessage(message: $message, isLastInGroup: isLastInGroup)
-            .background(
+            .overlay(alignment: .topLeading) {
                 GeometryReader { geo in
                     let rect = geo.frame(in: .named(spaceName))
                     Color.clear
                         .preference(key: FrameInSpaceKey.self, value: rect)
                 }
-            )
+            }
             .onPreferenceChange(FrameInSpaceKey.self) { newRect in
                 let snapped = snap(newRect)
                 guard !nearlyEqual(snapped, frameInScroll) else { return }
@@ -63,24 +63,23 @@ struct MessageBubble: View {
     }
 }
 
-
 #Preview("Incoming") {
-    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false)))
+    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", side: .incoming, time: "16:00")))
 }
 
 #Preview("Outgoing") {
-    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true)))
+    MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", side: .outgoing, time: "16:00")))
 }
 
 #Preview("Both") {
     VStack(spacing: 12) {
         HStack {
-            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: false)))
+            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", side: .incoming, time: "16:00")))
             Spacer()
         }
         HStack {
             Spacer()
-            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", isSentByUser: true)))
+            MessageBubble(message: .constant(ChatMessage(id: UUID(), text: "Demo text", side: .outgoing, time: "16:00")))
         }
     }
 }

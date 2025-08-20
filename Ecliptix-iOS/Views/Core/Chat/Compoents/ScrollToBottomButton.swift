@@ -17,13 +17,14 @@ struct ScrollToBottomButton: View {
                 Button(action: action) {
                     Image(systemName: "arrow.down.circle.fill")
                         .font(.system(size: 28, weight: .semibold))
-                        .shadow(radius: 2, y: 1)
-                        .padding(10)
-                        .background(.ultraThinMaterial, in: Circle())
                 }
                 .transition(.scale.combined(with: .opacity))
                 .zIndex(10)
             }
         }
     }
+}
+
+#Preview {
+    ScrollToBottomButton(isVisible: true, action: {})
 }

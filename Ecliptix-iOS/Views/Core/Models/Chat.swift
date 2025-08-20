@@ -11,6 +11,7 @@ import SwiftUI
 struct Chat: Identifiable {
     let id: Int
     let name: String
+    let lastSeenOnline: String
     let lastMessage: String
     
     let unread: Int

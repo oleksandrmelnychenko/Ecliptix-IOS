@@ -42,12 +42,11 @@ struct EditPreview: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-//        .background(.ultraThinMaterial)
     }
 }
 
 #Preview {
     EditPreview(
-        message: .init(text: "Якщо не вміщується — вниз", isSentByUser: true, createdAt: Date().addingTimeInterval(-60*29)),
+        message: .init(text: "Якщо не вміщується — вниз", side: .outgoing, time: "16:00", createdAt: Date().addingTimeInterval(-60*29)),
         onCancel: {})
 }

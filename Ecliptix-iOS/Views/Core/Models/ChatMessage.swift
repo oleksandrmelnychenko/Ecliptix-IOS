@@ -11,39 +11,47 @@ import Foundation
 struct ReplyRef: Identifiable, Equatable {
     let id: UUID
     let author: String
-    let text: String
+    let preview: String
 }
 
-enum MessageStatus {
+enum ChatMessageStatus {
     case sending
     case sent
     case delivered
     case read
-    case failed(Error?)
+    case failed
+}
+
+enum ChatMessageSide {
+    case outgoing
+    case incoming
 }
 
 struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     var text: String
-    var isSentByUser: Bool
+    var side: ChatMessageSide
+    var time: String
     var createdAt: Date
     var updatedAt: Date?
-    var status: MessageStatus
+    var status: ChatMessageStatus
     
     var replyTo: ReplyRef? = nil
     
     init(
         id: UUID = UUID(),
         text: String,
-        isSentByUser: Bool,
+        side: ChatMessageSide,
+        time: String,
         createdAt: Date = Date(),
         updatedAt: Date? = nil,
-        status: MessageStatus = .sending,
+        status: ChatMessageStatus = .sending,
         replyTo: ReplyRef? = nil
     ) {
         self.id = id
         self.text = text
-        self.isSentByUser = isSentByUser
+        self.side = side
+        self.time = time
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.status = status

@@ -7,13 +7,12 @@
 
 
 import SwiftUI
-import PhotosUI
-import UniformTypeIdentifiers
 
+@available(iOS 16.0, *)
 struct ChatBubbleShape: Shape {
     var isFromCurrentUser: Bool
     var showTail: Bool
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -25,8 +24,7 @@ struct ChatBubbleShape: Shape {
             height: rect.height
         )
         
-        path.addRoundedRect(in: bubbleRect,
-                            cornerSize: .init(width: cornerRadius, height: cornerRadius))
+        path.addRoundedRect(in: bubbleRect, cornerSize: .init(width: cornerRadius, height: cornerRadius))
         
         guard showTail else { return path }
 
@@ -59,15 +57,15 @@ struct ChatBubbleShape: Shape {
 struct ChatBubbleShape_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 40) {
-            ChatBubbleShape(isFromCurrentUser: true, showTail: true)
+            ChatBubbleShape(isFromCurrentUser: true, showTail: true, cornerRadius: 16)
                 .fill(.blue)
                 .frame(width: 200, height: 80)
 
-            ChatBubbleShape(isFromCurrentUser: false, showTail: true)
+            ChatBubbleShape(isFromCurrentUser: false, showTail: true, cornerRadius: 16)
                 .fill(.green)
                 .frame(width: 200, height: 80)
 
-            ChatBubbleShape(isFromCurrentUser: true, showTail: false)
+            ChatBubbleShape(isFromCurrentUser: true, showTail: false, cornerRadius: 16)
                 .stroke(.red, lineWidth: 2)
                 .frame(width: 200, height: 80)
         }

@@ -26,7 +26,7 @@ struct ContextMenuOverlay: View {
             if !anchored { Spacer() }
 
             HStack {
-                if textMessage.message.isSentByUser {
+                if textMessage.message.side == .outgoing {
                     Spacer()
                     textMessage
                         .shadow(radius: 6, y: 3)
@@ -40,7 +40,7 @@ struct ContextMenuOverlay: View {
             }
 
             HStack {
-                if textMessage.message.isSentByUser {
+                if textMessage.message.side == .outgoing {
                     Spacer()
                     MessageActionMenu(
                         status: Text("read today at 18:00"),
@@ -83,7 +83,8 @@ struct ContextMenuOverlay: View {
         let now = Date()
         let msg = ChatMessage(
             text: "Preview bubble with context menu",
-            isSentByUser: true,
+            side: .outgoing,
+            time: "16:00",
             createdAt: now,
             updatedAt: now
         )
@@ -110,7 +111,8 @@ struct ContextMenuOverlay: View {
         let now = Date()
         let msg = ChatMessage(
             text: "Preview bubble with context menu",
-            isSentByUser: true,
+            side: .outgoing,
+            time: "16:00",
             createdAt: now,
             updatedAt: now
         )

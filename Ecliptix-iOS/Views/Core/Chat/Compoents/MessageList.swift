@@ -57,7 +57,7 @@ struct MessageList: View {
                                         )
                                     }
                                     
-                                    if msg.isSentByUser { Spacer() }
+                                    if msg.side == .outgoing { Spacer() }
                                     
                                     MessageBubble(
                                         message: $messages[idx],
@@ -71,7 +71,7 @@ struct MessageList: View {
                                         if isSelecting { onToggleSelect(msg.id) }
                                     }
 
-                                    if !msg.isSentByUser { Spacer() }
+                                    if msg.side == .incoming { Spacer() }
                                 }
                                 .id(msg.id)
                                 .padding(.top, grouping.spacingAbove(idx, messages))
@@ -123,7 +123,7 @@ struct MessageList: View {
         static func standart(groupGap: TimeInterval = 5 * 60, calendar: Calendar = .current) -> Grouping {
             
             func same(_ a: ChatMessage, _ b: ChatMessage) -> Bool {
-                guard a.isSentByUser == b.isSentByUser else {
+                guard a.side == b.side else {
                     return false
                 }
                 

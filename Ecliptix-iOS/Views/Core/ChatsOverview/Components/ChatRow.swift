@@ -25,7 +25,7 @@ struct ChatRow: View {
                 ChatOverviewItem(chat: chat)
             }
         } else {
-            NavigationLink(destination: ChatView(chatName: chat.name)) {
+            NavigationLink(destination: ChatView(chatName: chat.name, chatSubtitle: chat.lastSeenOnline)) {
                 ChatOverviewItem(chat: chat)
                     .frame(maxWidth: .infinity, alignment: .leading) 
                     .contentShape(Rectangle())
@@ -37,7 +37,7 @@ struct ChatRow: View {
 
 #Preview {
     @Previewable @State var mode: ChatsMode = .selecting
-    var chat = Chat(id: 1, name: "Demo chat", lastMessage: "This is a demo message", unread: 100,    lastDate: Date())
+    var chat = Chat(id: 1, name: "Demo chat", lastSeenOnline: "last seen recently", lastMessage: "This is a demo message", unread: 100,    lastDate: Date())
     
     ChatRow(
         chat: chat,
