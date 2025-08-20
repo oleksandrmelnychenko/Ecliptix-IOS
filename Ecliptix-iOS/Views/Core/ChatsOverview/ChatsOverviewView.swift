@@ -19,7 +19,7 @@ struct ChatsOverviewView: View {
     @State private var currentPage = 1
     
     private let pageSize = 200
-    private let totalChats = 200
+    private let totalChats = 200_000_000
     
     private func chat(for id: Int) -> Chat {
         .init(

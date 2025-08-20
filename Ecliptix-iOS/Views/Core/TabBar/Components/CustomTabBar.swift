@@ -1,3 +1,11 @@
+//
+//  CustomTabBar.swift
+//  Ecliptix-iOS
+//
+//  Created by Oleksandr Melnechenko on 20.08.2025.
+//
+
+
 import SwiftUI
 
 struct CustomTabBar: View {
@@ -19,35 +27,34 @@ struct CustomTabBar: View {
                             .font(.caption2)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .overlay(alignment: .top) {
-                        if selection == item.tab {
-                            Capsule()
-                                .frame(height: 3)
-                                .matchedGeometryEffect(id: "underline", in: ns)
-                                .offset(y: -6)
-                        }
-                    }
+                    .padding(.vertical, 3)
                 }
-                .buttonStyle(.plain)
-                .overlay(alignment: .topTrailing) {
-                    if let badge = item.badge, badge > 0 {
-                        Text("\(badge)")
-                            .font(.caption2).bold()
-                            .padding(5)
-                            .background(Circle().fill(.red))
-                            .foregroundColor(.white)
-                            .offset(x: 10, y: -8)
-                            .accessibilityLabel("\(badge) new")
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(item.title)
-                .accessibilityAddTraits(selection == item.tab ? .isSelected : [])
+//                .overlay(alignment: .topTrailing) {
+//                    if let badge = item.badge, badge > 0 {
+//                        Text("\(badge)")
+//                            .font(.caption2).bold()
+//                            .padding(5)
+//                            .background(Circle().fill(.red))
+//                            .foregroundColor(.white)
+//                            .offset(x: 10, y: -8)
+//                            .accessibilityLabel("\(badge) new")
+//                    }
+//                }
             }
         }
-        .padding(.horizontal, 12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .shadow(radius: 8, y: 3)
+        .background(.bar)
     }
+}
+
+#Preview {
+    @Previewable @State var selection: MainTab = .chats
+    
+    CustomTabBar(
+        selection: $selection,
+        items: [
+            .init(tab: .status,   title: "Status",   systemImage: "circle.dashed"),
+            .init(tab: .chats,    title: "Chats",    systemImage: "bubble.left.and.bubble.right.fill", badge: 3),
+            .init(tab: .settings, title: "Settings", systemImage: "gear")
+        ]
+    )
 }
